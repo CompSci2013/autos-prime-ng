@@ -1,9 +1,9 @@
-# AUTOS Application - Claude Onboarding Reference
+# AUTOS-PrimeNG Application - Claude Onboarding Reference
 
-**Path:** `/home/odin/projects/autos/CLAUDE.md`
-**Created:** 2025-10-13
-**Updated:** 2025-10-26
-**Purpose:** Complete reference for Claude to rapidly understand and develop the AUTOS application
+**Path:** `/home/odin/projects/autos-prime-ng/CLAUDE.md`
+**Created:** 2025-11-05
+**Updated:** 2025-11-05
+**Purpose:** Complete reference for Claude to rapidly understand and develop the AUTOS-PrimeNG application (PrimeNG implementation)
 
 ---
 
@@ -39,13 +39,13 @@ DNS: Internal via /etc/hosts (*.minilab domain)
 Container Runtime: containerd (K3s) + Podman (builds)
 ```
 
-### AUTOS Project Location
+### AUTOS-PrimeNG Project Location
 
 ```bash
-Thor: /home/odin/projects/autos/
-├── backend/              # Node.js + Express API
-├── frontend/             # Angular 14 application
-├── data/scripts/         # Elasticsearch data loading
+Thor: /home/odin/projects/autos-prime-ng/
+├── backend/              # Node.js + Express API (shared with original AUTOS)
+├── frontend/             # Angular 14 application (PrimeNG UI)
+├── data/scripts/         # Elasticsearch data loading (shared)
 ├── k8s/                  # Kubernetes manifests
 └── docs/                 # Project documentation
     ├── design/           # Design documents (milestones)
@@ -58,12 +58,12 @@ Thor: /home/odin/projects/autos/
 ### Kubernetes Resources
 
 ```yaml
-Namespace: autos
-Access URL: http://autos.minilab
-Backend Service: autos-backend.autos.svc.cluster.local:3000
-Frontend Service: autos-frontend.autos.svc.cluster.local:80
-Data Store: elasticsearch.data.svc.cluster.local:9200
-Index: autos-unified
+Namespace: autos-prime-ng
+Access URL: http://autos-prime-ng.minilab
+Backend Service: autos-prime-ng-backend.autos-prime-ng.svc.cluster.local:3000
+Frontend Service: autos-prime-ng-frontend.autos-prime-ng.svc.cluster.local:80
+Data Store: elasticsearch.data.svc.cluster.local:9200 (shared with original AUTOS)
+Index: autos-unified (shared with original AUTOS)
 ```
 
 ---
@@ -74,11 +74,12 @@ Index: autos-unified
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    AUTOS ARCHITECTURE                        │
+│                AUTOS-PrimeNG ARCHITECTURE                    │
 │                                                              │
-│  Browser (http://autos.minilab)                             │
+│  Browser (http://autos-prime-ng.minilab)                    │
 │       │                                                      │
 │       ├─> Angular Frontend (port 80)                        │
+│       │   ├── PrimeNG UI Library                            │
 │       │   ├── URL-driven state (query parameters)           │
 │       │   ├── StateManagementService + RouteStateService    │
 │       │   ├── RequestCoordinatorService (deduplication)     │
@@ -89,7 +90,7 @@ Index: autos-unified
 │           ├── Vehicle search & details                      │
 │           └── Elasticsearch queries                         │
 │                                                              │
-│  Data Store: Elasticsearch                                  │
+│  Data Store: Elasticsearch (shared with original AUTOS)     │
 │       └── Index: autos-unified (100,000 records)            │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -132,16 +133,16 @@ Index: autos-unified
 ### Frontend Images
 
 ```yaml
-Development Image: localhost/autos-frontend:dev
-  Base: node:14-alpine
-  Port: 4200
+Development Image: localhost/autos-prime-ng-frontend:dev
+  Base: node:18-alpine
+  Port: 4201 (4200 reserved for original AUTOS dev container)
   Features: Hot Module Reload (HMR), live reload
   Use: VS Code development only
 
-Production Image: localhost/autos-frontend:prod-v1.1.3
+Production Image: localhost/autos-prime-ng-frontend:prod-v1.0.0
   Base: nginx:alpine
   Port: 80
-  Features: Optimized build, static serving
+  Features: Optimized build, static serving, PrimeNG components
   Use: Kubernetes deployment
   Versioning: Release tags (prod-vX.Y.Z)
 ```
@@ -150,31 +151,33 @@ Production Image: localhost/autos-frontend:prod-v1.1.3
 
 The frontend production image tag **must match** `k8s/frontend-deployment.yaml` line 26:
 ```yaml
-image: localhost/autos-frontend:prod-v1.1.3
+image: localhost/autos-prime-ng-frontend:prod-v1.0.0
 ```
 
 **Deployment procedure:**
-1. Build image: `podman build -f Dockerfile.prod -t localhost/autos-frontend:prod .`
-2. Re-tag to match deployment YAML: `podman tag localhost/autos-frontend:prod localhost/autos-frontend:prod-v1.1.3`
-3. Export: `podman save localhost/autos-frontend:prod-v1.1.3 -o autos-frontend-prod-v1.1.3.tar`
-4. Import to K3s: `sudo k3s ctr images import autos-frontend-prod-v1.1.3.tar`
-5. Restart: `kubectl rollout restart deployment/autos-frontend -n autos`
+1. Build image: `podman build -f Dockerfile.prod -t localhost/autos-prime-ng-frontend:prod .`
+2. Re-tag to match deployment YAML: `podman tag localhost/autos-prime-ng-frontend:prod localhost/autos-prime-ng-frontend:prod-v1.0.0`
+3. Export: `podman save localhost/autos-prime-ng-frontend:prod-v1.0.0 -o autos-prime-ng-frontend-prod-v1.0.0.tar`
+4. Import to K3s: `sudo k3s ctr images import autos-prime-ng-frontend-prod-v1.0.0.tar`
+5. Restart: `kubectl rollout restart deployment/autos-prime-ng-frontend -n autos-prime-ng`
 
-**Note:** Frontend uses release tags (`prod-v1.1.3`), not semantic versioning from package.json.
+**Note:** Frontend uses release tags (`prod-v1.0.0`), not semantic versioning from package.json.
 
 ### Backend Images
 
 ```yaml
-Current Version: localhost/autos-backend:v1.4.1
+Current Version: localhost/autos-prime-ng-backend:v1.4.1
   Base: node:18-alpine
   Port: 3000
-  Features: Express API, Elasticsearch client
+  Features: Express API, Elasticsearch client (shared backend with original AUTOS)
   Versioning: Semantic (major.minor.patch) from package.json
 ```
 
 **Backend Deployment:**
 Backend version automatically syncs with `backend/package.json` version field.
-Deployment YAML (`k8s/backend-deployment.yaml`) references `localhost/autos-backend:v1.4.1`.
+Deployment YAML (`k8s/backend-deployment.yaml`) references `localhost/autos-prime-ng-backend:v1.4.1`.
+
+**Note:** Backend code is shared with original AUTOS; only image names differ for deployment isolation.
 
 ---
 
@@ -298,9 +301,9 @@ Response: {
 Framework: Angular 14
 CLI Version: @angular/cli@14
 Package Manager: npm
-Development Port: 4200 (hot reload)
+Development Port: 4201 (hot reload) - Port 4200 reserved for original AUTOS
 Production Port: 80 (nginx)
-UI Library: NG-ZORRO (Ant Design for Angular)
+UI Library: PrimeNG (Enterprise-grade Angular UI components)
 State Management: URL-driven with RxJS
 ```
 
@@ -469,38 +472,38 @@ This operational guide covers:
 
 ```bash
 # 1. Start dev container with HMR
-cd /home/odin/projects/autos/frontend
+cd /home/odin/projects/autos-prime-ng/frontend
 podman run -d \
-  --name autos-frontend-dev \
-  -p 4200:4200 \
+  --name autos-prime-ng-frontend-dev \
+  -p 4201:4201 \
   -v ./:/app:z \
-  localhost/autos-frontend:dev
+  localhost/autos-prime-ng-frontend:dev
 
 # 2. Edit files (VS Code Remote-SSH to Thor)
 # Changes auto-reload via HMR
 
-# 3. View at http://192.168.0.244:4200
+# 3. View at http://192.168.0.244:4201
 ```
 
 **Production Build (When Ready to Deploy):**
 
 ```bash
 # 1. Build production image
-cd /home/odin/projects/autos/frontend
-podman build -f Dockerfile.prod -t localhost/autos-frontend:prod .
+cd /home/odin/projects/autos-prime-ng/frontend
+podman build -f Dockerfile.prod -t localhost/autos-prime-ng-frontend:prod .
 
 # 2. Save as tar
-podman save -o autos-frontend-prod.tar localhost/autos-frontend:prod
+podman save -o autos-prime-ng-frontend-prod.tar localhost/autos-prime-ng-frontend:prod
 
 # 3. Import to K3s
-sudo k3s ctr images import autos-frontend-prod.tar
+sudo k3s ctr images import autos-prime-ng-frontend-prod.tar
 
 # 4. Verify import
-sudo k3s ctr images list | grep autos-frontend
+sudo k3s ctr images list | grep autos-prime-ng-frontend
 
 # 5. Deploy to Kubernetes (rolling update)
 kubectl apply -f k8s/frontend-deployment.yaml
-kubectl rollout status deployment/autos-frontend -n autos
+kubectl rollout status deployment/autos-prime-ng-frontend -n autos-prime-ng
 ```
 
 ### Backend Development Workflow
@@ -509,25 +512,25 @@ kubectl rollout status deployment/autos-frontend -n autos
 
 ```bash
 # 1. Increment version in package.json
-cd /home/odin/projects/autos/backend
+cd /home/odin/projects/autos-prime-ng/backend
 # Edit package.json: "version": "1.2.6"
 
 # 2. Build image with new version
 VERSION=$(node -p "require('./package.json').version")
-podman build -t localhost/autos-backend:v${VERSION} .
+podman build -t localhost/autos-prime-ng-backend:v${VERSION} .
 
 # 3. Save as tar
-podman save -o autos-backend-v${VERSION}.tar localhost/autos-backend:v${VERSION}
+podman save -o autos-prime-ng-backend-v${VERSION}.tar localhost/autos-prime-ng-backend:v${VERSION}
 
 # 4. Import to K3s
-sudo k3s ctr images import autos-backend-v${VERSION}.tar
+sudo k3s ctr images import autos-prime-ng-backend-v${VERSION}.tar
 
 # 5. Update deployment manifest
-# Edit k8s/backend-deployment.yaml: image: localhost/autos-backend:v1.2.6
+# Edit k8s/backend-deployment.yaml: image: localhost/autos-prime-ng-backend:v1.2.6
 
 # 6. Apply to cluster
 kubectl apply -f k8s/backend-deployment.yaml
-kubectl rollout status deployment/autos-backend -n autos
+kubectl rollout status deployment/autos-prime-ng-backend -n autos-prime-ng
 ```
 
 ---
@@ -864,46 +867,46 @@ When beginning any implementation or complex task, acknowledge that context trac
 ### Check Cluster Status
 
 ```bash
-kubectl get pods -n autos
-kubectl get svc -n autos
-kubectl logs -n autos deployment/autos-backend --tail=50
-kubectl logs -n autos deployment/autos-frontend --tail=50
+kubectl get pods -n autos-prime-ng
+kubectl get svc -n autos-prime-ng
+kubectl logs -n autos-prime-ng deployment/autos-prime-ng-backend --tail=50
+kubectl logs -n autos-prime-ng deployment/autos-prime-ng-frontend --tail=50
 ```
 
 ### Restart Services
 
 ```bash
-kubectl rollout restart deployment/autos-backend -n autos
-kubectl rollout restart deployment/autos-frontend -n autos
+kubectl rollout restart deployment/autos-prime-ng-backend -n autos-prime-ng
+kubectl rollout restart deployment/autos-prime-ng-frontend -n autos-prime-ng
 ```
 
 ### Access Services
 
 ```bash
 # Frontend
-curl http://autos.minilab
+curl http://autos-prime-ng.minilab
 
 # Backend health
-curl http://autos.minilab/api/health
+curl http://autos-prime-ng.minilab/api/health
 
 # Backend manufacturer counts
-curl http://autos.minilab/api/search/manufacturer-model-counts
+curl http://autos-prime-ng.minilab/api/search/manufacturer-model-counts
 ```
 
 ### Development Container Management
 
 ```bash
 # Start dev frontend
-podman run -d --name autos-frontend-dev -p 4200:4200 \
-  -v /home/odin/projects/autos/frontend:/app:z \
-  localhost/autos-frontend:dev
+podman run -d --name autos-prime-ng-frontend-dev -p 4201:4201 \
+  -v /home/odin/projects/autos-prime-ng/frontend:/app:z \
+  localhost/autos-prime-ng-frontend:dev
 
 # Stop dev frontend
-podman stop autos-frontend-dev
-podman rm autos-frontend-dev
+podman stop autos-prime-ng-frontend-dev
+podman rm autos-prime-ng-frontend-dev
 
 # View logs
-podman logs -f autos-frontend-dev
+podman logs -f autos-prime-ng-frontend-dev
 ```
 
 ---
@@ -914,13 +917,13 @@ podman logs -f autos-frontend-dev
 
 ```bash
 # Check pod status
-kubectl get pods -n autos
+kubectl get pods -n autos-prime-ng
 
 # Check logs
-kubectl logs -n autos deployment/autos-frontend
+kubectl logs -n autos-prime-ng deployment/autos-prime-ng-frontend
 
 # Common issues:
-# 1. Image not imported: sudo k3s ctr images list | grep autos-frontend
+# 1. Image not imported: sudo k3s ctr images list | grep autos-prime-ng-frontend
 # 2. Wrong image tag in deployment
 # 3. ConfigMap not applied
 ```
@@ -929,10 +932,10 @@ kubectl logs -n autos deployment/autos-frontend
 
 ```bash
 # Check backend logs
-kubectl logs -n autos deployment/autos-backend --tail=100
+kubectl logs -n autos-prime-ng deployment/autos-prime-ng-backend --tail=100
 
 # Check Elasticsearch connectivity
-kubectl exec -n autos deployment/autos-backend -- \
+kubectl exec -n autos-prime-ng deployment/autos-prime-ng-backend -- \
   curl http://elasticsearch.data.svc.cluster.local:9200/_cluster/health
 
 # Common issues:
@@ -945,23 +948,36 @@ kubectl exec -n autos deployment/autos-backend -- \
 
 ```bash
 # Verify image exists locally
-podman images | grep autos
+podman images | grep autos-prime-ng
 
 # Verify import succeeded
-sudo k3s ctr images list | grep autos
+sudo k3s ctr images list | grep autos-prime-ng
 
 # Re-import if needed
-sudo k3s ctr images import autos-frontend-prod.tar
+sudo k3s ctr images import autos-prime-ng-frontend-prod.tar
 
 # Check image name matches deployment
-kubectl get deployment autos-frontend -n autos -o yaml | grep image
+kubectl get deployment autos-prime-ng-frontend -n autos-prime-ng -o yaml | grep image
 ```
 
 ---
 
 ## Changelog
 
-### 2025-11-05 (v1.6.2)
+### 2025-11-05 (v1.0.0) - AUTOS-PrimeNG Initial Fork
+
+- **Created AUTOS-PrimeNG Repository** - New PrimeNG-based implementation
+  - Forked from AUTOS main branch (commit 23ab55a)
+  - Replaced NG-ZORRO with PrimeNG UI library
+  - Updated all paths from `/home/odin/projects/autos/` to `/home/odin/projects/autos-prime-ng/`
+  - Changed namespace from `autos` to `autos-prime-ng`
+  - Updated image names: `autos-prime-ng-frontend` and `autos-prime-ng-backend`
+  - Changed dev port from 4200 to 4201 (preserving 4200 for original AUTOS)
+  - Shared backend and Elasticsearch with original AUTOS
+  - Updated all documentation (CLAUDE.md, developer-environment.md)
+  - Removed obsolete documentation files
+
+### 2025-11-05 (v1.6.2) - Original AUTOS Project
 
 - **VIN Count Column Implementation** - Added VIN instance counts to results table
   - Backend v1.6.2: VIN count aggregation from `autos-vins` index
@@ -1088,10 +1104,11 @@ kubectl get deployment autos-frontend -n autos -o yaml | grep image
 
 **Last Updated:** 2025-11-05
 **Maintained By:** Claude (with odin)
-**Version:** 1.6.2
+**Version:** 1.0.0 (AUTOS-PrimeNG)
+**Forked From:** AUTOS v1.6.2 (NG-ZORRO implementation)
 
 ---
 
-**END OF AUTOS APPLICATION REFERENCE DOCUMENT**
+**END OF AUTOS-PRIMENG APPLICATION REFERENCE DOCUMENT**
 
-This document should be read at the start of every new Claude session to ensure rapid understanding and immediate productivity on the AUTOS project.
+This document should be read at the start of every new Claude session to ensure rapid understanding and immediate productivity on the AUTOS-PrimeNG project.
