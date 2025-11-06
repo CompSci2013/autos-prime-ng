@@ -49,7 +49,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   /** Total count for pre-fetched data mode */
   @Input() totalCount?: number;
 
-  @Input() maxTableHeight: string = '600px';
+  @Input() maxTableHeight: string = '1200px';
 
   /** Initial query parameters from parent */
   @Input() queryParams: TableQueryParams = {

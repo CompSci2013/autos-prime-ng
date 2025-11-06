@@ -146,7 +146,7 @@
     [header]="'Select Manufacturers'"
     [modal]="true"
     [closable]="true"
-    [style]="{width: '600px'}"
+    [style]="{width: '600px', height: '90vh', maxHeight: '90vh'}"
     (onShow)="onManufacturerDialogOpened()"
     (onHide)="onManufacturerDialogCancel()"
   >
@@ -184,7 +184,7 @@
             #manufacturerViewport
             itemSize="40"
             class="manufacturer-list"
-            style="height: 480px;">
+            style="height: 1200px;">
             <div
               *cdkVirtualFor="let manufacturer of filteredManufacturers"
               class="manufacturer-item"
@@ -222,7 +222,7 @@
     [header]="'Select Models'"
     [modal]="true"
     [closable]="true"
-    [style]="{width: '600px'}"
+    [style]="{width: '600px', height: '90vh', maxHeight: '90vh'}"
     (onShow)="onModelDialogOpened()"
     (onHide)="onModelDialogCancel()"
   >
@@ -260,7 +260,7 @@
             #modelViewport
             itemSize="40"
             class="model-list"
-            style="height: 480px;">
+            style="height: 1200px;">
             <div
               *cdkVirtualFor="let model of filteredModels"
               class="model-item"
@@ -298,7 +298,7 @@
     [header]="'Select Body Classes'"
     [modal]="true"
     [closable]="true"
-    [style]="{width: '600px'}"
+    [style]="{width: '600px', height: '90vh', maxHeight: '90vh'}"
     (onShow)="onBodyClassDialogOpened()"
     (onHide)="onBodyClassDialogCancel()"
   >
@@ -336,7 +336,7 @@
             #bodyClassViewport
             itemSize="40"
             class="body-class-list"
-            style="height: 480px;">
+            style="height: 1200px;">
             <div
               *cdkVirtualFor="let bodyClass of filteredBodyClasses"
               class="body-class-item"
@@ -374,7 +374,7 @@
     [header]="'Select Data Sources'"
     [modal]="true"
     [closable]="true"
-    [style]="{width: '600px'}"
+    [style]="{width: '600px', height: '90vh', maxHeight: '90vh'}"
     (onShow)="onDataSourceDialogOpened()"
     (onHide)="onDataSourceDialogCancel()"
   >
@@ -412,7 +412,7 @@
             #dataSourceViewport
             itemSize="40"
             class="data-source-list"
-            style="height: 480px;">
+            style="height: 1200px;">
             <div
               *cdkVirtualFor="let dataSource of filteredDataSources"
               class="data-source-item"

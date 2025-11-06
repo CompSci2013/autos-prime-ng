@@ -151,7 +151,7 @@ describe('BaseDataTableComponent', () => {
     });
 
     it('should initialize with default maxTableHeight', () => {
-      expect(component.maxTableHeight).toBe('600px');
+      expect(component.maxTableHeight).toBe('1200px');
     });
 
     it('should initialize with expandable false by default', () => {
