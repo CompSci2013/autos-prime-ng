@@ -2,9 +2,7 @@
   <!-- Header with title and close button -->
   <div class="popout-header">
     <h2 class="popout-title">{{ panelTitle }}</h2>
-    <button nz-button nzType="text" nzSize="small" (click)="closeWindow()" class="close-btn">
-      <span nz-icon nzType="close" nzTheme="outline"></span>
-    </button>
+    <button pButton type="button" icon="pi pi-times" (click)="closeWindow()" class="close-btn p-button-text p-button-sm"></button>
   </div>
 
   <!-- Generic panel content - components handle their own state -->
@@ -64,12 +62,14 @@
 
       <!-- Unknown panel type -->
       <div *ngSwitchDefault class="panel-wrapper">
-        <nz-alert
-          nzType="warning"
-          nzMessage="Unknown Panel Type"
-          [nzDescription]="'Panel type &quot;' + panelType + '&quot; is not recognized.'"
-          nzShowIcon
-        ></nz-alert>
+        <p-messages severity="warn">
+          <ng-template pTemplate>
+            <div class="p-message-wrapper">
+              <span class="p-message-summary">Unknown Panel Type</span>
+              <span class="p-message-detail">Panel type "{{ panelType }}" is not recognized.</span>
+            </div>
+          </ng-template>
+        </p-messages>
       </div>
 
     </ng-container>

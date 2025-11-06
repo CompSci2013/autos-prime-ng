@@ -11,13 +11,14 @@
     <div class="column-manager-container">
       <!-- Info Section -->
       <div class="info-section">
-        <nz-alert
-          nzType="info"
-          nzShowIcon
-          nzMessage="Column Visibility"
-          nzDescription="Move columns between the lists to show or hide them. Required columns cannot be hidden."
-        >
-        </nz-alert>
+        <p-messages severity="info">
+          <ng-template pTemplate>
+            <div class="p-message-wrapper">
+              <span class="p-message-summary">Column Visibility</span>
+              <span class="p-message-detail">Move columns between the lists to show or hide them. Required columns cannot be hidden.</span>
+            </div>
+          </ng-template>
+        </p-messages>
 
         <div class="column-stats">
           <span class="stat">
@@ -61,18 +62,15 @@
 <!-- Footer Template (outside drawer, referenced by [nzFooter]) -->
 <ng-template #footerTemplate>
   <div class="drawer-footer">
-    <button nz-button nzType="default" (click)="onCancel()">Cancel</button>
+    <button pButton type="button" label="Cancel" (click)="onCancel()"></button>
     <button
-      nz-button
-      nzType="default"
-      nzDanger
+      pButton
+      type="button"
+      label="Reset to Default"
+      severity="danger"
       (click)="onReset()"
       [disabled]="!canReset()"
-    >
-      Reset to Default
-    </button>
-    <button nz-button nzType="primary" (click)="onApply()">
-      Apply Changes
-    </button>
+    ></button>
+    <button pButton type="button" label="Apply Changes" class="p-button-primary" (click)="onApply()"></button>
   </div>
 </ng-template>

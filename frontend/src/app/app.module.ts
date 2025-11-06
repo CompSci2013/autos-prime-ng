@@ -75,6 +75,9 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 // Shared Module (contains BaseDataTableComponent, BasePickerComponent)
 import { SharedModule } from './shared/shared.module';
 
+// PrimeNG Module (centralized PrimeNG imports for migration)
+import { PrimeNgModule } from './primeng.module';
+
 // Core Services - Error Handling
 import { ErrorInterceptor } from './core/interceptors/error.interceptor';
 import { GlobalErrorHandler } from './core/services/global-error-handler.service';
@@ -148,6 +151,8 @@ export function initializePickerConfigs(pickerConfigService: PickerConfigService
     GridsterModule,
     // Shared Module (BaseDataTableComponent, BasePickerComponent)
     SharedModule,
+    // PrimeNG Module (will gradually replace NG-ZORRO during migration)
+    PrimeNgModule,
   ],
   providers: [
     { provide: NZ_I18N, useValue: en_US },

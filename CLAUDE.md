@@ -2,25 +2,89 @@
 
 **Path:** `/home/odin/projects/autos-prime-ng/CLAUDE.md`
 **Created:** 2025-11-05
-**Updated:** 2025-11-05
-**Purpose:** Complete reference for Claude to rapidly understand and develop the AUTOS-PrimeNG application (PrimeNG implementation)
+**Updated:** 2025-11-06
+**Purpose:** Complete reference for Claude to rapidly understand and develop the AUTOS-PrimeNG application (NG-ZORRO → PrimeNG migration)
 
 ---
 
 ## Table of Contents
 
-1. [Infrastructure Overview](#infrastructure-overview)
-2. [Application Architecture](#application-architecture)
-3. [Container Images](#container-images)
-4. [Data Pipeline](#data-pipeline)
-5. [Backend API](#backend-api)
-6. [Frontend Application](#frontend-application)
-7. [Development Workflows](#development-workflows)
-8. [Deployment Procedures](#deployment-procedures)
-9. [Quick Start Commands](#quick-start-commands)
-10. [Troubleshooting](#troubleshooting)
-11. [Documentation](#documentation)
-12. [Claude Session Guidelines](#claude-session-guidelines)
+1. [Project Purpose & Status](#project-purpose--status)
+2. [Infrastructure Overview](#infrastructure-overview)
+3. [Application Architecture](#application-architecture)
+4. [Container Images](#container-images)
+5. [Data Pipeline](#data-pipeline)
+6. [Backend API](#backend-api)
+7. [Frontend Application](#frontend-application)
+8. [Development Workflows](#development-workflows)
+9. [Deployment Procedures](#deployment-procedures)
+10. [Quick Start Commands](#quick-start-commands)
+11. [Troubleshooting](#troubleshooting)
+12. [Documentation](#documentation)
+13. [Claude Session Guidelines](#claude-session-guidelines)
+
+---
+
+## Project Purpose & Status
+
+### Migration Overview
+
+**Purpose:** Migrate AUTOS application from NG-ZORRO to PrimeNG UI library
+
+**Current Status:** âš  IN PROGRESS
+
+- **Current UI Library:** NG-ZORRO (ng-zorro-antd v14.3.0)
+- **Target UI Library:** PrimeNG (14.x series)
+- **Angular Version:** 14.2.0 (fixed requirement)
+- **PrimeNG Compatibility:** Must use PrimeNG 14.x (compatible with Angular 14.2.0)
+
+### Migration Goals
+
+1. **Replace all NG-ZORRO components** with PrimeNG equivalents:
+   - Tables (nz-table → p-table)
+   - Forms (nz-form → PrimeNG form components)
+   - Modals/Dialogs (nz-modal → p-dialog)
+   - Navigation (nz-menu → p-menu)
+   - Data displays (nz-collapse, nz-card → p-accordion, p-card)
+
+2. **Maintain architectural patterns:**
+   - URL-driven state management (unchanged)
+   - Component composition patterns (unchanged)
+   - Backend API integration (unchanged)
+
+3. **Preserve all functionality:**
+   - Vehicle search and filtering
+   - VIN instance generation
+   - Table customization (column reorder, visibility)
+   - Workshop drag-and-drop interface
+   - Panel pop-out feature
+
+### Data Sharing Architecture
+
+**Elasticsearch Database:** SHARED with original AUTOS and autos-material-ui
+
+- **Current:** All three applications (autos, autos-prime-ng, autos-material-ui) use the same Elasticsearch cluster
+- **Cluster:** elasticsearch.data.svc.cluster.local:9200
+- **Indices:** autos-unified, autos-vins (shared read access)
+- **Future:** May separate into individual Kubernetes instances/namespaces/pods per application
+
+**Backend API:** Currently shared codebase, deployed independently
+
+- Backend code is identical across applications
+- Only image names differ for deployment isolation (autos-backend vs autos-prime-ng-backend)
+- Future: May diverge if UI-specific API needs emerge
+
+### Migration Status
+
+| Component | NG-ZORRO (Current) | PrimeNG (Target) | Status |
+|-----------|-------------------|------------------|--------|
+| Tables | nz-table | p-table | ⏸️ Not Started |
+| Forms | nz-form | PrimeNG forms | ⏸️ Not Started |
+| Navigation | nz-menu | p-menu | ⏸️ Not Started |
+| Modals | nz-modal | p-dialog | ⏸️ Not Started |
+| Data Display | nz-collapse, nz-card | p-accordion, p-card | ⏸️ Not Started |
+| Grid Layout | angular-grid-layout | (unchanged) | ✅ No Change |
+| State Management | RouteStateService | (unchanged) | ✅ No Change |
 
 ---
 
@@ -79,7 +143,7 @@ Index: autos-unified (shared with original AUTOS)
 │  Browser (http://autos-prime-ng.minilab)                    │
 │       │                                                      │
 │       ├─> Angular Frontend (port 80)                        │
-│       │   ├── PrimeNG UI Library                            │
+│       │   ├── UI Library: NG-ZORRO (current) → PrimeNG (target) │
 │       │   ├── URL-driven state (query parameters)           │
 │       │   ├── StateManagementService + RouteStateService    │
 │       │   ├── RequestCoordinatorService (deduplication)     │
@@ -298,14 +362,31 @@ Response: {
 ### Technology Stack
 
 ```yaml
-Framework: Angular 14
+Framework: Angular 14.2.0
 CLI Version: @angular/cli@14
 Package Manager: npm
 Development Port: 4201 (hot reload) - Port 4200 reserved for original AUTOS
 Production Port: 80 (nginx)
-UI Library: PrimeNG (Enterprise-grade Angular UI components)
+UI Library (Current): NG-ZORRO v14.3.0 (ng-zorro-antd)
+UI Library (Target): PrimeNG 14.x (Enterprise-grade Angular UI components)
 State Management: URL-driven with RxJS
 ```
+
+### Migration Notes
+
+**⚠️ IMPORTANT: This is a migration project**
+
+The project is currently in the process of migrating from NG-ZORRO to PrimeNG. The codebase still uses NG-ZORRO components (nz-table, nz-form, nz-modal, etc.) and the `ng-zorro-antd` package is installed in package.json.
+
+**Target PrimeNG Version:**
+- PrimeNG 14.x series (compatible with Angular 14.2.0)
+- Example: `primeng@14.2.3` or similar 14.x release
+
+**When working on this project:**
+1. New components should use PrimeNG (p-table, p-dialog, etc.)
+2. Existing NG-ZORRO components will be migrated incrementally
+3. Both libraries may coexist temporarily during migration
+4. Consult PrimeNG 14.x documentation for component APIs
 
 ### Project Structure
 
@@ -964,11 +1045,32 @@ kubectl get deployment autos-prime-ng-frontend -n autos-prime-ng -o yaml | grep 
 
 ## Changelog
 
+### 2025-11-06 (v1.0.1) - Documentation Update
+
+- **Clarified Project Purpose** - Added comprehensive migration context
+  - Created "Project Purpose & Status" section at document beginning
+  - Documented current state: Still using NG-ZORRO (ng-zorro-antd v14.3.0)
+  - Documented target state: PrimeNG 14.x (compatible with Angular 14.2.0)
+  - Added migration status table tracking component-by-component progress
+  - Clarified this is a migration project, not a complete implementation
+- **Documented Data Sharing Architecture**
+  - Elasticsearch cluster shared with autos and autos-material-ui
+  - Backend codebase shared, deployed independently
+  - Future architecture: May separate into individual K8s instances
+- **Updated Technology Stack section**
+  - Separated current (NG-ZORRO) vs. target (PrimeNG) UI libraries
+  - Added migration notes for developers
+  - Specified PrimeNG version requirement (14.x series)
+- **Updated Architecture Diagram**
+  - Changed UI Library line to show current → target
+- **Updated Table of Contents**
+  - Added "Project Purpose & Status" as section 1
+
 ### 2025-11-05 (v1.0.0) - AUTOS-PrimeNG Initial Fork
 
 - **Created AUTOS-PrimeNG Repository** - New PrimeNG-based implementation
   - Forked from AUTOS main branch (commit 23ab55a)
-  - Replaced NG-ZORRO with PrimeNG UI library
+  - Prepared for NG-ZORRO to PrimeNG migration
   - Updated all paths from `/home/odin/projects/autos/` to `/home/odin/projects/autos-prime-ng/`
   - Changed namespace from `autos` to `autos-prime-ng`
   - Updated image names: `autos-prime-ng-frontend` and `autos-prime-ng-backend`
@@ -1102,10 +1204,11 @@ kubectl get deployment autos-prime-ng-frontend -n autos-prime-ng -o yaml | grep 
 
 ---
 
-**Last Updated:** 2025-11-05
+**Last Updated:** 2025-11-06
 **Maintained By:** Claude (with odin)
-**Version:** 1.0.0 (AUTOS-PrimeNG)
+**Version:** 1.0.1 (AUTOS-PrimeNG)
 **Forked From:** AUTOS v1.6.2 (NG-ZORRO implementation)
+**Migration Status:** ⚠️ IN PROGRESS (NG-ZORRO → PrimeNG)
 
 ---
 

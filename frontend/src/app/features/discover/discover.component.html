@@ -15,28 +15,26 @@
         >
       </div>
       <button
-        nz-button
-        nzType="default"
-        nzSize="small"
+        pButton
+        type="button"
+        class="p-button-sm"
         (click)="expandAllGrids()"
-        nz-tooltip="Expand all sections"
+        pTooltip="Expand all sections"
       >
-        <i nz-icon nzType="down"></i>
+        <i class="pi pi-angle-down"></i>
         Expand All
       </button>
       <button
-        nz-button
-        nzType="default"
-        nzSize="small"
+        pButton
+        type="button"
+        class="p-button-sm"
         (click)="collapseAllGrids()"
-        nz-tooltip="Collapse all sections"
+        pTooltip="Collapse all sections"
       >
-        <i nz-icon nzType="up"></i>
+        <i class="pi pi-angle-up"></i>
         Collapse All
       </button>
-      <button nz-button nzType="default" (click)="onClearAll()">
-        Clear All
-      </button>
+      <button pButton type="button" label="Clear All" (click)="onClearAll()"></button>
     </div>
   </div>
 

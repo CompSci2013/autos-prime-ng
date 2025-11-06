@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { MenuItem } from 'primeng/api';
 
 @Component({
   selector: 'app-navigation',
@@ -7,8 +8,27 @@ import { Router } from '@angular/router';
   styleUrls: ['./navigation.component.scss']
 })
 export class NavigationComponent {
-  
-  constructor(private router: Router) {}
+  menuItems: MenuItem[] = [];
+
+  constructor(private router: Router) {
+    this.menuItems = [
+      {
+        label: 'Home',
+        icon: 'pi pi-home',
+        routerLink: '/'
+      },
+      {
+        label: 'Discover',
+        icon: 'pi pi-search',
+        routerLink: '/discover'
+      },
+      {
+        label: 'Workshop',
+        icon: 'pi pi-flask',
+        routerLink: '/workshop'
+      }
+    ];
+  }
 
   isActive(route: string): boolean {
     return this.router.url === route;

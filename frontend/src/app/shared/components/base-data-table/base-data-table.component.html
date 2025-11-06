@@ -3,35 +3,22 @@
   <div class="table-toolbar">
     <div class="toolbar-left">
       <ng-container *ngIf="showColumnManagement">
-        <button nz-button nzType="default" (click)="openColumnManager()">
-          <i nz-icon nzType="setting" nzTheme="outline"></i>
-          Manage Columns
-        </button>
+        <button pButton type="button" icon="pi pi-cog" label="Manage Columns" (click)="openColumnManager()"></button>
       </ng-container>
       <button
-        nz-button
-        nzType="default"
+        pButton
+        type="button"
+        icon="pi pi-times-circle"
+        label="Clear Filters"
         (click)="clearFilters()"
         [disabled]="getFilterCount() === 0"
-      >
-        <i nz-icon nzType="close-circle" nzTheme="outline"></i>
-        Clear Filters
-      </button>
+      ></button>
       <ng-container *ngIf="showColumnManagement">
-        <button nz-button nzType="default" (click)="resetColumns()">
-          <i nz-icon nzType="reload" nzTheme="outline"></i>
-          Reset Columns</button
-        >
+        <button pButton type="button" icon="pi pi-refresh" label="Reset Columns" (click)="resetColumns()"></button>
       </ng-container><!-- Add these two buttons only when expandable is true -->
       <ng-container *ngIf="expandable">
-        <button nz-button nzType="default" (click)="onExpandAll()">
-          <i nz-icon nzType="down" nzTheme="outline"></i>
-          Expand All
-        </button>
-        <button nz-button nzType="default" (click)="onCollapseAll()">
-          <i nz-icon nzType="up" nzTheme="outline"></i>
-          Collapse All
-        </button>
+        <button pButton type="button" icon="pi pi-angle-down" label="Expand All" (click)="onExpandAll()"></button>
+        <button pButton type="button" icon="pi pi-angle-up" label="Collapse All" (click)="onCollapseAll()"></button>
       </ng-container>
     </div>
     <div class="toolbar-right">
@@ -81,7 +68,7 @@
         >
           <div class="header-content">
             <span class="column-label">{{ column.label }}</span>
-            <i nz-icon nzType="drag" nzTheme="outline" class="drag-handle"></i>
+            <i class="pi pi-arrows-alt drag-handle"></i>
           </div>
         </th>
       </tr>
@@ -171,17 +158,12 @@
           <!-- Expansion toggle -->
           <td *ngIf="expandable">
             <button
-              nz-button
-              nzType="link"
-              nzSize="small"
+              pButton
+              type="button"
+              class="p-button-text p-button-sm"
               (click)="toggleRowExpansion(row)"
             >
-              <i
-                nz-icon
-                [nzType]="isRowExpanded(row) ? 'caret-down' : 'caret-right'"
-                nzTheme="outline"
-              >
-              </i>
+              <i [class]="isRowExpanded(row) ? 'pi pi-angle-down' : 'pi pi-angle-right'"></i>
             </button>
           </td>
 

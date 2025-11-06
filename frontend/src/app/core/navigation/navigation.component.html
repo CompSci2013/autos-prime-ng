@@ -4,20 +4,13 @@
       <h1>AUTOS</h1>
       <span class="tagline">Classic Vehicle Discovery</span>
     </div>
-    
-    <ul nz-menu nzMode="horizontal" nzTheme="dark" class="nav-menu">
-      <li nz-menu-item [nzSelected]="isActive('/')" routerLink="/">
-        <i nz-icon nzType="home" nzTheme="outline"></i>
-        Home
-      </li>
-      <li nz-menu-item [nzSelected]="isActive('/discover')" routerLink="/discover">
-        <i nz-icon nzType="search" nzTheme="outline"></i>
-        Discover
-      </li>
-      <li nz-menu-item [nzSelected]="isActive('/workshop')" routerLink="/workshop">
-        <i nz-icon nzType="experiment" nzTheme="outline"></i>
-        Workshop
-      </li>
-    </ul>
+
+    <p-menubar [model]="menuItems" styleClass="nav-menu">
+      <ng-template pTemplate="start">
+        <div class="nav-brand-mobile">
+          <h1>AUTOS</h1>
+        </div>
+      </ng-template>
+    </p-menubar>
   </div>
 </div>

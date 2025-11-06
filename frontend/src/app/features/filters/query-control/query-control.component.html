@@ -20,45 +20,40 @@
   <!-- Active Filter Chips -->
   <div class="filter-chips" *ngIf="activeFilterChips.length > 0">
     <span class="chips-label">Active Filters:</span>
-    <nz-tag
+    <p-chip
       *ngFor="let chip of activeFilterChips"
-      [nzColor]="chip.color"
-      nzMode="closeable"
-      (nzOnClose)="removeFilter(chip.field)"
-      class="filter-chip"
-      nz-tooltip
-      [nzTooltipTitle]="chip.label + ': ' + chip.displayValue + ' (Click to edit)'"
+      [removable]="true"
+      (onRemove)="removeFilter(chip.field)"
+      [styleClass]="'filter-chip ' + (chip.color ? 'chip-' + chip.color : '')"
+      [pTooltip]="chip.label + ': ' + chip.displayValue + ' (Click to edit)'"
     >
       <span class="chip-content clickable" (click)="editFilter(chip.field); $event.stopPropagation()">
         <strong>{{ chip.label }}:</strong> {{ chip.displayValue }}
       </span>
-    </nz-tag>
+    </p-chip>
   </div>
 
   <!-- Active Highlight Chips (distinct from filters) -->
   <div class="highlight-chips" *ngIf="activeHighlightChips.length > 0">
     <span class="chips-label">Active Highlights:</span>
-    <nz-tag
+    <p-chip
       *ngFor="let chip of activeHighlightChips"
-      [nzColor]="chip.color"
-      nzMode="closeable"
-      (nzOnClose)="removeHighlight(chip.field)"
-      class="highlight-chip"
-      nz-tooltip
-      nzTooltipTitle="Data highlighting for charts (non-filtering)"
+      [removable]="true"
+      (onRemove)="removeHighlight(chip.field)"
+      [styleClass]="'highlight-chip ' + (chip.color ? 'chip-' + chip.color : '')"
+      pTooltip="Data highlighting for charts (non-filtering)"
     >
       <span class="chip-content">
         <strong>{{ chip.label }}:</strong> {{ chip.displayValue }}
       </span>
-    </nz-tag>
+    </p-chip>
     <button
-      nz-button
-      nzType="link"
-      nzSize="small"
+      pButton
+      type="button"
+      label="Clear All Highlights"
+      class="clear-highlights-btn p-button-link p-button-sm"
       (click)="onClearAllHighlights()"
-      class="clear-highlights-btn"
     >
-      Clear All Highlights
     </button>
   </div>
 
@@ -91,18 +86,20 @@
         </div>
 
         <div class="year-range-display" *ngIf="rangeMin || rangeMax">
-          <nz-tag nzColor="blue">
-            Range: {{ rangeMin || 'Any' }} - {{ rangeMax || 'Any' }}
-          </nz-tag>
+          <p-chip styleClass="chip-blue">
+            <span>Range: {{ rangeMin || 'Any' }} - {{ rangeMax || 'Any' }}</span>
+          </p-chip>
         </div>
 
-        <nz-alert
+        <p-messages
           *ngIf="rangeMin !== undefined && rangeMax !== undefined && rangeMin > rangeMax"
-          nzType="error"
-          nzMessage="Start year cannot be after end year"
-          nzShowIcon
-          class="validation-alert"
-        ></nz-alert>
+          severity="error"
+          styleClass="validation-alert"
+        >
+          <ng-template pTemplate>
+            <span class="p-message-summary">Start year cannot be after end year</span>
+          </ng-template>
+        </p-messages>
       </div>
     </ng-container>
   </nz-modal>
@@ -166,18 +163,17 @@
           />
         </nz-input-group>
         <ng-template #prefixIconSearch>
-          <i nz-icon nzType="search"></i>
+          <i class="pi pi-search"></i>
         </ng-template>
         <ng-template #suffixClearButton>
           <button
-            nz-button
-            nzType="text"
-            nzSize="small"
+            pButton
+            type="button"
+            icon="pi pi-times-circle"
+            class="clear-button p-button-text p-button-sm"
             *ngIf="manufacturerSearchTerm"
             (click)="clearManufacturerSearch()"
-            class="clear-button"
           >
-            <i nz-icon nzType="close-circle" nzTheme="fill"></i>
           </button>
         </ng-template>
 
@@ -242,18 +238,17 @@
           />
         </nz-input-group>
         <ng-template #prefixIconSearchModel>
-          <i nz-icon nzType="search"></i>
+          <i class="pi pi-search"></i>
         </ng-template>
         <ng-template #suffixClearButtonModel>
           <button
-            nz-button
-            nzType="text"
-            nzSize="small"
+            pButton
+            type="button"
+            icon="pi pi-times-circle"
+            class="clear-button p-button-text p-button-sm"
             *ngIf="modelSearchTerm"
             (click)="clearModelSearch()"
-            class="clear-button"
           >
-            <i nz-icon nzType="close-circle" nzTheme="fill"></i>
           </button>
         </ng-template>
 
@@ -318,18 +313,17 @@
           />
         </nz-input-group>
         <ng-template #prefixIconSearchBodyClass>
-          <i nz-icon nzType="search"></i>
+          <i class="pi pi-search"></i>
         </ng-template>
         <ng-template #suffixClearButtonBodyClass>
           <button
-            nz-button
-            nzType="text"
-            nzSize="small"
+            pButton
+            type="button"
+            icon="pi pi-times-circle"
+            class="clear-button p-button-text p-button-sm"
             *ngIf="bodyClassSearchTerm"
             (click)="clearBodyClassSearch()"
-            class="clear-button"
           >
-            <i nz-icon nzType="close-circle" nzTheme="fill"></i>
           </button>
         </ng-template>
 
@@ -394,18 +388,17 @@
           />
         </nz-input-group>
         <ng-template #prefixIconSearchDataSource>
-          <i nz-icon nzType="search"></i>
+          <i class="pi pi-search"></i>
         </ng-template>
         <ng-template #suffixClearButtonDataSource>
           <button
-            nz-button
-            nzType="text"
-            nzSize="small"
+            pButton
+            type="button"
+            icon="pi pi-times-circle"
+            class="clear-button p-button-text p-button-sm"
             *ngIf="dataSourceSearchTerm"
             (click)="clearDataSourceSearch()"
-            class="clear-button"
           >
-            <i nz-icon nzType="close-circle" nzTheme="fill"></i>
           </button>
         </ng-template>
 

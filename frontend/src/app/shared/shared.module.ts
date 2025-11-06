@@ -20,6 +20,12 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzSliderModule } from 'ng-zorro-antd/slider';
+
+// PrimeNG Imports
+import { ButtonModule } from 'primeng/button';
+import { ChipModule } from 'primeng/chip';
+import { MessagesModule } from 'primeng/messages';
+import { TooltipModule } from 'primeng/tooltip';
 import { BaseDataTableComponent } from './components/base-data-table/base-data-table.component';
 import { ColumnManagerComponent } from './components/column-manager/column-manager.component';
 import { PlotlyHistogramComponent } from './components/plotly-histogram/plotly-histogram.component';
@@ -67,6 +73,11 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     NzTagModule,
     NzCheckboxModule,
     NzSliderModule,
+    // PrimeNG modules
+    ButtonModule,
+    ChipModule,
+    MessagesModule,
+    TooltipModule,
   ],
   exports: [
     // Export our components
@@ -102,6 +113,11 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     NzTagModule,
     NzCheckboxModule,
     NzSliderModule,
+    // Export PrimeNG modules
+    ButtonModule,
+    ChipModule,
+    MessagesModule,
+    TooltipModule,
   ],
 })
 export class SharedModule {}

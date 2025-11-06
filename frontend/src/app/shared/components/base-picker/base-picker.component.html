@@ -16,21 +16,22 @@
 
     <div class="picker-actions">
       <button
-        nz-button
-        nzType="default"
+        pButton
+        type="button"
+        label="Clear"
         (click)="onClear()"
         [disabled]="selectionCount === 0"
       >
-        Clear
       </button>
 
       <button
-        nz-button
-        nzType="primary"
+        pButton
+        type="button"
+        label="Apply Selection"
+        class="p-button-primary"
         (click)="onApply()"
         [disabled]="selectionCount === 0"
       >
-        Apply Selection
       </button>
     </div>
   </div>
@@ -71,15 +72,11 @@
   <!-- Selection summary (chips) -->
   <div class="selection-summary" *ngIf="selectionCount > 0">
     <span class="summary-label">Selected:</span>
-    <nz-tag
+    <p-chip
       *ngFor="let label of selectedItemsDisplay.slice(0, 10)"
-      [nzColor]="'blue'"
-      class="selection-chip"
-    >
-      {{ label }}
-    </nz-tag>
-    <nz-tag *ngIf="selectionCount > 10" [nzColor]="'default'">
-      +{{ selectionCount - 10 }} more
-    </nz-tag>
+      [label]="label"
+      styleClass="selection-chip chip-blue"
+    ></p-chip>
+    <p-chip *ngIf="selectionCount > 10" [label]="'+' + (selectionCount - 10) + ' more'" styleClass="chip-default"></p-chip>
   </div>
 </div>

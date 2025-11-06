@@ -14,9 +14,9 @@
   <ng-template #cellTemplate let-column="column" let-row="row">
     <ng-container [ngSwitch]="column.key">
       <!-- Data Source badge -->
-      <nz-tag *ngSwitchCase="'data_source'" [nzColor]="'blue'">
-        {{ $any(row).data_source }}
-      </nz-tag>
+      <p-chip *ngSwitchCase="'data_source'" styleClass="chip-blue">
+        <span>{{ $any(row).data_source }}</span>
+      </p-chip>
 
       <!-- Vehicle ID (small monospace) -->
       <small *ngSwitchCase="'vehicle_id'" class="vehicle-id">
@@ -81,11 +81,9 @@
                   <small>{{ instance.registration_status }}</small>
                 </td>
                 <td>
-                  <nz-tag
-                    [nzColor]="getTitleStatusColor(instance.title_status)"
-                  >
-                    {{ instance.title_status }}
-                  </nz-tag>
+                  <p-chip [styleClass]="'chip-' + getTitleStatusColor(instance.title_status)">
+                    <span>{{ instance.title_status }}</span>
+                  </p-chip>
                 </td>
                 <td>{{ instance.exterior_color }}</td>
                 <td>{{ instance.estimated_value | currency }}</td>
