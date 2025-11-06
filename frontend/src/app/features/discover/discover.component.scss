@@ -159,7 +159,7 @@
   position: relative;
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 200px; // Smaller height for top grid (query control)
+  height: 1200px; // Height for query control grid
 
   gridster {
     flex: 1; // Fill container height
@@ -209,7 +209,7 @@
   position: relative;
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 200px; // Smaller height for top grid (query control)
+  height: 1200px; // Height for query control grid
 
   gridster {
     flex: 1; // Fill container height
