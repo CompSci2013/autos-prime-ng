@@ -71,14 +71,16 @@
         </div>
 
         <div class="year-range-picker">
-          <nz-range-picker
-            nzMode="year"
-            nzFormat="yyyy"
+          <p-calendar
             [(ngModel)]="yearDateRange"
-            [nzPlaceHolder]="['Start Year', 'End Year']"
+            selectionMode="range"
+            view="year"
+            dateFormat="yy"
+            placeholder="Select Year Range"
             (ngModelChange)="onYearRangeChange($event)"
-            style="width: 100%"
-          ></nz-range-picker>
+            [style]="{'width': '100%'}"
+            [showIcon]="true"
+          ></p-calendar>
         </div>
 
         <div class="year-range-display" *ngIf="rangeMin || rangeMax">
