@@ -93,59 +93,55 @@
             />
 
             <!-- Number filter -->
-            <nz-input-number
+            <p-inputNumber
               *ngIf="column.filterType === 'number'"
-              [nzPlaceHolder]="'Filter ' + column.label"
-              [ngModel]="filters[column.key]"
+              [placeholder]="'Filter ' + column.label"
+              [(ngModel)]="filters[column.key]"
               (ngModelChange)="onFilterChange(column.key, $event)"
               class="filter-input"
             >
-            </nz-input-number>
+            </p-inputNumber>
 
             <!-- Select filter -->
-            <nz-select
+            <p-dropdown
               *ngIf="column.filterType === 'select'"
-              nzAllowClear
-              [nzPlaceHolder]="'Filter ' + column.label"
-              [ngModel]="filters[column.key]"
+              [showClear]="true"
+              [placeholder]="'Filter ' + column.label"
+              [(ngModel)]="filters[column.key]"
               (ngModelChange)="onFilterChange(column.key, $event)"
+              [options]="column.filterOptions"
+              optionLabel="label"
+              optionValue="value"
               class="filter-input"
-            >
-              <nz-option
-                *ngFor="let option of column.filterOptions"
-                [nzValue]="option.value"
-                [nzLabel]="option.label"
-              >
-              </nz-option>
-            </nz-select>
+            ></p-dropdown>
 
             <!-- Number Range filter with two inputs -->
             <div *ngIf="column.filterType === 'number-range'" class="range-filter-container">
-              <nz-input-number
-                [nzMin]="column.rangeConfig?.min || 0"
-                [nzMax]="column.rangeConfig?.max || 100"
-                [nzStep]="column.rangeConfig?.step || 1"
-                [nzPlaceHolder]="'Min'"
-                [ngModel]="filters[column.key + 'Min'] || column.rangeConfig?.min || 0"
+              <p-inputNumber
+                [min]="column.rangeConfig?.min || 0"
+                [max]="column.rangeConfig?.max || 100"
+                [step]="column.rangeConfig?.step || 1"
+                placeholder="Min"
+                [(ngModel)]="filters[column.key + 'Min']"
                 (ngModelChange)="onRangeMinChange(column.key, $event, column.rangeConfig)"
-                [nzFormatter]="column.key === 'estimated_value' ? formatCurrency : formatMileage"
-                [nzParser]="column.key === 'estimated_value' ? parseCurrency : parseMileage"
+                [prefix]="column.key === 'estimated_value' ? '$' : ''"
+                [useGrouping]="true"
                 class="range-input range-input-min"
               >
-              </nz-input-number>
+              </p-inputNumber>
               <span class="range-separator">-</span>
-              <nz-input-number
-                [nzMin]="column.rangeConfig?.min || 0"
-                [nzMax]="column.rangeConfig?.max || 100"
-                [nzStep]="column.rangeConfig?.step || 1"
-                [nzPlaceHolder]="'Max'"
-                [ngModel]="filters[column.key + 'Max'] || column.rangeConfig?.max || 100"
+              <p-inputNumber
+                [min]="column.rangeConfig?.min || 0"
+                [max]="column.rangeConfig?.max || 100"
+                [step]="column.rangeConfig?.step || 1"
+                placeholder="Max"
+                [(ngModel)]="filters[column.key + 'Max']"
                 (ngModelChange)="onRangeMaxChange(column.key, $event, column.rangeConfig)"
-                [nzFormatter]="column.key === 'estimated_value' ? formatCurrency : formatMileage"
-                [nzParser]="column.key === 'estimated_value' ? parseCurrency : parseMileage"
+                [prefix]="column.key === 'estimated_value' ? '$' : ''"
+                [useGrouping]="true"
                 class="range-input range-input-max"
               >
-              </nz-input-number>
+              </p-inputNumber>
             </div>
           </ng-container>
         </th>

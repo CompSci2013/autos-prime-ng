@@ -50,12 +50,11 @@
       <!-- Selection checkbox column -->
       <ng-container *ngIf="column.key === '__selection'">
         <ng-container *ngIf="row">
-          <label
-            nz-checkbox
+          <p-checkbox
+            [binary]="true"
             [ngModel]="isRowSelected(row)"
             (ngModelChange)="onRowSelectionChange(row, $event)"
-          >
-          </label>
+          ></p-checkbox>
         </ng-container>
       </ng-container>
 

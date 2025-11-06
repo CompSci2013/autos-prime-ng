@@ -468,23 +468,23 @@ visibleColumns = [
 
 ## Progress Tracking
 
-### Phase 3A: Simple Form Controls
+### Phase 3A: Simple Form Controls ✅ COMPLETE (43 occurrences migrated)
 - [x] Step 1: nz-input → p-inputText (6 occurrences) ✅ COMPLETE
   - [x] query-control.component.html (5 inputs: string dialog + 4 search inputs)
   - [x] base-data-table.component.html (1 text filter input)
-- [x] Step 2: nz-spin → p-progressSpinner (10 occurrences) ✅ COMPLETE
+- [x] Step 2: nz-spin → p-progressSpinner (5 wrappers) ✅ COMPLETE
   - [x] query-control.component.html (4 loading wrappers: manufacturer, model, body class, data source)
   - [x] results-table.component.html (1 VIN instances loader)
-- [ ] Step 3: nz-input-number → p-inputNumber (6 occurrences)
-  - [ ] base-data-table.component.html (6)
-- [ ] Step 4: nz-checkbox → p-checkbox (5 occurrences)
-  - [ ] query-control.component.html (4)
-  - [ ] base-picker.component.html (1)
+- [x] Step 3: nz-input-number → p-inputNumber (3 components) ✅ COMPLETE
+  - [x] base-data-table.component.html (1 number filter + 2 range inputs with currency/mileage formatters)
+- [x] Step 4: nz-checkbox → p-checkbox (5 occurrences) ✅ COMPLETE
+  - [x] query-control.component.html (4 checkboxes in virtual scrollers)
+  - [x] base-picker.component.html (1 selection checkbox)
 
-### Phase 3B: Dropdowns
-- [ ] Step 5: nz-select → p-dropdown (4 occurrences)
-  - [ ] base-data-table.component.html (2)
-  - [ ] query-control.component.html (2)
+### Phase 3B: Dropdowns ✅ COMPLETE (2 components migrated)
+- [x] Step 5: nz-select → p-dropdown (2 components) ✅ COMPLETE
+  - [x] base-data-table.component.html (1 select filter with options array)
+  - [x] query-control.component.html (1 field selector with search + clear)
 
 ### Phase 3C: Complex Components
 - [ ] Step 6: nz-table → p-table (4 occurrences)

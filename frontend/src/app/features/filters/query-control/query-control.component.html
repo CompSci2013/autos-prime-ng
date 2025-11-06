@@ -1,20 +1,17 @@
 <div class="query-control">
   <div class="query-control-row">
     <!-- Field Selector Dropdown -->
-    <nz-select
+    <p-dropdown
       class="field-selector"
-      nzPlaceHolder="Add filter by field..."
-      nzShowSearch
-      nzAllowClear
+      placeholder="Add filter by field..."
+      [filter]="true"
+      [showClear]="true"
       [(ngModel)]="selectedField"
       (ngModelChange)="onFieldSelect($event)"
-    >
-      <nz-option
-        *ngFor="let field of queryFields"
-        [nzValue]="field.key"
-        [nzLabel]="field.label"
-      ></nz-option>
-    </nz-select>
+      [options]="queryFields"
+      optionLabel="label"
+      optionValue="key"
+    ></p-dropdown>
   </div>
 
   <!-- Active Filter Chips -->
@@ -186,13 +183,13 @@
               class="manufacturer-item"
               (click)="toggleManufacturer(manufacturer)"
             >
-              <label nz-checkbox
+              <p-checkbox
+                [binary]="true"
                 [ngModel]="tempSelectedManufacturers.indexOf(manufacturer) !== -1"
                 (ngModelChange)="toggleManufacturer(manufacturer)"
                 (click)="$event.stopPropagation()"
-              >
-                {{ manufacturer }}
-              </label>
+                [label]="manufacturer"
+              ></p-checkbox>
             </div>
           </cdk-virtual-scroll-viewport>
           <div *ngIf="filteredManufacturers.length === 0 && !isLoadingManufacturers" class="no-data">
@@ -259,13 +256,13 @@
               class="model-item"
               (click)="toggleModel(model)"
             >
-              <label nz-checkbox
+              <p-checkbox
+                [binary]="true"
                 [ngModel]="tempSelectedModels.indexOf(model) !== -1"
                 (ngModelChange)="toggleModel(model)"
                 (click)="$event.stopPropagation()"
-              >
-                {{ model }}
-              </label>
+                [label]="model"
+              ></p-checkbox>
             </div>
           </cdk-virtual-scroll-viewport>
           <div *ngIf="filteredModels.length === 0 && !isLoadingModels" class="no-data">
@@ -332,13 +329,13 @@
               class="body-class-item"
               (click)="toggleBodyClass(bodyClass)"
             >
-              <label nz-checkbox
+              <p-checkbox
+                [binary]="true"
                 [ngModel]="tempSelectedBodyClasses.indexOf(bodyClass) !== -1"
                 (ngModelChange)="toggleBodyClass(bodyClass)"
                 (click)="$event.stopPropagation()"
-              >
-                {{ bodyClass }}
-              </label>
+                [label]="bodyClass"
+              ></p-checkbox>
             </div>
           </cdk-virtual-scroll-viewport>
           <div *ngIf="filteredBodyClasses.length === 0 && !isLoadingBodyClasses" class="no-data">
@@ -405,13 +402,13 @@
               class="data-source-item"
               (click)="toggleDataSource(dataSource)"
             >
-              <label nz-checkbox
+              <p-checkbox
+                [binary]="true"
                 [ngModel]="tempSelectedDataSources.indexOf(dataSource) !== -1"
                 (ngModelChange)="toggleDataSource(dataSource)"
                 (click)="$event.stopPropagation()"
-              >
-                {{ dataSource }}
-              </label>
+                [label]="dataSource"
+              ></p-checkbox>
             </div>
           </cdk-virtual-scroll-viewport>
           <div *ngIf="filteredDataSources.length === 0 && !isLoadingDataSources" class="no-data">
