@@ -160,8 +160,8 @@
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -182,8 +182,8 @@
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -216,8 +216,8 @@
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -238,8 +238,8 @@
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -260,8 +260,8 @@
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -282,8 +282,8 @@
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -304,8 +304,8 @@
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
@@ -326,8 +326,8 @@
   margin: 0 16px 16px 16px;
   border: 3px solid; // Color set dynamically via [style.border-color]
   min-height: 500px; // Minimum height for grid
-  max-height: 2000px; // Maximum height for grid
-  height: auto; // Dynamic height based on content
+  max-height: 3500px; // Maximum height for grid (allows for tall tables)
+  height: fit-content; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height

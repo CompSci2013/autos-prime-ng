@@ -181,7 +181,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     this.grids[2].items = [
       {
         cols: 12,
-        rows: 24,
+        rows: 32, // Increased to accommodate taller tables (100 rows)
         y: 0,
         x: 0,
         id: 'results-1',
