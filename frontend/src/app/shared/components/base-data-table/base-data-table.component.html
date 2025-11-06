@@ -84,7 +84,8 @@
             <!-- Text filter -->
             <input
               *ngIf="!column.filterType || column.filterType === 'text'"
-              nz-input
+              type="text"
+              pInputText
               placeholder="Filter {{ column.label }}"
               [value]="filters[column.key] || ''"
               (input)="onFilterChange(column.key, $any($event.target).value)"

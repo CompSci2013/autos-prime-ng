@@ -33,13 +33,15 @@
   <!-- Expansion content (VIN instances) -->
   <ng-template #expansionTemplate let-row="row">
     <div class="expansion-content">
-      <nz-spin [nzSpinning]="isLoadingInstances($any(row).vehicle_id)">
-        <div
-          *ngIf="
-            getInstances($any(row).vehicle_id).length > 0;
-            else noInstances
-          "
-        >
+      <div class="loading-container">
+        <p-progressSpinner *ngIf="isLoadingInstances($any(row).vehicle_id)" styleClass="p-spinner-sm"></p-progressSpinner>
+        <div *ngIf="!isLoadingInstances($any(row).vehicle_id)">
+          <div
+            *ngIf="
+              getInstances($any(row).vehicle_id).length > 0;
+              else noInstances
+            "
+          >
           <h4>Synthetic VIN Instances (Sample of 8)</h4>
           <nz-table
             #instancesTable
@@ -90,15 +92,16 @@
               </tr>
             </tbody>
           </nz-table>
-        </div>
-
-        <ng-template #noInstances>
-          <div class="no-instances">
-            <i nz-icon nzType="inbox" nzTheme="outline"></i>
-            <p>No instances available</p>
           </div>
-        </ng-template>
-      </nz-spin>
+
+          <ng-template #noInstances>
+            <div class="no-instances">
+              <i nz-icon nzType="inbox" nzTheme="outline"></i>
+              <p>No instances available</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
     </div>
   </ng-template>
 </app-base-data-table>

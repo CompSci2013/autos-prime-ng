@@ -27,6 +27,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { FieldsetModule } from 'primeng/fieldset';
 import { DividerModule } from 'primeng/divider';
 import { TagModule } from 'primeng/tag';
+import { PickListModule } from 'primeng/picklist';
 
 // Form Components
 import { InputTextModule } from 'primeng/inputtext';
@@ -105,6 +106,7 @@ const PRIMENG_MODULES = [
   FieldsetModule,
   DividerModule,
   TagModule,
+  PickListModule,
 
   // Forms
   InputTextModule,

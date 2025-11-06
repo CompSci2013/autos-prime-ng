@@ -123,14 +123,14 @@
           </p>
         </div>
 
-        <nz-input-group>
-          <input
-            nz-input
-            [(ngModel)]="stringValue"
-            [placeholder]="currentField?.placeholder || 'Enter value'"
-            (keyup.enter)="isStringValid() && onStringDialogOk()"
-          />
-        </nz-input-group>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="stringValue"
+          [placeholder]="currentField?.placeholder || 'Enter value'"
+          (keyup.enter)="isStringValid() && onStringDialogOk()"
+          class="w-full"
+        />
       </div>
     </ng-container>
   </nz-modal>
@@ -153,32 +153,30 @@
         </div>
 
         <!-- Search Input -->
-        <nz-input-group [nzPrefix]="prefixIconSearch" [nzSuffix]="suffixClearButton" class="search-input">
-          <input
-            nz-input
-            placeholder="Type to search manufacturers..."
-            [(ngModel)]="manufacturerSearchTerm"
-            (ngModelChange)="onManufacturerSearchChange()"
-            #searchInput
-          />
-        </nz-input-group>
-        <ng-template #prefixIconSearch>
-          <i class="pi pi-search"></i>
-        </ng-template>
-        <ng-template #suffixClearButton>
-          <button
-            pButton
-            type="button"
-            icon="pi pi-times-circle"
-            class="clear-button p-button-text p-button-sm"
-            *ngIf="manufacturerSearchTerm"
-            (click)="clearManufacturerSearch()"
-          >
-          </button>
-        </ng-template>
+        <div class="search-input-wrapper">
+          <span class="p-input-icon-left p-input-icon-right">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Type to search manufacturers..."
+              [(ngModel)]="manufacturerSearchTerm"
+              (ngModelChange)="onManufacturerSearchChange()"
+              #searchInput
+            />
+            <i
+              *ngIf="manufacturerSearchTerm"
+              class="pi pi-times-circle clickable"
+              (click)="clearManufacturerSearch()"
+              style="cursor: pointer;"
+            ></i>
+          </span>
+        </div>
 
-        <nz-spin [nzSpinning]="isLoadingManufacturers">
+        <div class="loading-container">
+          <p-progressSpinner *ngIf="isLoadingManufacturers" styleClass="p-spinner-sm"></p-progressSpinner>
           <cdk-virtual-scroll-viewport
+            *ngIf="!isLoadingManufacturers"
             #manufacturerViewport
             itemSize="40"
             class="manufacturer-list"
@@ -200,7 +198,7 @@
           <div *ngIf="filteredManufacturers.length === 0 && !isLoadingManufacturers" class="no-data">
             No manufacturers match your search
           </div>
-        </nz-spin>
+        </div>
 
         <div class="selection-summary" *ngIf="tempSelectedManufacturers.length > 0">
           <strong>Selected ({{ tempSelectedManufacturers.length }}):</strong>
@@ -228,32 +226,30 @@
         </div>
 
         <!-- Search Input -->
-        <nz-input-group [nzPrefix]="prefixIconSearchModel" [nzSuffix]="suffixClearButtonModel" class="search-input">
-          <input
-            nz-input
-            placeholder="Type to search models..."
-            [(ngModel)]="modelSearchTerm"
-            (ngModelChange)="onModelSearchChange()"
-            #modelSearchInput
-          />
-        </nz-input-group>
-        <ng-template #prefixIconSearchModel>
-          <i class="pi pi-search"></i>
-        </ng-template>
-        <ng-template #suffixClearButtonModel>
-          <button
-            pButton
-            type="button"
-            icon="pi pi-times-circle"
-            class="clear-button p-button-text p-button-sm"
-            *ngIf="modelSearchTerm"
-            (click)="clearModelSearch()"
-          >
-          </button>
-        </ng-template>
+        <div class="search-input-wrapper">
+          <span class="p-input-icon-left p-input-icon-right">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Type to search models..."
+              [(ngModel)]="modelSearchTerm"
+              (ngModelChange)="onModelSearchChange()"
+              #modelSearchInput
+            />
+            <i
+              *ngIf="modelSearchTerm"
+              class="pi pi-times-circle clickable"
+              (click)="clearModelSearch()"
+              style="cursor: pointer;"
+            ></i>
+          </span>
+        </div>
 
-        <nz-spin [nzSpinning]="isLoadingModels">
+        <div class="loading-container">
+          <p-progressSpinner *ngIf="isLoadingModels" styleClass="p-spinner-sm"></p-progressSpinner>
           <cdk-virtual-scroll-viewport
+            *ngIf="!isLoadingModels"
             #modelViewport
             itemSize="40"
             class="model-list"
@@ -275,7 +271,7 @@
           <div *ngIf="filteredModels.length === 0 && !isLoadingModels" class="no-data">
             No models match your search
           </div>
-        </nz-spin>
+        </div>
 
         <div class="selection-summary" *ngIf="tempSelectedModels.length > 0">
           <strong>Selected ({{ tempSelectedModels.length }}):</strong>
@@ -303,32 +299,30 @@
         </div>
 
         <!-- Search Input -->
-        <nz-input-group [nzPrefix]="prefixIconSearchBodyClass" [nzSuffix]="suffixClearButtonBodyClass" class="search-input">
-          <input
-            nz-input
-            placeholder="Type to search body classes..."
-            [(ngModel)]="bodyClassSearchTerm"
-            (ngModelChange)="onBodyClassSearchChange()"
-            #bodyClassSearchInput
-          />
-        </nz-input-group>
-        <ng-template #prefixIconSearchBodyClass>
-          <i class="pi pi-search"></i>
-        </ng-template>
-        <ng-template #suffixClearButtonBodyClass>
-          <button
-            pButton
-            type="button"
-            icon="pi pi-times-circle"
-            class="clear-button p-button-text p-button-sm"
-            *ngIf="bodyClassSearchTerm"
-            (click)="clearBodyClassSearch()"
-          >
-          </button>
-        </ng-template>
+        <div class="search-input-wrapper">
+          <span class="p-input-icon-left p-input-icon-right">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Type to search body classes..."
+              [(ngModel)]="bodyClassSearchTerm"
+              (ngModelChange)="onBodyClassSearchChange()"
+              #bodyClassSearchInput
+            />
+            <i
+              *ngIf="bodyClassSearchTerm"
+              class="pi pi-times-circle clickable"
+              (click)="clearBodyClassSearch()"
+              style="cursor: pointer;"
+            ></i>
+          </span>
+        </div>
 
-        <nz-spin [nzSpinning]="isLoadingBodyClasses">
+        <div class="loading-container">
+          <p-progressSpinner *ngIf="isLoadingBodyClasses" styleClass="p-spinner-sm"></p-progressSpinner>
           <cdk-virtual-scroll-viewport
+            *ngIf="!isLoadingBodyClasses"
             #bodyClassViewport
             itemSize="40"
             class="body-class-list"
@@ -350,7 +344,7 @@
           <div *ngIf="filteredBodyClasses.length === 0 && !isLoadingBodyClasses" class="no-data">
             No body classes match your search
           </div>
-        </nz-spin>
+        </div>
 
         <div class="selection-summary" *ngIf="tempSelectedBodyClasses.length > 0">
           <strong>Selected ({{ tempSelectedBodyClasses.length }}):</strong>
@@ -378,32 +372,30 @@
         </div>
 
         <!-- Search Input -->
-        <nz-input-group [nzPrefix]="prefixIconSearchDataSource" [nzSuffix]="suffixClearButtonDataSource" class="search-input">
-          <input
-            nz-input
-            placeholder="Type to search data sources..."
-            [(ngModel)]="dataSourceSearchTerm"
-            (ngModelChange)="onDataSourceSearchChange()"
-            #dataSourceSearchInput
-          />
-        </nz-input-group>
-        <ng-template #prefixIconSearchDataSource>
-          <i class="pi pi-search"></i>
-        </ng-template>
-        <ng-template #suffixClearButtonDataSource>
-          <button
-            pButton
-            type="button"
-            icon="pi pi-times-circle"
-            class="clear-button p-button-text p-button-sm"
-            *ngIf="dataSourceSearchTerm"
-            (click)="clearDataSourceSearch()"
-          >
-          </button>
-        </ng-template>
+        <div class="search-input-wrapper">
+          <span class="p-input-icon-left p-input-icon-right">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Type to search data sources..."
+              [(ngModel)]="dataSourceSearchTerm"
+              (ngModelChange)="onDataSourceSearchChange()"
+              #dataSourceSearchInput
+            />
+            <i
+              *ngIf="dataSourceSearchTerm"
+              class="pi pi-times-circle clickable"
+              (click)="clearDataSourceSearch()"
+              style="cursor: pointer;"
+            ></i>
+          </span>
+        </div>
 
-        <nz-spin [nzSpinning]="isLoadingDataSources">
+        <div class="loading-container">
+          <p-progressSpinner *ngIf="isLoadingDataSources" styleClass="p-spinner-sm"></p-progressSpinner>
           <cdk-virtual-scroll-viewport
+            *ngIf="!isLoadingDataSources"
             #dataSourceViewport
             itemSize="40"
             class="data-source-list"
@@ -425,7 +417,7 @@
           <div *ngIf="filteredDataSources.length === 0 && !isLoadingDataSources" class="no-data">
             No data sources match your search
           </div>
-        </nz-spin>
+        </div>
 
         <div class="selection-summary" *ngIf="tempSelectedDataSources.length > 0">
           <strong>Selected ({{ tempSelectedDataSources.length }}):</strong>

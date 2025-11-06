@@ -26,6 +26,14 @@ import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
 import { MessagesModule } from 'primeng/messages';
 import { TooltipModule } from 'primeng/tooltip';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DropdownModule } from 'primeng/dropdown';
+import { TableModule } from 'primeng/table';
+import { PickListModule } from 'primeng/picklist';
+import { SidebarModule } from 'primeng/sidebar';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { BaseDataTableComponent } from './components/base-data-table/base-data-table.component';
 import { ColumnManagerComponent } from './components/column-manager/column-manager.component';
 import { PlotlyHistogramComponent } from './components/plotly-histogram/plotly-histogram.component';
@@ -78,6 +86,14 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     ChipModule,
     MessagesModule,
     TooltipModule,
+    InputTextModule,
+    InputNumberModule,
+    CheckboxModule,
+    DropdownModule,
+    TableModule,
+    PickListModule,
+    SidebarModule,
+    ProgressSpinnerModule,
   ],
   exports: [
     // Export our components
@@ -118,6 +134,14 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     ChipModule,
     MessagesModule,
     TooltipModule,
+    InputTextModule,
+    InputNumberModule,
+    CheckboxModule,
+    DropdownModule,
+    TableModule,
+    PickListModule,
+    SidebarModule,
+    ProgressSpinnerModule,
   ],
 })
 export class SharedModule {}
