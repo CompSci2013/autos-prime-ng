@@ -54,17 +54,16 @@
     </button>
   </div>
 
-  <!-- Year Range Dialog (using NG-ZORRO Year Picker) -->
-  <nz-modal
-    [(nzVisible)]="rangeDialogVisible"
-    nzTitle="Select Year Range"
-    [nzOkDisabled]="!isRangeValid()"
-    (nzOnOk)="onRangeDialogOk()"
-    (nzOnCancel)="onRangeDialogCancel()"
-    nzOkText="Apply"
-    nzCancelText="Cancel"
+  <!-- Year Range Dialog -->
+  <p-dialog
+    [(visible)]="rangeDialogVisible"
+    [header]="'Select Year Range'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '500px'}"
+    (onHide)="onRangeDialogCancel()"
   >
-    <ng-container *nzModalContent>
+    <ng-template pTemplate="content">
       <div class="range-dialog-content">
         <div class="field-info">
           <label class="field-label">{{ currentField?.label }}</label>
@@ -98,20 +97,23 @@
           </ng-template>
         </p-messages>
       </div>
-    </ng-container>
-  </nz-modal>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" (click)="onRangeDialogCancel()"></button>
+      <button pButton type="button" label="Apply" class="p-button-primary" (click)="onRangeDialogOk()" [disabled]="!isRangeValid()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- String/Number Input Dialog -->
-  <nz-modal
-    [(nzVisible)]="stringDialogVisible"
-    [nzTitle]="'Filter by ' + currentField?.label"
-    [nzOkDisabled]="!isStringValid()"
-    (nzOnOk)="onStringDialogOk()"
-    (nzOnCancel)="onStringDialogCancel()"
-    nzOkText="Apply"
-    nzCancelText="Cancel"
+  <p-dialog
+    [(visible)]="stringDialogVisible"
+    [header]="'Filter by ' + currentField?.label"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '500px'}"
+    (onHide)="onStringDialogCancel()"
   >
-    <ng-container *nzModalContent>
+    <ng-template pTemplate="content">
       <div class="string-dialog-content">
         <div class="field-info">
           <label class="field-label">{{ currentField?.label }}</label>
@@ -129,21 +131,24 @@
           class="w-full"
         />
       </div>
-    </ng-container>
-  </nz-modal>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" (click)="onStringDialogCancel()"></button>
+      <button pButton type="button" label="Apply" class="p-button-primary" (click)="onStringDialogOk()" [disabled]="!isStringValid()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- Manufacturer Multi-Select Dialog -->
-  <nz-modal
-    [(nzVisible)]="manufacturerDialogVisible"
-    nzTitle="Select Manufacturers"
-    nzWidth="600px"
-    (nzOnOk)="onManufacturerDialogOk()"
-    (nzOnCancel)="onManufacturerDialogCancel()"
-    (nzAfterOpen)="onManufacturerDialogOpened()"
-    nzOkText="Apply"
-    nzCancelText="Cancel"
+  <p-dialog
+    [(visible)]="manufacturerDialogVisible"
+    [header]="'Select Manufacturers'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '600px'}"
+    (onShow)="onManufacturerDialogOpened()"
+    (onHide)="onManufacturerDialogCancel()"
   >
-    <ng-container *nzModalContent>
+    <ng-template pTemplate="content">
       <div class="manufacturer-dialog-content">
         <div class="field-info">
           <p class="field-description">Select one or more manufacturers to filter results.</p>
@@ -202,21 +207,24 @@
           {{ tempSelectedManufacturers.join(', ') }}
         </div>
       </div>
-    </ng-container>
-  </nz-modal>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" (click)="onManufacturerDialogCancel()"></button>
+      <button pButton type="button" label="Apply" class="p-button-primary" (click)="onManufacturerDialogOk()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- Model Multi-Select Dialog -->
-  <nz-modal
-    [(nzVisible)]="modelDialogVisible"
-    nzTitle="Select Models"
-    nzWidth="600px"
-    (nzOnOk)="onModelDialogOk()"
-    (nzOnCancel)="onModelDialogCancel()"
-    (nzAfterOpen)="onModelDialogOpened()"
-    nzOkText="Apply"
-    nzCancelText="Cancel"
+  <p-dialog
+    [(visible)]="modelDialogVisible"
+    [header]="'Select Models'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '600px'}"
+    (onShow)="onModelDialogOpened()"
+    (onHide)="onModelDialogCancel()"
   >
-    <ng-container *nzModalContent>
+    <ng-template pTemplate="content">
       <div class="model-dialog-content">
         <div class="field-info">
           <p class="field-description">Select one or more models to filter results.</p>
@@ -275,21 +283,24 @@
           {{ tempSelectedModels.join(', ') }}
         </div>
       </div>
-    </ng-container>
-  </nz-modal>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" (click)="onModelDialogCancel()"></button>
+      <button pButton type="button" label="Apply" class="p-button-primary" (click)="onModelDialogOk()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- Body Class Multi-Select Dialog -->
-  <nz-modal
-    [(nzVisible)]="bodyClassDialogVisible"
-    nzTitle="Select Body Classes"
-    nzWidth="600px"
-    (nzOnOk)="onBodyClassDialogOk()"
-    (nzOnCancel)="onBodyClassDialogCancel()"
-    (nzAfterOpen)="onBodyClassDialogOpened()"
-    nzOkText="Apply"
-    nzCancelText="Cancel"
+  <p-dialog
+    [(visible)]="bodyClassDialogVisible"
+    [header]="'Select Body Classes'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '600px'}"
+    (onShow)="onBodyClassDialogOpened()"
+    (onHide)="onBodyClassDialogCancel()"
   >
-    <ng-container *nzModalContent>
+    <ng-template pTemplate="content">
       <div class="body-class-dialog-content">
         <div class="field-info">
           <p class="field-description">Select one or more body classes to filter results.</p>
@@ -348,21 +359,24 @@
           {{ tempSelectedBodyClasses.join(', ') }}
         </div>
       </div>
-    </ng-container>
-  </nz-modal>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" (click)="onBodyClassDialogCancel()"></button>
+      <button pButton type="button" label="Apply" class="p-button-primary" (click)="onBodyClassDialogOk()"></button>
+    </ng-template>
+  </p-dialog>
 
   <!-- Data Source Multi-Select Dialog -->
-  <nz-modal
-    [(nzVisible)]="dataSourceDialogVisible"
-    nzTitle="Select Data Sources"
-    nzWidth="600px"
-    (nzOnOk)="onDataSourceDialogOk()"
-    (nzOnCancel)="onDataSourceDialogCancel()"
-    (nzAfterOpen)="onDataSourceDialogOpened()"
-    nzOkText="Apply"
-    nzCancelText="Cancel"
+  <p-dialog
+    [(visible)]="dataSourceDialogVisible"
+    [header]="'Select Data Sources'"
+    [modal]="true"
+    [closable]="true"
+    [style]="{width: '600px'}"
+    (onShow)="onDataSourceDialogOpened()"
+    (onHide)="onDataSourceDialogCancel()"
   >
-    <ng-container *nzModalContent>
+    <ng-template pTemplate="content">
       <div class="data-source-dialog-content">
         <div class="field-info">
           <p class="field-description">Select one or more data sources to filter results.</p>
@@ -421,6 +435,10 @@
           {{ tempSelectedDataSources.join(', ') }}
         </div>
       </div>
-    </ng-container>
-  </nz-modal>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cancel" (click)="onDataSourceDialogCancel()"></button>
+      <button pButton type="button" label="Apply" class="p-button-primary" (click)="onDataSourceDialogOk()"></button>
+    </ng-template>
+  </p-dialog>
 </div>
