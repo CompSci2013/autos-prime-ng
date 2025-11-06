@@ -61,6 +61,7 @@
     [modal]="true"
     [closable]="true"
     [style]="{width: '500px'}"
+    [contentStyle]="{minHeight: '600px'}"
     (onHide)="onRangeDialogCancel()"
   >
     <ng-template pTemplate="content">
@@ -112,7 +113,7 @@
     [header]="'Filter by ' + currentField?.label"
     [modal]="true"
     [closable]="true"
-    [style]="{width: '500px'}"
+    [style]="{width: '500px', height: 'auto', maxHeight: '50vh'}"
     (onHide)="onStringDialogCancel()"
   >
     <ng-template pTemplate="content">
