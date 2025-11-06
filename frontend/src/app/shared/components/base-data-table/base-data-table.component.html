@@ -109,7 +109,7 @@
               [placeholder]="'Filter ' + column.label"
               [(ngModel)]="filters[column.key]"
               (ngModelChange)="onFilterChange(column.key, $event)"
-              [options]="column.filterOptions"
+              [options]="column.filterOptions || []"
               optionLabel="label"
               optionValue="value"
               class="filter-input"
