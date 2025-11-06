@@ -39,12 +39,17 @@
     [lazy]="true"
     [paginator]="true"
     [showCurrentPageReport]="true"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
     [rowsPerPageOptions]="[5, 10, 25, 50, 100]"
     (onPage)="onPrimeNgPageChange($event)"
+    (onSort)="onPrimeNgSort($event)"
+    (onRowExpand)="onPrimeNgRowExpand($event)"
+    (onRowCollapse)="onPrimeNgRowCollapse($event)"
     styleClass="p-datatable-sm"
     [scrollable]="true"
     scrollDirection="horizontal"
     dataKey="vehicle_id"
+    [expandedRowKeys]="expandedRowsMap"
   >
     <ng-template pTemplate="header">
       <tr
@@ -154,12 +159,13 @@
         <!-- Expansion toggle -->
         <td *ngIf="expandable">
           <button
-            pButton
             type="button"
-            class="p-button-text p-button-sm"
-            (click)="toggleRowExpansion(row)"
+            pButton
+            pRipple
+            [pRowToggler]="row"
+            class="p-button-text p-button-rounded p-button-plain"
+            [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
           >
-            <i [class]="isRowExpanded(row) ? 'pi pi-angle-down' : 'pi pi-angle-right'"></i>
           </button>
         </td>
 

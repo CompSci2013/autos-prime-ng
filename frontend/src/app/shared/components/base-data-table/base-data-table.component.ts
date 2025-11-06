@@ -562,6 +562,88 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
     }
   }
 
+  /**
+   * Handle PrimeNG p-table row expand event
+   */
+  onPrimeNgRowExpand(event: any): void {
+    const row = event.data;
+    const key = this.getRowKey(row);
+
+    // Update our tracking
+    this.expandedRowSet.add(key);
+    this.expandedRowsMap[key] = true;
+
+    // Emit to parent
+    this.rowExpand.emit(row);
+  }
+
+  /**
+   * Handle PrimeNG p-table row collapse event
+   */
+  onPrimeNgRowCollapse(event: any): void {
+    const row = event.data;
+    const key = this.getRowKey(row);
+
+    // Update our tracking
+    this.expandedRowSet.delete(key);
+    delete this.expandedRowsMap[key];
+
+    // Emit to parent
+    this.rowCollapse.emit(row);
+  }
+
+  /**
+   * Handle PrimeNG p-table sort event
+   * Event structure: { field: string, order: number (1=asc, -1=desc, null=unsorted) }
+   */
+  onPrimeNgSort(event: any): void {
+    if (!event.field || event.order === null) {
+      // Sort cleared
+      this.sortBy = undefined;
+      this.sortOrder = undefined;
+    } else {
+      this.sortBy = event.field;
+      this.sortOrder = event.order === 1 ? 'asc' : 'desc';
+    }
+
+    // Check if this column uses client-side sorting
+    const column = this.columns.find((col) => col.key === this.sortBy);
+    if (column && column.clientSideSort && this.sortBy && this.sortOrder) {
+      console.log(`🔄 Client-side sorting by ${this.sortBy} (${this.sortOrder})`);
+      this.sortTableDataClientSide(this.sortBy, this.sortOrder);
+
+      // Still emit state change to update URL (but don't fetch from server)
+      if (this.data !== undefined) {
+        const params: TableQueryParams = {
+          page: this.currentPage,
+          size: this.pageSize,
+          sortBy: this.sortBy,
+          sortOrder: this.sortOrder,
+          filters: this.filters,
+        };
+        console.log('📄 Client-side sort: Emitting queryParamsChange to update URL:', params);
+        this.queryParamsChange.emit(params);
+      }
+      return; // Don't fetch from server
+    }
+
+    // Server-side sorting: In data mode, emit event to parent instead of fetching
+    if (this.data !== undefined) {
+      const params: TableQueryParams = {
+        page: this.currentPage,
+        size: this.pageSize,
+        sortBy: this.sortBy,
+        sortOrder: this.sortOrder,
+        filters: this.filters,
+      };
+      console.log('📄 onPrimeNgSort (data mode): Emitting queryParamsChange:', params);
+      this.queryParamsChange.emit(params);
+    } else {
+      // dataSource mode: fetch directly
+      this.fetchData(true); // User-initiated: clicked column header
+    }
+  }
+
   // ========== SORTING ==========
 
   onSort(columnKey: string): void {
@@ -855,6 +937,9 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
       this.expandedRowsMap[key] = true;
       this.rowExpand.emit(row);
     }
+
+    // Force change detection for PrimeNG p-table
+    this.cdr.markForCheck();
   }
 
   /**
