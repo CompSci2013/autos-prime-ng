@@ -127,7 +127,7 @@
   padding: 16px;
   overflow: visible;
   position: relative;
-  min-height: 500px;
+  min-height: 1000px;
 }
 
 .grid-wrapper {
@@ -159,7 +159,7 @@
   position: relative;
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -168,7 +168,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
@@ -181,7 +181,7 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -190,7 +190,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
@@ -215,7 +215,7 @@
   position: relative;
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -224,7 +224,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
@@ -237,7 +237,7 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -246,7 +246,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
@@ -259,7 +259,7 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -268,7 +268,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
@@ -281,7 +281,7 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -290,7 +290,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
@@ -303,7 +303,7 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 2250px; // Minimum height for grid (increased 125% for Interactive Charts)
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -312,7 +312,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 2250px;
   }
 }
 
@@ -325,7 +325,7 @@
   position: relative;
   margin: 0 16px 16px 16px;
   border: 3px solid; // Color set dynamically via [style.border-color]
-  min-height: 500px; // Minimum height for grid
+  min-height: 1000px; // Minimum height for grid
   max-height: 3500px; // Maximum height for grid (allows for tall tables)
   height: fit-content; // Dynamic height based on content
 
@@ -334,7 +334,7 @@
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
-    min-height: 500px;
+    min-height: 1000px;
   }
 }
 
