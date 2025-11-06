@@ -104,6 +104,9 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   /** Page size */
   pageSize = 20;
 
+  /** First record index for PrimeNG pagination (0-indexed) */
+  first = 0;
+
   /** Expanded row keys (uses row.key if available, otherwise row reference) */
   expandedRowSet = new Set<any>();
 
@@ -143,9 +146,23 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
     // Load preferences
     this.loadPreferences();
 
-    // Initialize from input queryParams
+    // Initialize from input queryParams with validation
     this.currentPage = this.queryParams.page || 1;
     this.pageSize = this.queryParams.size || 20;
+
+    // Ensure values are valid numbers
+    if (isNaN(this.currentPage) || this.currentPage < 1) {
+      console.warn('⚠️ Invalid currentPage, defaulting to 1');
+      this.currentPage = 1;
+    }
+    if (isNaN(this.pageSize) || this.pageSize < 1) {
+      console.warn('⚠️ Invalid pageSize, defaulting to 20');
+      this.pageSize = 20;
+    }
+
+    this.first = (this.currentPage - 1) * this.pageSize; // Initialize first index
+    console.log(`📄 Initial pagination: currentPage=${this.currentPage}, pageSize=${this.pageSize}, first=${this.first}`);
+
     this.filters = this.queryParams.filters || {};
     this.sortBy = this.queryParams.sortBy;
     this.sortOrder = this.queryParams.sortOrder;
@@ -155,6 +172,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
       .pipe(debounceTime(400), takeUntil(this.destroy$))
       .subscribe(() => {
         this.currentPage = 1; // Reset to first page on filter change
+        this.first = 0; // Reset first index on filter change
 
         // In data mode, emit event to parent instead of fetching
         if (this.data !== undefined) {
@@ -196,6 +214,10 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
 
       this.tableData = this.data || [];
 
+      // Update first property to match current page
+      this.first = (this.currentPage - 1) * this.pageSize;
+      console.log(`📄 Updated first to ${this.first} (page ${this.currentPage}, size ${this.pageSize})`);
+
       // Check if current sort column uses client-side sorting
       // If so, re-apply the sort after data loads
       if (this.sortBy && this.sortOrder) {
@@ -214,6 +236,10 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
         console.log('📊 Data input NOT in changes, but data property differs from tableData');
         console.log(`   tableData: ${this.tableData?.length || 0} items, data: ${this.data?.length || 0} items`);
         this.tableData = this.data || [];
+
+        // Update first property to match current page
+        this.first = (this.currentPage - 1) * this.pageSize;
+        console.log(`📄 Updated first to ${this.first} (page ${this.currentPage}, size ${this.pageSize})`);
 
         // Re-apply client-side sort if needed
         if (this.sortBy && this.sortOrder) {
@@ -274,6 +300,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
       // Update internal state from new queryParams BEFORE fetching
       this.currentPage = curr.page || 1;
       this.pageSize = curr.size || 20;
+      this.first = (this.currentPage - 1) * this.pageSize; // Update first index
       this.filters = curr.filters || {};
       this.sortBy = curr.sortBy;
       this.sortOrder = curr.sortOrder;
@@ -500,6 +527,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
 
   onPageChange(page: number): void {
     this.currentPage = page;
+    this.first = (page - 1) * this.pageSize; // Update first index
 
     // In data mode, emit event to parent instead of fetching
     if (this.data !== undefined) {
@@ -524,6 +552,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   onPageSizeChange(size: number): void {
     this.pageSize = size;
     this.currentPage = 1; // Reset to first page
+    this.first = 0; // Reset first index
     this.savePreferences();
 
     // In data mode, emit event to parent instead of fetching
@@ -551,15 +580,35 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
    * Event structure: { first: number, rows: number, page: number, pageCount: number }
    */
   onPrimeNgPageChange(event: any): void {
+    console.log('📄 onPrimeNgPageChange:', event);
+    console.log(`📄 Before: currentPage=${this.currentPage}, pageSize=${this.pageSize}, first=${this.first}`);
+
     const newPage = event.page + 1; // PrimeNG uses 0-indexed pages
     const newSize = event.rows;
+    const newFirst = event.first;
+
+    console.log(`📄 Event values: page=${event.page}, rows=${event.rows}, first=${event.first}`);
+    console.log(`📄 Calculated: newPage=${newPage}, newSize=${newSize}, newFirst=${newFirst}`);
+
+    // Validate values
+    if (isNaN(newFirst) || isNaN(newSize) || isNaN(newPage)) {
+      console.error('❌ Invalid pagination values!', { newFirst, newSize, newPage });
+      return;
+    }
+
+    // Update first index
+    this.first = newFirst;
 
     // Check if page size changed
     if (newSize !== this.pageSize) {
+      console.log(`📄 Page size changed: ${this.pageSize} → ${newSize}`);
       this.onPageSizeChange(newSize);
     } else if (newPage !== this.currentPage) {
+      console.log(`📄 Page changed: ${this.currentPage} → ${newPage}`);
       this.onPageChange(newPage);
     }
+
+    console.log(`📄 After: currentPage=${this.currentPage}, pageSize=${this.pageSize}, first=${this.first}`);
   }
 
   /**
