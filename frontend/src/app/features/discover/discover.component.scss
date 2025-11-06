@@ -159,13 +159,16 @@
   position: relative;
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Height for query control grid
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -178,13 +181,16 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Medium height for middle grids (picker/results)
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -209,13 +215,16 @@
   position: relative;
   margin: 0 16px 16px 16px; // No top margin - collapse panel header provides spacing
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Height for query control grid
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -228,13 +237,16 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Medium height for middle grids (picker/results)
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -247,13 +259,16 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Medium height for middle grids (picker/results)
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -266,13 +281,16 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Medium height for middle grids (picker/results)
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -285,13 +303,16 @@
   position: relative;
   margin: 0 16px 16px 16px;
   // border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1200px; // Medium height for middle grids (picker/results)
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
@@ -304,13 +325,16 @@
   position: relative;
   margin: 0 16px 16px 16px;
   border: 3px solid; // Color set dynamically via [style.border-color]
-  height: 1000px; // Fixed height for gridster to calculate layout
+  min-height: 500px; // Minimum height for grid
+  max-height: 2000px; // Maximum height for grid
+  height: auto; // Dynamic height based on content
 
   gridster {
     flex: 1; // Fill container height
     background: #f5f5f5;
     overflow: visible !important;
     position: relative;
+    min-height: 500px;
   }
 }
 
