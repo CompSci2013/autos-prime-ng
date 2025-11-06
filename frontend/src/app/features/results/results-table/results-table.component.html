@@ -43,15 +43,15 @@
             "
           >
           <h4>Synthetic VIN Instances (Sample of 8)</h4>
-          <nz-table
+          <p-table
             #instancesTable
-            [nzData]="getInstances($any(row).vehicle_id)"
-            [nzPageSize]="8"
-            [nzShowPagination]="false"
-            nzSize="small"
-            class="instances-table"
+            [value]="getInstances($any(row).vehicle_id)"
+            [paginator]="false"
+            styleClass="p-datatable-sm instances-table"
+            [scrollable]="true"
+            scrollHeight="flex"
           >
-            <thead>
+            <ng-template pTemplate="header">
               <tr>
                 <th>VIN</th>
                 <th>Condition</th>
@@ -61,9 +61,9 @@
                 <th>Color</th>
                 <th>Est. Value</th>
               </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let instance of instancesTable.data">
+            </ng-template>
+            <ng-template pTemplate="body" let-instance>
+              <tr>
                 <td>
                   <code>{{ instance.vin }}</code>
                   <small *ngIf="instance.matching_numbers"
@@ -90,13 +90,13 @@
                 <td>{{ instance.exterior_color }}</td>
                 <td>{{ instance.estimated_value | currency }}</td>
               </tr>
-            </tbody>
-          </nz-table>
+            </ng-template>
+          </p-table>
           </div>
 
           <ng-template #noInstances>
             <div class="no-instances">
-              <i nz-icon nzType="inbox" nzTheme="outline"></i>
+              <i class="pi pi-inbox"></i>
               <p>No instances available</p>
             </div>
           </ng-template>

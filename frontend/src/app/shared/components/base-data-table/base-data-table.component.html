@@ -29,37 +29,37 @@
   </div>
 
   <!-- Table -->
-  <nz-table
+  <p-table
     #basicTable
-    [nzData]="tableData"
-    [nzLoading]="isLoading"
-    [nzTotal]="totalCount || 0"
-    [nzPageSize]="pageSize"
-    [nzPageIndex]="currentPage"
-    [nzFrontPagination]="false"
-    [nzShowSizeChanger]="true"
-    [nzPageSizeOptions]="[5, 10, 25, 50, 100]"
-    (nzPageIndexChange)="onPageChange($event)"
-    (nzPageSizeChange)="onPageSizeChange($event)"
-    nzSize="small"
-    [nzScroll]="{ x: 'max-content' }"
+    [value]="tableData"
+    [loading]="isLoading"
+    [totalRecords]="totalCount || 0"
+    [rows]="pageSize"
+    [first]="(currentPage - 1) * pageSize"
+    [lazy]="true"
+    [paginator]="true"
+    [showCurrentPageReport]="true"
+    [rowsPerPageOptions]="[5, 10, 25, 50, 100]"
+    (onPage)="onPrimeNgPageChange($event)"
+    styleClass="p-datatable-sm"
+    [scrollable]="true"
+    scrollDirection="horizontal"
+    dataKey="vehicle_id"
   >
-    <thead>
+    <ng-template pTemplate="header">
       <tr
         cdkDropList
         cdkDropListOrientation="horizontal"
         (cdkDropListDropped)="onColumnDrop($event)"
       >
         <!-- Expansion column -->
-        <th *ngIf="expandable" nzWidth="50px"></th>
+        <th *ngIf="expandable" style="width: 50px"></th>
 
         <!-- Data columns -->
         <th
           *ngFor="let column of getVisibleColumns(); trackBy: trackByKey"
-          [nzWidth]="column.width || null"
-          [nzAlign]="column.align || 'left'"
-          [nzSortFn]="column.sortable ? true : null"
-          (nzSortOrderChange)="onSort(column.key)"
+          [style.width]="column.width || null"
+          [pSortableColumn]="column.sortable ? column.key : ''"
           cdkDrag
           [cdkDragData]="column"
           (cdkDragStarted)="onColumnDragStart($event)"
@@ -69,6 +69,7 @@
           <div class="header-content">
             <span class="column-label">{{ column.label }}</span>
             <i class="pi pi-arrows-alt drag-handle"></i>
+            <p-sortIcon *ngIf="column.sortable" [field]="column.key"></p-sortIcon>
           </div>
         </th>
       </tr>
@@ -146,74 +147,72 @@
           </ng-container>
         </th>
       </tr>
-    </thead>
+    </ng-template>
 
-    <tbody>
-      <ng-container *ngFor="let row of basicTable.data; trackBy: trackByIndex">
-        <!-- Main row -->
-        <tr>
-          <!-- Expansion toggle -->
-          <td *ngIf="expandable">
-            <button
-              pButton
-              type="button"
-              class="p-button-text p-button-sm"
-              (click)="toggleRowExpansion(row)"
-            >
-              <i [class]="isRowExpanded(row) ? 'pi pi-angle-down' : 'pi pi-angle-right'"></i>
-            </button>
-          </td>
-
-          <!-- Data cells -->
-          <td
-            *ngFor="let column of getVisibleColumns(); trackBy: trackByKey"
-            [nzAlign]="column.align || 'left'"
+    <ng-template pTemplate="body" let-row let-expanded="expanded">
+      <tr>
+        <!-- Expansion toggle -->
+        <td *ngIf="expandable">
+          <button
+            pButton
+            type="button"
+            class="p-button-text p-button-sm"
+            (click)="toggleRowExpansion(row)"
           >
-            <!-- Use custom template if provided -->
-            <ng-container *ngIf="cellTemplate">
+            <i [class]="isRowExpanded(row) ? 'pi pi-angle-down' : 'pi pi-angle-right'"></i>
+          </button>
+        </td>
+
+        <!-- Data cells -->
+        <td
+          *ngFor="let column of getVisibleColumns(); trackBy: trackByKey"
+          [style.text-align]="column.align || 'left'"
+        >
+          <!-- Use custom template if provided -->
+          <ng-container *ngIf="cellTemplate">
+            <ng-container
+              *ngTemplateOutlet="
+                cellTemplate;
+                context: { column: column, row: row }
+              "
+            >
+            </ng-container>
+          </ng-container>
+
+          <!-- Default cell rendering -->
+          <ng-container *ngIf="!cellTemplate">
+            {{
+              column.formatter
+                ? column.formatter($any(row)[column.key], row)
+                : $any(row)[column.key]
+            }}
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- Expansion row template -->
+    <ng-template pTemplate="rowexpansion" let-row>
+      <tr class="expansion-row">
+        <td [attr.colspan]="getVisibleColumns().length + 1">
+          <div class="expansion-content">
+            <ng-container *ngIf="expansionTemplate">
               <ng-container
-                *ngTemplateOutlet="
-                  cellTemplate;
-                  context: { column: column, row: row }
-                "
+                *ngTemplateOutlet="expansionTemplate; context: { row: row }"
               >
               </ng-container>
             </ng-container>
-
-            <!-- Default cell rendering -->
-            <ng-container *ngIf="!cellTemplate">
-              {{
-                column.formatter
-                  ? column.formatter($any(row)[column.key], row)
-                  : $any(row)[column.key]
-              }}
-            </ng-container>
-          </td>
-        </tr>
-
-        <!-- Expansion row -->
-        <tr *ngIf="expandable && isRowExpanded(row)" class="expansion-row">
-          <td [attr.colspan]="getVisibleColumns().length + 1">
-            <div class="expansion-content">
-              <ng-container *ngIf="expansionTemplate">
-                <ng-container
-                  *ngTemplateOutlet="expansionTemplate; context: { row: row }"
-                >
-                </ng-container>
-              </ng-container>
-            </div>
-          </td>
-        </tr>
-      </ng-container>
-    </tbody>
-  </nz-table>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 
   <!-- Empty state -->
-  <nz-empty
-    *ngIf="!isLoading && tableData.length === 0"
-    nzNotFoundContent="No data available"
-  >
-  </nz-empty>
+  <div *ngIf="!isLoading && tableData.length === 0" class="empty-state">
+    <i class="pi pi-inbox"></i>
+    <p>No data available</p>
+  </div>
 </div>
 
 <!-- Column Manager Drawer -->

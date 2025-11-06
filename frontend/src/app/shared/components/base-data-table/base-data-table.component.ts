@@ -107,6 +107,9 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   /** Expanded row keys (uses row.key if available, otherwise row reference) */
   expandedRowSet = new Set<any>();
 
+  /** Expanded rows map for PrimeNG p-table (key: row key, value: true) */
+  expandedRowsMap: { [key: string]: boolean } = {};
+
   /** Column manager drawer visibility */
   columnManagerVisible = false;
 
@@ -543,6 +546,22 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
     }
   }
 
+  /**
+   * Handle PrimeNG p-table pagination event
+   * Event structure: { first: number, rows: number, page: number, pageCount: number }
+   */
+  onPrimeNgPageChange(event: any): void {
+    const newPage = event.page + 1; // PrimeNG uses 0-indexed pages
+    const newSize = event.rows;
+
+    // Check if page size changed
+    if (newSize !== this.pageSize) {
+      this.onPageSizeChange(newSize);
+    } else if (newPage !== this.currentPage) {
+      this.onPageChange(newPage);
+    }
+  }
+
   // ========== SORTING ==========
 
   onSort(columnKey: string): void {
@@ -829,9 +848,11 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
     const key = this.getRowKey(row);
     if (this.expandedRowSet.has(key)) {
       this.expandedRowSet.delete(key);
+      delete this.expandedRowsMap[key];
       this.rowCollapse.emit(row);
     } else {
       this.expandedRowSet.add(key);
+      this.expandedRowsMap[key] = true;
       this.rowExpand.emit(row);
     }
   }
@@ -844,6 +865,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
     this.tableData.forEach((row) => {
       const key = this.getRowKey(row);
       this.expandedRowSet.add(key);
+      this.expandedRowsMap[key] = true;
     });
     this.cdr.markForCheck();
     console.log('✅ Expanded rows:', this.expandedRowSet.size);
@@ -855,6 +877,7 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   public collapseAllRows(): void {
     console.log('🔼 BaseDataTable: Collapsing all rows');
     this.expandedRowSet.clear();
+    this.expandedRowsMap = {};
     this.cdr.markForCheck();
     console.log('✅ Collapsed all rows');
   }

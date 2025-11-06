@@ -169,8 +169,123 @@
     }
 
     // Empty state
-    nz-empty {
-      margin: 40px 0;
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: rgba(0, 0, 0, 0.45);
+
+      i {
+        font-size: 64px;
+        margin-bottom: 16px;
+        color: rgba(0, 0, 0, 0.25);
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+    }
+
+    // PrimeNG p-table styles
+    p-table {
+      .p-datatable {
+        font-size: 13px;
+
+        // Header styles
+        .p-datatable-thead > tr > th {
+          background-color: #fafafa;
+          font-weight: 600;
+          padding: 12px 8px;
+          white-space: nowrap;
+          border-color: #f0f0f0;
+
+          // Sortable column hover
+          &.p-sortable-column:hover {
+            background-color: #f0f0f0;
+          }
+
+          // Drag handle
+          .drag-handle {
+            margin-left: 8px;
+            cursor: move;
+            color: rgba(0, 0, 0, 0.45);
+          }
+        }
+
+        // Filter row styling
+        .filter-row {
+          th {
+            padding: 8px;
+            background-color: #fff;
+            border-bottom: 1px solid #f0f0f0;
+
+            .filter-input {
+              width: 100%;
+              font-size: 12px;
+
+              input {
+                font-size: 12px;
+              }
+            }
+
+            // Range filter styling
+            .range-filter-container {
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              padding: 4px;
+              min-width: 220px;
+
+              .range-input {
+                flex: 1;
+                min-width: 90px;
+              }
+
+              .range-separator {
+                color: #8c8c8c;
+                font-weight: 400;
+                padding: 0 4px;
+              }
+            }
+          }
+        }
+
+        // Body styles
+        .p-datatable-tbody > tr > td {
+          padding: 10px 8px;
+          vertical-align: middle;
+          border-color: #f0f0f0;
+
+          // Expansion toggle button
+          button.p-button {
+            padding: 0;
+            height: auto;
+            line-height: 1;
+          }
+        }
+
+        // Row hover
+        .p-datatable-tbody > tr:not(.expansion-row):hover {
+          background-color: #fafafa;
+        }
+
+        // Expansion row
+        .expansion-row {
+          background-color: #f9f9f9;
+
+          td {
+            padding: 0;
+          }
+
+          .expansion-content {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+          }
+        }
+      }
     }
   }
 
@@ -193,12 +308,12 @@
     }
 
     ::ng-deep {
-      nz-table {
-        .ant-table {
+      p-table {
+        .p-datatable {
           font-size: 12px;
 
-          thead tr th,
-          tbody tr td {
+          .p-datatable-thead > tr > th,
+          .p-datatable-tbody > tr > td {
             padding: 8px 4px;
           }
         }
