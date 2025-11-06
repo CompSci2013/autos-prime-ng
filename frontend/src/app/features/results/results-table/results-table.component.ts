@@ -226,7 +226,9 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
    * - Query Control selections → Shareable (in URL), exact matching
    */
   onTableQueryChange(params: TableQueryParams): void {
-    console.log('[ResultsTable] Table query changed:', params);
+    console.log('========================================');
+    console.log('🔄 [ResultsTable] onTableQueryChange CALLED');
+    console.log('   Received params:', params);
 
     // Extract ephemeral filters (table column searches)
     const ephemeralFilters: any = {};
@@ -251,18 +253,36 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
     // Check if pagination or sort changed (these should update URL)
     const currentFilters = this.stateService.getCurrentFilters();
+    console.log('   Current URL filters:', currentFilters);
+
     const urlUpdates: any = {};
 
-    if (params.page !== currentFilters.page) urlUpdates.page = params.page;
-    if (params.size !== currentFilters.size) urlUpdates.size = params.size;
-    if (params.sortBy !== currentFilters.sort) urlUpdates.sort = params.sortBy || undefined;
-    if (params.sortOrder !== currentFilters.sortDirection) urlUpdates.sortDirection = params.sortOrder || undefined;
+    if (params.page !== currentFilters.page) {
+      console.log(`   Page changed: ${currentFilters.page} → ${params.page}`);
+      urlUpdates.page = params.page;
+    }
+    if (params.size !== currentFilters.size) {
+      console.log(`   Size changed: ${currentFilters.size} → ${params.size}`);
+      urlUpdates.size = params.size;
+    }
+    if (params.sortBy !== currentFilters.sort) {
+      console.log(`   Sort changed: ${currentFilters.sort} → ${params.sortBy}`);
+      urlUpdates.sort = params.sortBy || undefined;
+    }
+    if (params.sortOrder !== currentFilters.sortDirection) {
+      console.log(`   SortDirection changed: ${currentFilters.sortDirection} → ${params.sortOrder}`);
+      urlUpdates.sortDirection = params.sortOrder || undefined;
+    }
 
     const hasUrlUpdates = Object.keys(urlUpdates).length > 0;
     const hasEphemeralFilters = Object.keys(ephemeralFilters).length > 0;
 
+    console.log(`   hasUrlUpdates: ${hasUrlUpdates}`, urlUpdates);
+    console.log(`   hasEphemeralFilters: ${hasEphemeralFilters}`, ephemeralFilters);
+
     if (this.popOutContext.isInPopOut()) {
       // Pop-out mode: send message to main window
+      console.log('   Pop-out mode detected');
       if (hasUrlUpdates) {
         this.popOutContext.sendMessage({
           type: 'PAGINATION_SORT_CHANGE',
@@ -277,10 +297,12 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
       }
     } else {
       // Normal mode: update URL if needed, then fetch with ephemeral filters
+      console.log('   Normal mode (not pop-out)');
       if (hasUrlUpdates) {
-        console.log('[ResultsTable] Updating URL (pagination/sort):', urlUpdates);
+        console.log('✅ Calling stateService.updateFilters() with:', urlUpdates);
         // Update URL first (synchronously)
         this.stateService.updateFilters(urlUpdates);
+        console.log('✅ updateFilters() returned');
       }
 
       if (hasEphemeralFilters) {
@@ -291,9 +313,12 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
         // Filters were cleared - fetch unfiltered data
         console.log('[ResultsTable] Filters cleared, fetching unfiltered data');
         this.stateService.fetchVehicleData().subscribe();
+      } else {
+        console.log('   URL updated, waiting for automatic data fetch from URL change');
       }
       // If hasUrlUpdates but NO ephemeralFilters, updateFilters() already triggered fetch
     }
+    console.log('========================================');
   }
 
   /**

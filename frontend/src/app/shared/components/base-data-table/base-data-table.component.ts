@@ -208,15 +208,27 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
     if (changes['data']) {
       const prev = changes['data'].previousValue;
       const curr = changes['data'].currentValue;
-      console.log('📊 Data input changed');
-      console.log(`   Previous: ${prev?.length || 0} items, Current: ${curr?.length || 0} items`);
-      console.log(`   Reference changed: ${prev !== curr ? 'YES' : 'NO'}`);
+      console.log('========================================');
+      console.log('📊 DATA INPUT CHANGED (ngOnChanges)');
+      console.log(`   Previous data: ${prev?.length || 0} items`);
+      console.log(`   Current data: ${curr?.length || 0} items`);
+      console.log(`   Reference changed: ${prev !== curr ? 'YES ✅' : 'NO ❌'}`);
+      console.log(`   Previous tableData: ${this.tableData?.length || 0} items`);
 
+      const oldTableData = this.tableData;
       this.tableData = this.data || [];
+      console.log(`   New tableData: ${this.tableData?.length || 0} items`);
+      console.log(`   tableData reference changed: ${oldTableData !== this.tableData ? 'YES ✅' : 'NO ❌'}`);
+
+      // Log first few items to verify data actually changed
+      if (this.tableData.length > 0) {
+        console.log(`   First item in new tableData:`, this.tableData[0]);
+      }
 
       // Update first property to match current page
+      const oldFirst = this.first;
       this.first = (this.currentPage - 1) * this.pageSize;
-      console.log(`📄 Updated first to ${this.first} (page ${this.currentPage}, size ${this.pageSize})`);
+      console.log(`📄 Pagination state: page=${this.currentPage}, size=${this.pageSize}, first: ${oldFirst} → ${this.first}`);
 
       // Check if current sort column uses client-side sorting
       // If so, re-apply the sort after data loads
@@ -228,7 +240,10 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
         }
       }
 
+      console.log(`📄 Calling detectChanges() to force view update`);
       this.cdr.detectChanges(); // Force immediate change detection
+      console.log('✅ DATA UPDATE COMPLETE');
+      console.log('========================================');
     } else {
       // CRITICAL FIX: Update tableData even if ngOnChanges didn't detect a change
       // This handles cases where array reference changes but Angular doesn't detect it
@@ -526,51 +541,62 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   // ========== PAGINATION ==========
 
   onPageChange(page: number): void {
-    this.currentPage = page;
-    this.first = (page - 1) * this.pageSize; // Update first index
+    console.log(`📄 onPageChange: User wants page ${page}`);
 
-    // In data mode, emit event to parent instead of fetching
+    // In data mode (URL-first pattern), DON'T update internal state
+    // Just emit desired change and let parent update URL → triggers hydration
     if (this.data !== undefined) {
       const params: TableQueryParams = {
-        page: this.currentPage,
-        size: this.pageSize,
+        page: page,  // Desired new page
+        size: this.pageSize,  // Current size
         sortBy: this.sortBy,
         sortOrder: this.sortOrder,
         filters: this.filters,
       };
-      console.log(
-        '📄 onPageChange (data mode): Emitting queryParamsChange:',
-        params
-      );
+      console.log('📄 onPageChange (data mode): Emitting queryParamsChange:', params);
       this.queryParamsChange.emit(params);
+      // DON'T update this.currentPage or this.first here
+      // Wait for parent to update URL → new queryParams input → ngOnChanges → hydration
     } else {
-      // dataSource mode: fetch directly
+      // dataSource mode: update state and fetch directly
+      this.currentPage = page;
+      this.first = (page - 1) * this.pageSize;
       this.fetchData(true); // User-initiated: clicked pagination
     }
   }
 
   onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 1; // Reset to first page
-    this.first = 0; // Reset first index
-    this.savePreferences();
+    console.log(`📄 onPageSizeChange: User wants size ${size}`);
 
-    // In data mode, emit event to parent instead of fetching
+    // Save preference immediately (UI-only, not URL state)
+    const prefs = this.persistenceService.loadPreferences(this.tableId) || {
+      columnOrder: [],
+      columnVisibility: {},
+      visibleColumns: [],
+      pageSize: undefined
+    };
+    prefs.pageSize = size;
+    this.persistenceService.savePreferences(this.tableId, prefs);
+
+    // In data mode (URL-first pattern), DON'T update internal state
+    // Just emit desired change and let parent update URL → triggers hydration
     if (this.data !== undefined) {
       const params: TableQueryParams = {
-        page: this.currentPage,
-        size: this.pageSize,
+        page: 1,  // Always reset to page 1 when size changes
+        size: size,  // New size
         sortBy: this.sortBy,
         sortOrder: this.sortOrder,
         filters: this.filters,
       };
-      console.log(
-        '📄 onPageSizeChange (data mode): Emitting queryParamsChange:',
-        params
-      );
+      console.log('📄 onPageSizeChange (data mode): Emitting queryParamsChange:', params);
       this.queryParamsChange.emit(params);
+      // DON'T update this.currentPage, this.pageSize, or this.first here
+      // Wait for parent to update URL → new queryParams input → ngOnChanges → hydration
     } else {
-      // dataSource mode: fetch directly
+      // dataSource mode: update state and fetch directly
+      this.pageSize = size;
+      this.currentPage = 1; // Reset to first page
+      this.first = 0;
       this.fetchData(true); // User-initiated: changed page size
     }
   }
@@ -580,35 +606,33 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
    * Event structure: { first: number, rows: number, page: number, pageCount: number }
    */
   onPrimeNgPageChange(event: any): void {
-    console.log('📄 onPrimeNgPageChange:', event);
-    console.log(`📄 Before: currentPage=${this.currentPage}, pageSize=${this.pageSize}, first=${this.first}`);
+    console.log('========================================');
+    console.log('📄 onPrimeNgPageChange: PrimeNG emitted pagination event');
+    console.log('   Event:', event);
+    console.log(`   Current state: page=${this.currentPage}, size=${this.pageSize}, first=${this.first}`);
 
     const newPage = event.page + 1; // PrimeNG uses 0-indexed pages
     const newSize = event.rows;
-    const newFirst = event.first;
 
-    console.log(`📄 Event values: page=${event.page}, rows=${event.rows}, first=${event.first}`);
-    console.log(`📄 Calculated: newPage=${newPage}, newSize=${newSize}, newFirst=${newFirst}`);
+    console.log(`   User wants: page=${newPage}, size=${newSize}`);
 
     // Validate values
-    if (isNaN(newFirst) || isNaN(newSize) || isNaN(newPage)) {
-      console.error('❌ Invalid pagination values!', { newFirst, newSize, newPage });
+    if (isNaN(newSize) || isNaN(newPage)) {
+      console.error('❌ Invalid pagination values!', { newSize, newPage });
       return;
     }
 
-    // Update first index
-    this.first = newFirst;
-
     // Check if page size changed
     if (newSize !== this.pageSize) {
-      console.log(`📄 Page size changed: ${this.pageSize} → ${newSize}`);
+      console.log(`   → Page size changed: ${this.pageSize} → ${newSize}`);
       this.onPageSizeChange(newSize);
     } else if (newPage !== this.currentPage) {
-      console.log(`📄 Page changed: ${this.currentPage} → ${newPage}`);
+      console.log(`   → Page changed: ${this.currentPage} → ${newPage}`);
       this.onPageChange(newPage);
+    } else {
+      console.log('   → No change (page and size are same)');
     }
-
-    console.log(`📄 After: currentPage=${this.currentPage}, pageSize=${this.pageSize}, first=${this.first}`);
+    console.log('========================================');
   }
 
   /**
