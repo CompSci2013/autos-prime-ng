@@ -61,6 +61,9 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
   /** Whether rows can be expanded */
   @Input() expandable = false;
 
+  /** Optional callback to determine if a specific row can be expanded */
+  @Input() isRowExpandable?: (row: T) => boolean;
+
   /** Whether to show column management buttons (Manage Columns, Reset Columns) */
   @Input() showColumnManagement = true;
 

@@ -6,6 +6,7 @@
   [loading]="isLoading"
   [queryParams]="tableQueryParams"
   [expandable]="true"
+  [isRowExpandable]="canExpandRow"
   [maxTableHeight]="'1200px'"
   (queryParamsChange)="onTableQueryChange($event)"
   (rowExpand)="onRowExpand($event)"

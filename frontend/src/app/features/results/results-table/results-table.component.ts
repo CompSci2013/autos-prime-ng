@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { StateManagementService } from '../../../core/services/state-management.service';
@@ -6,6 +6,7 @@ import { PopOutContextService } from '../../../core/services/popout-context.serv
 import { ApiService } from '../../../services/api.service';
 import { VehicleResult, VehicleInstance, SearchFilters } from '../../../models';
 import { TableColumn, TableQueryParams } from '../../../shared/models';
+import { BaseDataTableComponent } from '../../../shared/components/base-data-table/base-data-table.component';
 
 /**
  * Results-Table Component
@@ -42,6 +43,9 @@ import { TableColumn, TableQueryParams } from '../../../shared/models';
 })
 export class ResultsTableComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+
+  // Reference to BaseDataTable for calling public methods
+  @ViewChild(BaseDataTableComponent) baseTable!: BaseDataTableComponent<VehicleResult>;
 
   // Pre-fetched data from StateManagement (URL-driven)
   results: VehicleResult[] = [];
@@ -370,14 +374,35 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Determine if a row can be expanded (has VIN instances)
+   */
+  canExpandRow = (vehicle: VehicleResult): boolean => {
+    return (vehicle.instance_count || 0) > 0;
+  };
+
   /**
    * Handle expand all rows
-   * Load VIN instances for all visible vehicles
+   * Load VIN instances for all visible vehicles with data (instance_count > 0)
    */
   onExpandAll(): void {
-    console.log('ResultsTable: Expanding all rows');
-    // Load instances for all current results
-    this.results.forEach((vehicle) => {
+    console.log('ResultsTable: Expanding all rows with data');
+    // Filter out vehicles with no instances, then load VIN data
+    const vehiclesWithData = this.results.filter(v => (v.instance_count || 0) > 0);
+    console.log(`Found ${vehiclesWithData.length} vehicles with instance_count > 0`);
+
+    // First, tell BaseDataTable to expand all rows that have data
+    if (this.baseTable) {
+      // Manually expand each row with data by adding to expandedRowsMap
+      vehiclesWithData.forEach((vehicle) => {
+        const key = vehicle.vehicle_id;
+        this.baseTable.expandedRowSet.add(key);
+        this.baseTable.expandedRowsMap[key] = true;
+      });
+      console.log(`✅ Expanded ${vehiclesWithData.length} rows in UI`);
+    }
+
+    // Then load VIN instances for each
+    vehiclesWithData.forEach((vehicle) => {
       if (!this.expandedRowInstances.has(vehicle.vehicle_id)) {
         this.loadVehicleInstances(vehicle.vehicle_id);
       }
@@ -386,10 +411,12 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
   /**
    * Handle collapse all rows
+   * Calls BaseDataTable's collapseAllRows() method
    */
   onCollapseAll(): void {
     console.log('ResultsTable: Collapsing all rows');
-    // BaseDataTable will handle the actual collapsing
+    // Call BaseDataTable's public method to clear expansion state
+    this.baseTable?.collapseAllRows();
     // No need to clear our instances cache - keep them for next expand
   }
 

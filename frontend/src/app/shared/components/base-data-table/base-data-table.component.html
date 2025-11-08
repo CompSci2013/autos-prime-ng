@@ -3,22 +3,23 @@
   <div class="table-toolbar">
     <div class="toolbar-left">
       <ng-container *ngIf="showColumnManagement">
-        <button pButton type="button" icon="pi pi-cog" label="Manage Columns" (click)="openColumnManager()"></button>
+        <button pButton type="button" icon="pi pi-cog" label="Manage Columns" class="p-button-primary" (click)="openColumnManager()"></button>
       </ng-container>
       <button
         pButton
         type="button"
         icon="pi pi-times-circle"
         label="Clear Filters"
+        class="p-button-primary"
         (click)="clearFilters()"
         [disabled]="getFilterCount() === 0"
       ></button>
       <ng-container *ngIf="showColumnManagement">
-        <button pButton type="button" icon="pi pi-refresh" label="Reset Columns" (click)="resetColumns()"></button>
+        <button pButton type="button" icon="pi pi-refresh" label="Reset Columns" class="p-button-primary" (click)="resetColumns()"></button>
       </ng-container><!-- Add these two buttons only when expandable is true -->
       <ng-container *ngIf="expandable">
-        <button pButton type="button" icon="pi pi-angle-down" label="Expand All" (click)="onExpandAll()"></button>
-        <button pButton type="button" icon="pi pi-angle-up" label="Collapse All" (click)="onCollapseAll()"></button>
+        <button pButton type="button" icon="pi pi-angle-down" label="Expand All" class="p-button-primary" (click)="onExpandAll()"></button>
+        <button pButton type="button" icon="pi pi-angle-up" label="Collapse All" class="p-button-primary" (click)="onCollapseAll()"></button>
       </ng-container>
     </div>
     <div class="toolbar-right">
@@ -126,7 +127,7 @@
             <div *ngIf="column.filterType === 'number-range'" class="range-filter-container">
               <p-inputNumber
                 [min]="column.rangeConfig?.min || 0"
-                [max]="column.rangeConfig?.max || 100"
+                [max]="filters[column.key + 'Max']"
                 [step]="column.rangeConfig?.step || 1"
                 placeholder="Min"
                 [(ngModel)]="filters[column.key + 'Min']"
@@ -138,8 +139,7 @@
               </p-inputNumber>
               <span class="range-separator">-</span>
               <p-inputNumber
-                [min]="column.rangeConfig?.min || 0"
-                [max]="column.rangeConfig?.max || 100"
+                [min]="filters[column.key + 'Min'] || column.rangeConfig?.min || 0"
                 [step]="column.rangeConfig?.step || 1"
                 placeholder="Max"
                 [(ngModel)]="filters[column.key + 'Max']"
@@ -160,6 +160,7 @@
         <!-- Expansion toggle -->
         <td *ngIf="expandable">
           <button
+            *ngIf="!isRowExpandable || isRowExpandable(row)"
             type="button"
             pButton
             pRipple

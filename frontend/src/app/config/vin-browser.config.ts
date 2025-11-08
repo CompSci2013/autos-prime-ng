@@ -191,7 +191,7 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
       return {
         page: params.page || 1,
         size: params.size || 20,
-        filters: mappedFilters,
+        ...mappedFilters,  // Spread filters to top level (backend expects flat structure)
         sortBy: params.sortBy || 'vin',
         sortOrder: params.sortOrder || 'asc',
       };
