@@ -110,21 +110,33 @@
               ></button>
             </div>
           </ng-template>
-          <!-- NEW: BasePickerComponent (Configuration-Driven) -->
-          <div class="info-banner">
-            <strong>✨ NEW: BasePickerComponent</strong>
-            <span>(Configuration-driven)</span>
-          </div>
           <app-base-picker
             [configId]="'manufacturer-model'"
             [externalFilters]="currentFilters"
           ></app-base-picker>
+        </p-panel>
 
-          <!-- VIN Browser (Browse ALL VINs) -->
-          <div class="info-banner vin-browser-banner">
-            <strong>🚗 NEW: VIN Browser</strong>
-            <span>(Browse ALL VINs with filtering: Mfr, Model, Year, Body Class, Mileage, Value)</span>
-          </div>
+        <!-- VIN Browser Panel -->
+        <p-panel
+          *ngSwitchCase="'vin-browser'"
+          [toggleable]="true"
+          [(collapsed)]="panel.collapsed"
+          [hidden]="isPanelPoppedOut(panel.id)"
+        >
+          <ng-template pTemplate="header">
+            <div class="panel-header-content">
+              <span class="panel-header-title">{{ panel.title }}</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-window-maximize"
+                class="p-button-text p-button-sm popout-btn"
+                (click)="popOutPanel(panel.id)"
+                pTooltip="Pop out to new window"
+                tooltipPosition="left"
+              ></button>
+            </div>
+          </ng-template>
           <app-base-picker [configId]="'vin-browser'"></app-base-picker>
         </p-panel>
 

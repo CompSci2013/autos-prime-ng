@@ -46,6 +46,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   panels: PanelConfig[] = [
     { id: 'query-control', title: 'Query Control', collapsed: false },
     { id: 'model-picker', title: 'Model Picker', collapsed: false },
+    { id: 'vin-browser', title: 'VIN Browser', collapsed: false },
     { id: 'vehicle-results', title: 'Vehicle Results', collapsed: false },
     { id: 'interactive-charts', title: 'Interactive Charts', collapsed: false },
   ];
@@ -234,6 +235,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     this.panels = [
       { id: 'query-control', title: 'Query Control', collapsed: false },
       { id: 'model-picker', title: 'Model Picker', collapsed: false },
+      { id: 'vin-browser', title: 'VIN Browser', collapsed: false },
       { id: 'vehicle-results', title: 'Vehicle Results', collapsed: false },
       { id: 'interactive-charts', title: 'Interactive Charts', collapsed: false },
     ];
@@ -253,6 +255,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     const panelTypeMap: Record<string, string> = {
       'query-control': 'query-control',
       'model-picker': 'picker',
+      'vin-browser': 'picker',
       'vehicle-results': 'results',
       'interactive-charts': 'plotly-charts',
     };
