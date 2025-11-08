@@ -97,13 +97,13 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background-color: #e3f2fd;
+  background-color: #ffebee;
   border-radius: 4px;
-  border: 1px solid #90caf9;
+  border: 1px solid #ef9a9a;
 
   .summary-label {
     font-weight: 500;
-    color: #1976d2;
+    color: #d32f2f;
   }
 
   .more-label {
@@ -114,7 +114,41 @@
 
 ::ng-deep .selection-chip {
   &.chip-blue {
-    background-color: #1976d2;
+    background-color: #d32f2f;
     color: white;
+  }
+}
+
+// Override PrimeNG button colors to match red theme
+::ng-deep .p-button-primary {
+  background-color: #d32f2f !important;
+  border-color: #d32f2f !important;
+
+  &:enabled:hover {
+    background-color: #c62828 !important;
+    border-color: #c62828 !important;
+  }
+
+  &:enabled:active {
+    background-color: #b71c1c !important;
+    border-color: #b71c1c !important;
+  }
+}
+
+::ng-deep .p-button-secondary {
+  background-color: #f5f5f5 !important;
+  border-color: #e0e0e0 !important;
+  color: #333 !important;
+
+  &:enabled:hover {
+    background-color: #eeeeee !important;
+    border-color: #d32f2f !important;
+    color: #d32f2f !important;
+  }
+
+  &:enabled:active {
+    background-color: #e0e0e0 !important;
+    border-color: #c62828 !important;
+    color: #c62828 !important;
   }
 }

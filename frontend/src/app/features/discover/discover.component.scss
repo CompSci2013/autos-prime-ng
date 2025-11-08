@@ -337,3 +337,41 @@
     }
   }
 }
+
+// ========== BUTTON STYLING (RED THEME) ==========
+
+::ng-deep {
+  // Override default PrimeNG primary button to red theme
+  .workspace-header button.p-button:not(.p-button-secondary) {
+    background-color: #d32f2f !important;
+    border-color: #d32f2f !important;
+    color: white !important;
+
+    &:enabled:hover {
+      background-color: #c62828 !important;
+      border-color: #c62828 !important;
+    }
+
+    &:enabled:active {
+      background-color: #b71c1c !important;
+      border-color: #b71c1c !important;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(211, 47, 47, 0.5) !important;
+    }
+  }
+
+  // Secondary button styling (keep existing gray, add red hover)
+  .workspace-header button.p-button-secondary {
+    &:enabled:hover {
+      border-color: #d32f2f !important;
+      color: #d32f2f !important;
+    }
+
+    &:enabled:active {
+      border-color: #c62828 !important;
+      color: #c62828 !important;
+    }
+  }
+}
