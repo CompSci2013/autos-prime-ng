@@ -50,6 +50,10 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     { id: 'interactive-charts', title: 'Interactive Charts', collapsed: false },
   ];
 
+  // Track popped-out panels (MOVE semantics)
+  poppedOutPanels: Set<string> = new Set();
+  private popoutWindows: Map<string, { window: Window; channel: BroadcastChannel; checkInterval: any }> = new Map();
+
   constructor(
     private stateService: StateManagementService,
     private routeState: RouteStateService,
@@ -64,6 +68,16 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+
+    // Clean up all popout windows and channels
+    this.popoutWindows.forEach(({ window, channel, checkInterval }) => {
+      clearInterval(checkInterval);
+      channel.close();
+      if (window && !window.closed) {
+        window.close();
+      }
+    });
+    this.popoutWindows.clear();
   }
 
   /**
@@ -230,8 +244,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   // ========== PANEL POPOUT FUNCTIONALITY ==========
 
   /**
-   * Pop out a panel to a new window
+   * Pop out a panel to a new window (MOVE semantics)
    * Opens panel in a separate window with BroadcastChannel communication
+   * Panel is removed from main page until pop-out window is closed
    */
   popOutPanel(panelId: string): void {
     // Map panel IDs to panel types for the popout route
@@ -274,7 +289,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log(`Panel ${panelId} popped out to new window`);
+    // MOVE SEMANTICS: Mark panel as popped out (removed from main page)
+    this.poppedOutPanels.add(panelId);
+    console.log(`Panel ${panelId} popped out to new window (MOVE semantics)`);
 
     // Set up BroadcastChannel for communication
     const channel = new BroadcastChannel(`panel-${panelId}`);
@@ -310,10 +327,33 @@ export class DiscoverComponent implements OnInit, OnDestroy {
             type: 'STATE_UPDATE',
             state: state
           });
-        } else {
-          // Clean up channel if window is closed
-          channel.close();
         }
       });
+
+    // Check periodically if pop-out window is closed (MOVE semantics restoration)
+    const checkInterval = setInterval(() => {
+      if (popoutWindow.closed) {
+        console.log(`Pop-out window for ${panelId} closed, restoring panel to main page`);
+        this.poppedOutPanels.delete(panelId);
+        this.popoutWindows.delete(panelId);
+        channel.close();
+        clearInterval(checkInterval);
+        this.cdr.markForCheck(); // Trigger UI update
+      }
+    }, 500);
+
+    // Store window reference and cleanup handlers
+    this.popoutWindows.set(panelId, {
+      window: popoutWindow,
+      channel,
+      checkInterval
+    });
+  }
+
+  /**
+   * Check if a panel is currently popped out
+   */
+  isPanelPoppedOut(panelId: string): boolean {
+    return this.poppedOutPanels.has(panelId);
   }
 }

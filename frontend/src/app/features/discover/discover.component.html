@@ -48,11 +48,23 @@
 
       <!-- Actual Panel Content -->
       <div [ngSwitch]="panel.id" class="panel-content">
+        <!-- Popped-Out Placeholder (shown when panel is moved to pop-out window) -->
+        <div *ngIf="isPanelPoppedOut(panel.id)" class="popout-placeholder">
+          <div class="placeholder-icon">
+            <i class="pi pi-external-link"></i>
+          </div>
+          <div class="placeholder-text">
+            <strong>{{ panel.title }}</strong>
+            <span>This panel is currently open in a separate window</span>
+          </div>
+        </div>
+
         <!-- Query Control Panel -->
         <p-panel
           *ngSwitchCase="'query-control'"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
+          [hidden]="isPanelPoppedOut(panel.id)"
         >
           <ng-template pTemplate="header">
             <div class="panel-header-content">
@@ -82,6 +94,7 @@
           *ngSwitchCase="'model-picker'"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
+          [hidden]="isPanelPoppedOut(panel.id)"
         >
           <ng-template pTemplate="header">
             <div class="panel-header-content">
@@ -120,6 +133,7 @@
           *ngSwitchCase="'vehicle-results'"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
+          [hidden]="isPanelPoppedOut(panel.id)"
         >
           <ng-template pTemplate="header">
             <div class="panel-header-content">
@@ -143,6 +157,7 @@
           *ngSwitchCase="'interactive-charts'"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
+          [hidden]="isPanelPoppedOut(panel.id)"
         >
           <ng-template pTemplate="header">
             <div class="panel-header-content">
