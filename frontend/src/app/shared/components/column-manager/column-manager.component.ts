@@ -6,8 +6,15 @@ import {
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
-import { TransferItem } from 'ng-zorro-antd/transfer';
 import { TableColumn } from '../../models/table-column.model';
+
+/** Column item for PickList */
+export interface ColumnItem {
+  key: string;
+  title: string;
+  description: string;
+  disabled: boolean;
+}
 
 @Component({
   selector: 'app-column-manager',
@@ -17,7 +24,7 @@ import { TableColumn } from '../../models/table-column.model';
 export class ColumnManagerComponent implements OnChanges {
   // ========== INPUTS ==========
 
-  /** Drawer visibility */
+  /** Sidebar visibility */
   @Input() visible = false;
 
   /** Column definitions */
@@ -25,7 +32,7 @@ export class ColumnManagerComponent implements OnChanges {
 
   // ========== OUTPUTS ==========
 
-  /** Emits when drawer visibility changes */
+  /** Emits when sidebar visibility changes */
   @Output() visibleChange = new EventEmitter<boolean>();
 
   /** Emits when columns are modified */
@@ -33,8 +40,11 @@ export class ColumnManagerComponent implements OnChanges {
 
   // ========== STATE ==========
 
-  /** Transfer data source */
-  transferData: TransferItem[] = [];
+  /** Hidden columns (source list for PickList) */
+  sourceColumns: ColumnItem[] = [];
+
+  /** Visible columns (target list for PickList) */
+  targetColumns: ColumnItem[] = [];
 
   /** Search text for filtering columns */
   searchText = '';
@@ -43,20 +53,30 @@ export class ColumnManagerComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['columns'] || changes['visible']) {
-      this.initializeTransferData();
+      this.initializePickListData();
     }
   }
 
   // ========== INITIALIZATION ==========
 
-  initializeTransferData(): void {
-    this.transferData = this.columns.map((col) => ({
-      key: col.key,
-      title: col.label,
-      description: this.getColumnDescription(col),
-      direction: col.visible !== false ? 'right' : 'left',
-      disabled: !col.hideable, // Required columns cannot be moved
-    }));
+  initializePickListData(): void {
+    this.sourceColumns = [];
+    this.targetColumns = [];
+
+    this.columns.forEach((col) => {
+      const item: ColumnItem = {
+        key: col.key,
+        title: col.label,
+        description: this.getColumnDescription(col),
+        disabled: !col.hideable, // Required columns cannot be moved
+      };
+
+      if (col.visible !== false) {
+        this.targetColumns.push(item); // Visible columns
+      } else {
+        this.sourceColumns.push(item); // Hidden columns
+      }
+    });
   }
 
   getColumnDescription(column: TableColumn): string {
@@ -87,24 +107,18 @@ export class ColumnManagerComponent implements OnChanges {
           key: c.key,
           visible: c.visible,
         })),
-        transferData: this.transferData.map((t) => ({
-          key: t['key'],
-          direction: t['direction'],
-        })),
+        targetColumns: this.targetColumns.map((t) => t.key),
+        sourceColumns: this.sourceColumns.map((s) => s.key),
       });
 
-      // Update column visibility based on transfer direction
+      // Update column visibility based on PickList position
       this.columns.forEach((col) => {
-        const transferItem = this.transferData.find(
-          (item) => item['key'] === col.key
-        );
-        if (transferItem) {
-          console.log(
-            `📝 Updating ${col.key}: ${col.visible} -> ${
-              transferItem.direction === 'right'
-            }`
-          );
-          col.visible = transferItem.direction === 'right';
+        const inTarget = this.targetColumns.some((item) => item.key === col.key);
+        const newVisible = inTarget;
+
+        if (col.visible !== newVisible) {
+          console.log(`📝 Updating ${col.key}: ${col.visible} -> ${newVisible}`);
+          col.visible = newVisible;
         }
       });
 
@@ -123,9 +137,9 @@ export class ColumnManagerComponent implements OnChanges {
       // Emit changes
       this.columnsChange.emit();
 
-      console.log('🚪 ColumnManager: Closing drawer');
+      console.log('🚪 ColumnManager: Closing sidebar');
 
-      // Close drawer
+      // Close sidebar
       this.onClose();
 
       console.log('✅ ColumnManager: onApply() COMPLETE');
@@ -139,27 +153,22 @@ export class ColumnManagerComponent implements OnChanges {
       col.visible = col.hideable ? undefined : true;
     });
 
-    // Reinitialize transfer data
-    this.initializeTransferData();
+    // Reinitialize PickList data
+    this.initializePickListData();
 
     // Emit changes
     this.columnsChange.emit();
   }
 
-  // ========== TRANSFER ACTIONS ==========
+  // ========== PICKLIST ACTIONS ==========
 
-  onTransferChange(event: any): void {
-    // Event format: { from: 'left'|'right', to: 'left'|'right', list: Array }
-    console.log('Transfer change:', event);
-
-    // The nz-transfer component emits changes, but we need to update our data
-    // The transfer component modifies the direction property automatically
-    // We just log for debugging purposes
+  onMoveToTarget(event: any): void {
+    console.log('Move to target (show columns):', event);
   }
 
-  filterOption = (inputValue: string, item: TransferItem): boolean => {
-    return item.title.toLowerCase().includes(inputValue.toLowerCase());
-  };
+  onMoveToSource(event: any): void {
+    console.log('Move to source (hide columns):', event);
+  }
 
   // ========== VALIDATION ==========
 
@@ -171,12 +180,11 @@ export class ColumnManagerComponent implements OnChanges {
           const depCol = this.columns.find((c) => c.key === depKey);
           if (depCol) {
             depCol.visible = true;
-            // Update transfer data
-            const transferItem = this.transferData.find(
-              (item) => item['key'] === depKey
-            );
-            if (transferItem) {
-              transferItem.direction = 'right';
+            // Update PickList data: move from source to target if needed
+            const sourceIndex = this.sourceColumns.findIndex((item) => item.key === depKey);
+            if (sourceIndex !== -1) {
+              const [item] = this.sourceColumns.splice(sourceIndex, 1);
+              this.targetColumns.push(item);
             }
           }
         });

@@ -1,76 +1,83 @@
-<nz-drawer
-  [nzVisible]="visible"
-  [nzWidth]="700"
-  nzTitle="Manage Columns"
-  nzPlacement="right"
-  [nzFooter]="footerTemplate"
-  (nzOnClose)="onClose()"
+<p-sidebar
+  [(visible)]="visible"
+  position="right"
+  [style]="{ width: '700px' }"
+  [showCloseIcon]="true"
+  (onHide)="onClose()"
 >
-  <!-- Drawer Content -->
-  <ng-container *nzDrawerContent>
-    <div class="column-manager-container">
-      <!-- Info Section -->
-      <div class="info-section">
-        <p-messages severity="info">
-          <ng-template pTemplate>
-            <div class="p-message-wrapper">
-              <span class="p-message-summary">Column Visibility</span>
-              <span class="p-message-detail">Move columns between the lists to show or hide them. Required columns cannot be hidden.</span>
-            </div>
-          </ng-template>
-        </p-messages>
+  <ng-template pTemplate="header">
+    <h3 style="margin: 0;">Manage Columns</h3>
+  </ng-template>
 
-        <div class="column-stats">
-          <span class="stat">
-            <strong>Total:</strong> {{ getTotalCount() }}
-          </span>
-          <span class="stat">
-            <strong>Visible:</strong> {{ getVisibleCount() }}
-          </span>
-          <span class="stat">
-            <strong>Hidden:</strong> {{ getHiddenCount() }}
-          </span>
-        </div>
-      </div>
+  <!-- Sidebar Content -->
+  <div class="column-manager-container">
+    <!-- Info Section -->
+    <div class="info-section">
+      <p-messages severity="info">
+        <ng-template pTemplate>
+          <div class="p-message-wrapper">
+            <span class="p-message-summary">Column Visibility</span>
+            <span class="p-message-detail">Move columns between the lists to show or hide them. Required columns cannot be hidden.</span>
+          </div>
+        </ng-template>
+      </p-messages>
 
-      <!-- Transfer Component -->
-      <div class="transfer-section">
-        <nz-transfer
-          [nzDataSource]="transferData"
-          [nzTitles]="['Hidden Columns', 'Visible Columns']"
-          [nzShowSearch]="true"
-          [nzFilterOption]="filterOption"
-          [nzShowSelectAll]="true"
-          [nzRender]="renderTemplate"
-          (nzChange)="onTransferChange($event)"
-        >
-          <!-- Custom Render Template -->
-          <ng-template #renderTemplate let-item>
-            <div class="transfer-item">
-              <div class="item-title">{{ item.title }}</div>
-              <div class="item-description" *ngIf="item.description">
-                {{ item.description }}
-              </div>
-            </div>
-          </ng-template>
-        </nz-transfer>
+      <div class="column-stats">
+        <span class="stat">
+          <strong>Total:</strong> {{ getTotalCount() }}
+        </span>
+        <span class="stat">
+          <strong>Visible:</strong> {{ getVisibleCount() }}
+        </span>
+        <span class="stat">
+          <strong>Hidden:</strong> {{ getHiddenCount() }}
+        </span>
       </div>
     </div>
-  </ng-container>
-</nz-drawer>
 
-<!-- Footer Template (outside drawer, referenced by [nzFooter]) -->
-<ng-template #footerTemplate>
-  <div class="drawer-footer">
-    <button pButton type="button" label="Cancel" (click)="onCancel()"></button>
-    <button
-      pButton
-      type="button"
-      label="Reset to Default"
-      severity="danger"
-      (click)="onReset()"
-      [disabled]="!canReset()"
-    ></button>
-    <button pButton type="button" label="Apply Changes" class="p-button-primary" (click)="onApply()"></button>
+    <!-- PickList Component -->
+    <div class="picklist-section">
+      <p-pickList
+        [source]="sourceColumns"
+        [target]="targetColumns"
+        sourceHeader="Hidden Columns"
+        targetHeader="Visible Columns"
+        [dragdrop]="true"
+        [responsive]="true"
+        [sourceStyle]="{ height: '400px' }"
+        [targetStyle]="{ height: '400px' }"
+        [showSourceControls]="false"
+        [showTargetControls]="false"
+        [sourceFilterPlaceholder]="'Search columns'"
+        [targetFilterPlaceholder]="'Search columns'"
+        filterBy="title"
+        (onMoveToTarget)="onMoveToTarget($event)"
+        (onMoveToSource)="onMoveToSource($event)"
+      >
+        <ng-template let-column pTemplate="item">
+          <div class="picklist-item">
+            <div class="item-title">{{ column.title }}</div>
+            <div class="item-description" *ngIf="column.description">
+              {{ column.description }}
+            </div>
+          </div>
+        </ng-template>
+      </p-pickList>
+    </div>
   </div>
-</ng-template>
+
+  <ng-template pTemplate="footer">
+    <div class="sidebar-footer">
+      <button pButton type="button" label="Cancel" (click)="onCancel()"></button>
+      <button
+        pButton
+        type="button"
+        label="Reset to Default"
+        severity="danger"
+        (click)="onReset()"
+        [disabled]="!canReset()"
+      ></button>
+      <button pButton type="button" label="Apply Changes" class="p-button-primary" (click)="onApply()"></button>
+    </div>
+  </ng-template>
+</p-sidebar>

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { MessageService } from 'primeng/api';
 
 export enum ErrorSeverity {
   INFO = 'info',
-  WARNING = 'warning',
+  WARNING = 'warn',  // PrimeNG uses 'warn' not 'warning'
   ERROR = 'error',
   SUCCESS = 'success',
 }
@@ -23,34 +23,54 @@ export class ErrorNotificationService {
   private recentErrors = new Map<string, number>();
   private readonly DEDUPE_WINDOW = 3000; // 3 seconds
 
-  constructor(private notification: NzNotificationService) {}
+  constructor(private messageService: MessageService) {}
 
   /**
    * Show a user-friendly error notification
    */
   showError(title: string, message: string, duration: number = 5000): void {
-    this.notification.error(title, message, { nzDuration: duration });
+    this.messageService.add({
+      severity: 'error',
+      summary: title,
+      detail: message,
+      life: duration,
+    });
   }
 
   /**
    * Show a warning notification
    */
   showWarning(title: string, message: string, duration: number = 4000): void {
-    this.notification.warning(title, message, { nzDuration: duration });
+    this.messageService.add({
+      severity: 'warn',
+      summary: title,
+      detail: message,
+      life: duration,
+    });
   }
 
   /**
    * Show an info notification
    */
   showInfo(title: string, message: string, duration: number = 3000): void {
-    this.notification.info(title, message, { nzDuration: duration });
+    this.messageService.add({
+      severity: 'info',
+      summary: title,
+      detail: message,
+      life: duration,
+    });
   }
 
   /**
    * Show a success notification
    */
   showSuccess(title: string, message: string, duration: number = 3000): void {
-    this.notification.success(title, message, { nzDuration: duration });
+    this.messageService.add({
+      severity: 'success',
+      summary: title,
+      detail: message,
+      life: duration,
+    });
   }
 
   /**

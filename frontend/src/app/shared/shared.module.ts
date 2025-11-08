@@ -4,23 +4,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 
-// NG-ZORRO Imports
-import { NzTableModule } from 'ng-zorro-antd/table';
-import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzIconModule } from 'ng-zorro-antd/icon';
-import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzSelectModule } from 'ng-zorro-antd/select';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzTransferModule } from 'ng-zorro-antd/transfer';
-import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
-import { NzEmptyModule } from 'ng-zorro-antd/empty';
-import { NzSpinModule } from 'ng-zorro-antd/spin';
-import { NzAlertModule } from 'ng-zorro-antd/alert';
-import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
-import { NzTagModule } from 'ng-zorro-antd/tag';
-import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
-import { NzSliderModule } from 'ng-zorro-antd/slider';
-
 // PrimeNG Imports
 import { ButtonModule } from 'primeng/button';
 import { ChipModule } from 'primeng/chip';
@@ -66,21 +49,6 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     ReactiveFormsModule,
     DragDropModule,
     ScrollingModule,
-    NzTableModule,
-    NzButtonModule,
-    NzIconModule,
-    NzInputModule,
-    NzInputNumberModule,
-    NzSelectModule,
-    NzDrawerModule,
-    NzTransferModule,
-    NzToolTipModule,
-    NzEmptyModule,
-    NzSpinModule,
-    NzAlertModule,
-    NzTagModule,
-    NzCheckboxModule,
-    NzSliderModule,
     // PrimeNG modules
     ButtonModule,
     ChipModule,
@@ -108,27 +76,12 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     ModelsChartComponent,
     YearChartComponent,
     BodyClassChartComponent,
-    // Also export NG-ZORRO modules for convenience
+    // Export Angular modules for convenience
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     DragDropModule,
     ScrollingModule,
-    NzTableModule,
-    NzButtonModule,
-    NzIconModule,
-    NzInputModule,
-    NzInputNumberModule,
-    NzSelectModule,
-    NzDrawerModule,
-    NzTransferModule,
-    NzToolTipModule,
-    NzEmptyModule,
-    NzSpinModule,
-    NzAlertModule,
-    NzTagModule,
-    NzCheckboxModule,
-    NzSliderModule,
     // Export PrimeNG modules
     ButtonModule,
     ChipModule,

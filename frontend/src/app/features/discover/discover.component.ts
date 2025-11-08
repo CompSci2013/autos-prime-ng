@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { StateManagementService } from '../../core/services/state-management.service';
+import { RouteStateService } from '../../core/services/route-state.service';
 import { SearchFilters } from '../../models/search-filters.model';
 import { QueryFilter } from '../filters/query-control/query-control.component';
 
@@ -28,6 +29,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
 
   constructor(
     private stateService: StateManagementService,
+    private routeState: RouteStateService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -68,7 +70,24 @@ export class DiscoverComponent implements OnInit, OnDestroy {
    */
   onFilterAdd(filter: QueryFilter): void {
     console.log('Discover: Filter added:', filter);
-    // QueryControlComponent already updates state directly
+
+    const updates: Partial<SearchFilters> = {};
+
+    if (filter.type === 'multiselect' && filter.values) {
+      // Join array values into comma-separated string
+      const valueString = filter.values.join(',');
+      updates[filter.field as keyof SearchFilters] = valueString as any;
+    } else if (filter.type === 'range') {
+      if (filter.field === 'year') {
+        updates.yearMin = filter.rangeMin;
+        updates.yearMax = filter.rangeMax;
+      }
+    } else if (filter.value !== undefined) {
+      updates[filter.field as keyof SearchFilters] = filter.value as any;
+    }
+
+    console.log('Discover: Updating filters with:', updates);
+    this.stateService.updateFilters(updates);
   }
 
   /**
@@ -76,7 +95,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
    */
   onFilterRemove(event: { field: string; updates: Partial<SearchFilters> }): void {
     console.log('Discover: Filter removed:', event);
-    // QueryControlComponent already updates state directly
+    this.stateService.updateFilters(event.updates);
   }
 
   /**
@@ -84,7 +103,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
    */
   onHighlightRemove(field: string): void {
     console.log('Discover: Highlight removed:', field);
-    // QueryControlComponent already updates state directly
+    // Highlights use h_* prefix in URL, so remove that parameter
+    this.routeState.removeParam(field);
   }
 
   /**
@@ -92,7 +112,15 @@ export class DiscoverComponent implements OnInit, OnDestroy {
    */
   onClearHighlights(): void {
     console.log('Discover: Clear highlights');
-    // QueryControlComponent already updates state directly
+    // Remove all h_* parameters from URL
+    const params = this.routeState.getCurrentParams();
+    const highlightKeys = Object.keys(params).filter(key => key.startsWith('h_'));
+
+    // Create new params object without highlight keys
+    const newParams = { ...params };
+    highlightKeys.forEach(key => delete newParams[key]);
+
+    this.routeState.setParams(newParams);
   }
 
   /**
