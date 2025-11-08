@@ -7,8 +7,6 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-import { GridsterModule } from 'angular-gridster2';
-
 // NG-ZORRO imports
 import { NZ_I18N, en_US } from 'ng-zorro-antd/i18n';
 import { NzTableModule } from 'ng-zorro-antd/table';
@@ -145,8 +143,6 @@ export function initializePickerConfigs(pickerConfigService: PickerConfigService
     NzDatePickerModule,
     // Angular CDK
     DragDropModule,
-    // Grid Layout
-    GridsterModule,
     // Shared Module (BaseDataTableComponent, BasePickerComponent)
     SharedModule,
     // PrimeNG Module (will gradually replace NG-ZORRO during migration)

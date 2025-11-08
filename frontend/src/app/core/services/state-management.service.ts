@@ -314,6 +314,29 @@ export class StateManagementService implements OnDestroy {
       error: (err) => console.error('🔴 Fetch failed:', err),
     });
   }
+
+  /**
+   * Clear all filters and reset to default state
+   */
+  clearAllFilters(): void {
+    const currentFilters = this.stateSubject.value.filters;
+    const newFilters: SearchFilters = {
+      page: 1,
+      size: currentFilters.size || 20, // Keep current page size
+    };
+
+    console.log('🔵 StateManagement.clearAllFilters() - resetting all filters');
+
+    this.updateState({ filters: newFilters });
+    this.syncStateToUrl();
+
+    // Trigger API search with empty filters (returns all vehicles)
+    this.fetchVehicleData().subscribe({
+      next: () => console.log('🟢 Data fetched successfully (all filters cleared)'),
+      error: (err) => console.error('🔴 Fetch failed:', err),
+    });
+  }
+
   /**
    * Update pagination and sync to URL
    */
