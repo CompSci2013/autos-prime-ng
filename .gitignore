@@ -39,7 +39,6 @@ ENV/
 # AI Assistants
 .claude/
 .claude-code/
-bmad/
 
 # OS
 .DS_Store
