@@ -21,11 +21,6 @@ export class NavigationComponent {
         label: 'Discover',
         icon: 'pi pi-search',
         routerLink: '/discover'
-      },
-      {
-        label: 'Workshop',
-        icon: 'pi pi-flask',
-        routerLink: '/workshop'
       }
     ];
   }

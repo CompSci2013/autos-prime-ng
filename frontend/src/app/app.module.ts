@@ -89,7 +89,6 @@ import { ALL_PICKER_CONFIGS } from './config/picker-configs';
 // Feature components
 import { DiscoverComponent } from './features/discover/discover.component';
 import { ResultsTableComponent } from './features/results/results-table/results-table.component';
-import { WorkshopComponent } from './features/workshop/workshop.component';
 import { HomeComponent } from './features/home/home.component';
 import { NavigationComponent } from './core/navigation/navigation.component';
 import { PanelPopoutComponent } from './features/panel-popout/panel-popout.component';
@@ -115,7 +114,6 @@ export function initializePickerConfigs(pickerConfigService: PickerConfigService
     AppComponent,
     DiscoverComponent,
     ResultsTableComponent,
-    WorkshopComponent,
     HomeComponent,
     NavigationComponent,
     PanelPopoutComponent,
