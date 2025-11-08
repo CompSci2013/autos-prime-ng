@@ -51,10 +51,23 @@
         <!-- Query Control Panel -->
         <p-panel
           *ngSwitchCase="'query-control'"
-          [header]="panel.title"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
         >
+          <ng-template pTemplate="header">
+            <div class="panel-header-content">
+              <span class="panel-header-title">{{ panel.title }}</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-window-maximize"
+                class="p-button-text p-button-sm popout-btn"
+                (click)="popOutPanel(panel.id)"
+                pTooltip="Pop out to new window"
+                tooltipPosition="left"
+              ></button>
+            </div>
+          </ng-template>
           <app-query-control
             (filterAdd)="onFilterAdd($event)"
             (filterRemove)="onFilterRemove($event)"
@@ -67,10 +80,23 @@
         <!-- Model Picker Panel -->
         <p-panel
           *ngSwitchCase="'model-picker'"
-          [header]="panel.title"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
         >
+          <ng-template pTemplate="header">
+            <div class="panel-header-content">
+              <span class="panel-header-title">{{ panel.title }}</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-window-maximize"
+                class="p-button-text p-button-sm popout-btn"
+                (click)="popOutPanel(panel.id)"
+                pTooltip="Pop out to new window"
+                tooltipPosition="left"
+              ></button>
+            </div>
+          </ng-template>
           <!-- NEW: BasePickerComponent (Configuration-Driven) -->
           <div class="info-banner">
             <strong>✨ NEW: BasePickerComponent</strong>
@@ -92,20 +118,46 @@
         <!-- Vehicle Results Panel -->
         <p-panel
           *ngSwitchCase="'vehicle-results'"
-          [header]="panel.title"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
         >
+          <ng-template pTemplate="header">
+            <div class="panel-header-content">
+              <span class="panel-header-title">{{ panel.title }}</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-window-maximize"
+                class="p-button-text p-button-sm popout-btn"
+                (click)="popOutPanel(panel.id)"
+                pTooltip="Pop out to new window"
+                tooltipPosition="left"
+              ></button>
+            </div>
+          </ng-template>
           <app-results-table></app-results-table>
         </p-panel>
 
         <!-- Interactive Charts Panel -->
         <p-panel
           *ngSwitchCase="'interactive-charts'"
-          [header]="panel.title"
           [toggleable]="true"
           [(collapsed)]="panel.collapsed"
         >
+          <ng-template pTemplate="header">
+            <div class="panel-header-content">
+              <span class="panel-header-title">{{ panel.title }}</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-window-maximize"
+                class="p-button-text p-button-sm popout-btn"
+                (click)="popOutPanel(panel.id)"
+                pTooltip="Pop out to new window"
+                tooltipPosition="left"
+              ></button>
+            </div>
+          </ng-template>
           <app-plotly-histogram></app-plotly-histogram>
         </p-panel>
       </div>

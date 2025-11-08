@@ -226,4 +226,94 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     this.savePanelOrder();
     console.log('Panel order reset to default');
   }
+
+  // ========== PANEL POPOUT FUNCTIONALITY ==========
+
+  /**
+   * Pop out a panel to a new window
+   * Opens panel in a separate window with BroadcastChannel communication
+   */
+  popOutPanel(panelId: string): void {
+    // Map panel IDs to panel types for the popout route
+    const panelTypeMap: Record<string, string> = {
+      'query-control': 'query-control',
+      'model-picker': 'picker',
+      'vehicle-results': 'results',
+      'interactive-charts': 'plotly-charts',
+    };
+
+    const panelType = panelTypeMap[panelId];
+    if (!panelType) {
+      console.error('Unknown panel ID:', panelId);
+      return;
+    }
+
+    // Build popout URL
+    const gridId = 'discover'; // Grid identifier for BroadcastChannel
+    const url = `/panel/${gridId}/${panelId}/${panelType}`;
+
+    // Window features (size, position)
+    const features = [
+      'width=1200',
+      'height=800',
+      'left=100',
+      'top=100',
+      'menubar=no',
+      'toolbar=no',
+      'location=no',
+      'status=no',
+      'resizable=yes',
+      'scrollbars=yes'
+    ].join(',');
+
+    // Open pop-out window
+    const popoutWindow = window.open(url, `panel-${panelId}`, features);
+
+    if (!popoutWindow) {
+      console.error('Failed to open pop-out window. Check if popups are blocked.');
+      return;
+    }
+
+    console.log(`Panel ${panelId} popped out to new window`);
+
+    // Set up BroadcastChannel for communication
+    const channel = new BroadcastChannel(`panel-${panelId}`);
+
+    // Listen for PANEL_READY message from pop-out
+    channel.onmessage = (event) => {
+      if (event.data.type === 'PANEL_READY') {
+        console.log(`Pop-out panel ${panelId} is ready, sending initial state`);
+
+        // Send current state to pop-out
+        const currentState = this.stateService.getCurrentState();
+        channel.postMessage({
+          type: 'STATE_UPDATE',
+          state: currentState
+        });
+      } else if (event.data.type === 'FILTER_ADD') {
+        // Handle filter add from pop-out
+        console.log('Filter add from pop-out:', event.data.payload);
+        this.onFilterAdd(event.data.payload);
+      } else if (event.data.type === 'FILTER_REMOVE') {
+        // Handle filter remove from pop-out
+        console.log('Filter remove from pop-out:', event.data.payload);
+        this.onFilterRemove(event.data.payload);
+      }
+    };
+
+    // Subscribe to state changes and broadcast to pop-out
+    this.stateService.state$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(state => {
+        if (popoutWindow && !popoutWindow.closed) {
+          channel.postMessage({
+            type: 'STATE_UPDATE',
+            state: state
+          });
+        } else {
+          // Clean up channel if window is closed
+          channel.close();
+        }
+      });
+  }
 }
