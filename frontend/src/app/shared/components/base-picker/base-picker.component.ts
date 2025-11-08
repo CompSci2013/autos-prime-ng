@@ -212,6 +212,12 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
     if (changes['externalFilters'] && !changes['externalFilters'].firstChange) {
       console.log('[BasePickerComponent] externalFilters changed:', this.externalFilters);
 
+      // Skip externalFilters in popout mode - subscribeToStateFilters() handles it
+      if (this.popOutContext.isInPopOut()) {
+        console.log('[BasePickerComponent] Popout mode: Skipping externalFilters (using filters$ subscription)');
+        return;
+      }
+
       // Only apply if data is loaded (client-side mode only)
       if (this.dataLoaded && this.config.pagination.mode === 'client') {
         this.applyExternalFilters();
