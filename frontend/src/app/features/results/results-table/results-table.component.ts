@@ -370,6 +370,30 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
   }
 
   /**
+  /**
+   * Handle expand all rows
+   * Load VIN instances for all visible vehicles
+   */
+  onExpandAll(): void {
+    console.log('ResultsTable: Expanding all rows');
+    // Load instances for all current results
+    this.results.forEach((vehicle) => {
+      if (!this.expandedRowInstances.has(vehicle.vehicle_id)) {
+        this.loadVehicleInstances(vehicle.vehicle_id);
+      }
+    });
+  }
+
+  /**
+   * Handle collapse all rows
+   */
+  onCollapseAll(): void {
+    console.log('ResultsTable: Collapsing all rows');
+    // BaseDataTable will handle the actual collapsing
+    // No need to clear our instances cache - keep them for next expand
+  }
+
+  /**
    * Get color for title status badge
    */
   getTitleStatusColor(status: string): string {

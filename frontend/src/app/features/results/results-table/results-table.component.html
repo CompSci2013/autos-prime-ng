@@ -9,6 +9,8 @@
   [maxTableHeight]="'1200px'"
   (queryParamsChange)="onTableQueryChange($event)"
   (rowExpand)="onRowExpand($event)"
+  (expandAll)="onExpandAll()"
+  (collapseAll)="onCollapseAll()"
 >
   <!-- Custom cell rendering -->
   <ng-template #cellTemplate let-column="column" let-row="row">
