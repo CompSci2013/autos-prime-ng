@@ -5,12 +5,15 @@
       <span class="tagline">Classic Vehicle Discovery</span>
     </div>
 
-    <p-menubar [model]="menuItems" styleClass="nav-menu">
-      <ng-template pTemplate="start">
-        <div class="nav-brand-mobile">
-          <h1>AUTOS</h1>
-        </div>
-      </ng-template>
-    </p-menubar>
+    <nav class="nav-links">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="nav-link">
+        <i class="pi pi-home"></i>
+        <span>Home</span>
+      </a>
+      <a routerLink="/discover" routerLinkActive="active" class="nav-link">
+        <i class="pi pi-search"></i>
+        <span>Discover</span>
+      </a>
+    </nav>
   </div>
 </div>

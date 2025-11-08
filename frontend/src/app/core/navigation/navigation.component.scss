@@ -1,5 +1,5 @@
 .navigation-bar {
-  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
@@ -35,29 +35,37 @@
   }
 }
 
-.nav-menu {
-  background: transparent !important;
-  border: none !important;
-  line-height: 64px;
+.nav-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 
-  ::ng-deep .ant-menu-item {
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
     color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
     font-weight: 500;
-    border-bottom: 3px solid transparent !important;
-    
+    font-size: 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+
     i {
-      margin-right: 8px;
+      font-size: 1.1rem;
     }
 
     &:hover {
       color: white;
-      background: rgba(255, 255, 255, 0.1) !important;
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    &.ant-menu-item-selected {
+    &.active {
       color: white;
-      background: rgba(255, 255, 255, 0.15) !important;
-      border-bottom: 3px solid white !important;
+      background: rgba(255, 255, 255, 0.15);
+      border-bottom-color: white;
     }
   }
 }
@@ -67,11 +75,10 @@
     flex-direction: column;
     padding: 1rem;
     align-items: flex-start;
+    gap: 1rem;
   }
 
   .nav-brand {
-    margin-bottom: 0.5rem;
-
     h1 {
       font-size: 1.4rem;
     }
@@ -81,7 +88,16 @@
     }
   }
 
-  .nav-menu {
-    line-height: 48px;
+  .nav-links {
+    width: 100%;
+    flex-direction: row;
+    gap: 0.5rem;
+
+    .nav-link {
+      flex: 1;
+      justify-content: center;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+    }
   }
 }

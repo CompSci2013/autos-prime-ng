@@ -231,7 +231,7 @@
     [closable]="true"
     [draggable]="true"
     appendTo="body"
-    [style]="{width: '600px', height: '90vh', maxHeight: '90vh'}"
+    [style]="{width: '600px'}"
     (onShow)="onModelDialogOpened()"
     (onHide)="onModelDialogCancel()"
   >
@@ -269,7 +269,7 @@
             #modelViewport
             itemSize="40"
             class="model-list"
-            style="height: 1200px;">
+            style="height: 440px; overflow-x: hidden;">
             <div
               *cdkVirtualFor="let model of filteredModels"
               class="model-item"
