@@ -1,0 +1,109 @@
+<div class="dual-checkbox-picker-container">
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading-container">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Loading manufacturers and models...</p>
+  </div>
+
+  <!-- Data table with dual checkboxes -->
+  <div *ngIf="!loading" class="table-container">
+    <p-table
+      [value]="tableData"
+      [scrollable]="true"
+      scrollHeight="400px"
+      [virtualScroll]="true"
+      [virtualScrollItemSize]="46"
+      styleClass="p-datatable-sm p-datatable-striped">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 200px">Manufacturer</th>
+          <th>Model</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+        <tr>
+          <!-- Manufacturer column with tri-state checkbox -->
+          <td>
+            <div class="manufacturer-checkbox-wrapper"
+                 [class.indeterminate]="getManufacturerCheckboxState(row.manufacturer).indeterminate">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="getManufacturerCheckboxState(row.manufacturer).checked"
+                (onChange)="onManufacturerCheckboxChange(row.manufacturer, $event)"
+                [label]="row.manufacturer">
+              </p-checkbox>
+            </div>
+          </td>
+
+          <!-- Model column with binary checkbox -->
+          <td>
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="isRowSelected(row)"
+              (onChange)="onModelCheckboxChange(row.manufacturer, row.model, $event)"
+              [label]="row.model">
+            </p-checkbox>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="2">
+            <div class="empty-message">
+              <i class="pi pi-info-circle"></i>
+              <span>No manufacturers or models found</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- Selected items display -->
+  <div class="selections-display" *ngIf="selectedItems.length > 0">
+    <div class="selections-header">
+      <span class="selections-count">
+        <i class="pi pi-check-circle"></i>
+        {{ selectedItems.length }} selected
+      </span>
+      <p-button
+        label="Clear all"
+        icon="pi pi-times"
+        styleClass="p-button-text p-button-sm"
+        (onClick)="onClear()">
+      </p-button>
+    </div>
+
+    <div class="selections-chips">
+      <p-chip
+        *ngFor="let item of selectedItems"
+        [label]="item.manufacturer + ' - ' + item.model"
+        [removable]="true"
+        (onRemove)="onRemoveModel(item)"
+        styleClass="selection-chip">
+      </p-chip>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="actions-section">
+    <p-button
+      label="Apply ({{ selectedItems.length }})"
+      icon="pi pi-check"
+      styleClass="p-button-primary p-button-lg"
+      [disabled]="selectedItems.length === 0"
+      (onClick)="onApply()">
+    </p-button>
+
+    <p-button
+      label="Clear"
+      icon="pi pi-times"
+      styleClass="p-button-secondary p-button-lg"
+      [disabled]="selectedItems.length === 0"
+      (onClick)="onClear()">
+    </p-button>
+  </div>
+</div>

@@ -1,0 +1,187 @@
+.dual-checkbox-picker-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+  padding: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+}
+
+.table-container {
+  flex: 1;
+  overflow: hidden;
+
+  // Manufacturer checkbox wrapper for indeterminate state
+  .manufacturer-checkbox-wrapper {
+    ::ng-deep {
+      // Checkbox label spacing
+      .p-checkbox-label {
+        margin-left: 0.5rem;
+      }
+    }
+
+    // Indeterminate state visual styling
+    &.indeterminate ::ng-deep {
+      .p-checkbox .p-checkbox-box {
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+
+        &::after {
+          content: '' !important;
+          position: absolute !important;
+          width: 60% !important;
+          height: 2px !important;
+          background-color: white !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          display: block !important;
+        }
+      }
+
+      // Hide the checkmark icon when indeterminate
+      .p-checkbox .p-checkbox-box .p-checkbox-icon {
+        display: none !important;
+      }
+    }
+  }
+
+  ::ng-deep .p-datatable {
+    font-size: 0.9rem;
+
+    .p-datatable-thead > tr > th {
+      background-color: var(--surface-100);
+      color: var(--text-color);
+      font-weight: 600;
+      padding: 0.75rem;
+      border-bottom: 2px solid var(--surface-300);
+    }
+
+    .p-datatable-tbody > tr > td {
+      padding: 0.5rem 0.75rem;
+    }
+
+    // Checkbox label spacing (for model checkboxes)
+    .p-checkbox-label {
+      margin-left: 0.5rem;
+    }
+  }
+}
+
+.empty-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: var(--text-color-secondary);
+  font-size: 0.95rem;
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+.selections-display {
+  background-color: var(--surface-50);
+  border: 1px solid var(--surface-300);
+  border-radius: 6px;
+  padding: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+
+  .selections-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--surface-300);
+
+    .selections-count {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      color: var(--primary-color);
+
+      i {
+        font-size: 1.1rem;
+      }
+    }
+  }
+
+  .selections-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+
+    ::ng-deep .p-chip {
+      background-color: var(--primary-50);
+      color: var(--primary-700);
+      border: 1px solid var(--primary-200);
+      padding: 0.25rem 0.5rem;
+      font-size: 0.85rem;
+
+      .p-chip-remove-icon {
+        color: var(--primary-600);
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+
+        &:hover {
+          color: var(--primary-800);
+        }
+      }
+    }
+  }
+}
+
+.actions-section {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--surface-300);
+
+  ::ng-deep {
+    .p-button {
+      flex: 1;
+
+      &.p-button-lg {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+      }
+
+      .p-button-icon {
+        font-size: 1.1rem;
+      }
+    }
+  }
+}
+
+// Scrollbar styling for selections display
+.selections-display::-webkit-scrollbar {
+  width: 8px;
+}
+
+.selections-display::-webkit-scrollbar-track {
+  background: var(--surface-100);
+  border-radius: 4px;
+}
+
+.selections-display::-webkit-scrollbar-thumb {
+  background: var(--surface-400);
+  border-radius: 4px;
+
+  &:hover {
+    background: var(--surface-500);
+  }
+}

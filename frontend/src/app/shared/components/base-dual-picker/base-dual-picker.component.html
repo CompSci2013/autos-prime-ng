@@ -1,0 +1,101 @@
+<!--
+  Base Dual Picker Component Template (EXPERIMENTAL)
+
+  Demonstrates proper config-driven parent-child picker using BaseDataTable.
+
+  Key Features:
+  - Uses BaseDataTable (inherits sorting, filtering, column management)
+  - Custom cellTemplate handles tri-state parent checkboxes
+  - Config-driven rendering (respects column.sortable, column.filterable)
+-->
+
+<div class="base-dual-picker-container">
+  <!-- Header with selection info and actions -->
+  <div class="picker-header">
+    <div class="selection-info">
+      <span class="selection-count">
+        <i class="pi pi-flask"></i> EXPERIMENTAL: {{ selectionCount }} item{{ selectionCount === 1 ? '' : 's' }} selected
+      </span>
+    </div>
+
+    <div class="picker-actions">
+      <button
+        pButton
+        type="button"
+        label="Clear"
+        class="p-button-secondary"
+        (click)="onClear()"
+        [disabled]="selectionCount === 0"
+      >
+      </button>
+
+      <button
+        pButton
+        type="button"
+        label="Apply Selection"
+        class="p-button-primary"
+        (click)="onApply()"
+        [disabled]="selectionCount === 0"
+      >
+      </button>
+    </div>
+  </div>
+
+  <!-- Data table with dual checkbox columns -->
+  <app-base-data-table
+    [tableId]="config.id + '-picker'"
+    [dataSource]="dataSource"
+    [columns]="columns"
+    [queryParams]="tableQueryParams"
+    (queryParamsChange)="onTableQueryChange($event)"
+    (dataLoaded)="onDataLoaded()"
+  >
+    <!-- Custom cell template for dual checkbox rendering -->
+    <ng-template #cellTemplate let-row="row" let-column="column">
+      <!-- Manufacturer column with tri-state checkbox -->
+      <ng-container *ngIf="column.key === 'manufacturer' && row">
+        <div class="manufacturer-cell" [class.indeterminate]="getManufacturerCheckboxState(row.manufacturer).indeterminate">
+          <p-checkbox
+            [binary]="true"
+            [ngModel]="getManufacturerCheckboxState(row.manufacturer).checked"
+            (ngModelChange)="onManufacturerCheckboxChange(row.manufacturer, $event)"
+          ></p-checkbox>
+          <span class="manufacturer-label">{{ row.manufacturer }}</span>
+        </div>
+      </ng-container>
+
+      <!-- Model column with binary checkbox -->
+      <ng-container *ngIf="column.key === 'model' && row">
+        <div class="model-cell">
+          <p-checkbox
+            [binary]="true"
+            [ngModel]="isRowSelected(row)"
+            (ngModelChange)="onModelCheckboxChange(row, $event)"
+          ></p-checkbox>
+          <span class="model-label">{{ row.model }}</span>
+        </div>
+      </ng-container>
+
+      <!-- Other columns (count, etc.) -->
+      <ng-container *ngIf="column.key !== 'manufacturer' && column.key !== 'model' && row">
+        {{ column.formatter ? column.formatter(row[column.key], row) : row[column.key] }}
+      </ng-container>
+    </ng-template>
+  </app-base-data-table>
+
+  <!-- Selection summary (chips) -->
+  <div class="selection-summary" *ngIf="selectionCount > 0">
+    <span class="summary-label">Selected:</span>
+    <p-chip
+      *ngFor="let label of selectedItemsDisplay.slice(0, 10)"
+      [label]="label"
+      [removable]="true"
+      (onRemove)="onRemoveItem(label)"
+      styleClass="selection-chip chip-blue"
+    >
+    </p-chip>
+    <span *ngIf="selectionCount > 10" class="more-label">
+      +{{ selectionCount - 10 }} more
+    </span>
+  </div>
+</div>

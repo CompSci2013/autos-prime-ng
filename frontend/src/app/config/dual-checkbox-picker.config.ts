@@ -1,17 +1,28 @@
 /**
- * Manufacturer-Model Picker Configuration
+ * Dual Checkbox Picker Configuration
  *
  * Features:
+ * - Parent-child checkbox pattern (manufacturer → models)
+ * - Tri-state manufacturer checkbox (unchecked/indeterminate/checked)
+ * - Binary model checkbox (unchecked/checked)
  * - Client-side pagination (loads all ~200 combinations at once)
- * - Client-side filtering and sorting
  * - Data caching enabled (rarely changes)
  * - URL param: modelCombos
+ *
+ * Limitations:
+ * - Custom template renders parent-child checkboxes (not config-driven)
+ * - No sorting/filtering UI (specialized UX pattern)
+ * - Column config used only for data structure, not rendering
+ *
+ * Note: Uses same API endpoint and data structure as manufacturer-model-picker,
+ * but renders with parent-child checkbox UX instead of single checkbox per row.
  */
 
 import { PickerConfig } from '../shared/models/picker-config.model';
 
 /**
  * Manufacturer-Model Picker Row Interface
+ * (Shared with manufacturer-model-picker.config.ts)
  */
 export interface ManufacturerModelPickerRow {
   manufacturer: string;
@@ -20,18 +31,18 @@ export interface ManufacturerModelPickerRow {
   key: string; // "Manufacturer|Model"
 }
 
-export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
+export const DUAL_CHECKBOX_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
   {
-    id: 'manufacturer-model',
-    displayName: 'Manufacturer & Model Picker',
+    id: 'manufacturer-model-dual',
+    displayName: 'Manufacturer & Model Picker (Dual Checkbox)',
 
     columns: [
       {
         key: 'manufacturer',
         label: 'Manufacturer',
         width: '50%',
-        sortable: true,
-        filterable: true,
+        sortable: false, // Parent-child checkbox UX doesn't support sorting
+        filterable: false, // Parent-child checkbox UX doesn't support filtering
         filterType: 'text',
         hideable: false,
       },
@@ -39,8 +50,8 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
         key: 'model',
         label: 'Model',
         width: '35%',
-        sortable: false,
-        filterable: false,
+        sortable: false, // Parent-child checkbox UX doesn't support sorting
+        filterable: false, // Parent-child checkbox UX doesn't support filtering
         filterType: 'text',
         hideable: false,
       },
@@ -48,7 +59,7 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
         key: 'count',
         label: 'Count',
         width: '15%',
-        sortable: true,
+        sortable: false, // Not displayed in dual picker template
         filterable: false,
         hideable: false,
       },
@@ -63,14 +74,14 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
       responseTransformer: (response: any) => {
         // Transform hierarchical API response to flat rows
         console.log(
-          '[PICKER CONFIG] responseTransformer called with:',
+          '[DUAL PICKER CONFIG] responseTransformer called with:',
           response
         );
 
         // Defensive check
         if (!response || !response.data) {
           console.error(
-            '[PICKER CONFIG] Invalid response structure:',
+            '[DUAL PICKER CONFIG] Invalid response structure:',
             response
           );
           return { results: [], total: 0, page: 1, size: 0, totalPages: 0 };
@@ -108,7 +119,7 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
       keyGenerator: (row) => {
         if (!row || !row.manufacturer || !row.model) {
           console.warn(
-            '[PICKER CONFIG] keyGenerator called with invalid row:',
+            '[DUAL PICKER CONFIG] keyGenerator called with invalid row:',
             row
           );
           return 'invalid-key';
@@ -139,7 +150,7 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
             const [manufacturer, model] = combo.split(':');
             // Skip if either is missing
             if (!manufacturer || !model) {
-              console.warn('[PICKER CONFIG] Invalid combo in URL:', combo);
+              console.warn('[DUAL PICKER CONFIG] Invalid combo in URL:', combo);
               return null;
             }
             return {

@@ -571,6 +571,54 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
    * Handle Clear button click
    * Context-aware: Clears state directly or sends message to main window
    */
+  /**
+   * Remove a single item from selection (from chip close button)
+   */
+  onRemoveItem(key: string): void {
+    console.log('[BasePickerComponent] Removing item:', key);
+    this.selectedRows.delete(key);
+    this.updateSelectedItemsDisplay();
+    this.cdr.markForCheck();
+
+    // Emit selection change event with updated selections
+    this.selectionChange.emit({
+      pickerId: this.config.id,
+      selections: this.selectedItems,
+      keys: Array.from(this.selectedRows),
+    });
+
+    // Update state based on context (pop-out vs normal)
+    if (this.selectedRows.size === 0) {
+      // If no selections left, remove URL parameter
+      if (this.popOutContext.isInPopOut()) {
+        this.popOutContext.sendMessage({
+          type: 'PICKER_CLEAR',
+          payload: {
+            configId: this.config.id,
+            urlParam: this.config.selection.urlParam,
+          },
+        });
+      } else {
+        this.urlParamService.removeParam(this.config.selection.urlParam);
+      }
+    } else {
+      // Otherwise, update with remaining selections
+      const urlValue = this.config.selection.serializer(this.selectedItems);
+      if (this.popOutContext.isInPopOut()) {
+        this.popOutContext.sendMessage({
+          type: 'PICKER_SELECTION_CHANGE',
+          payload: {
+            configId: this.config.id,
+            urlParam: this.config.selection.urlParam,
+            urlValue,
+          },
+        });
+      } else {
+        this.urlParamService.updateParam(this.config.selection.urlParam, urlValue);
+      }
+    }
+  }
+
   onClear(): void {
     console.log('[BasePickerComponent] Clear clicked');
     this.selectedRows.clear();

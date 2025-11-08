@@ -35,6 +35,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private readonly PANEL_ORDER_KEY = 'discover-panel-order';
 
+  // RxJS Subject for popout messages (Observable Pattern - replaces NgZone.run() hack)
+  private popoutMessages$ = new Subject<{ panelId: string; event: MessageEvent }>();
+
   // Current filters from state
   currentFilters: SearchFilters = {};
 
@@ -45,7 +48,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   // Panel order configuration
   panels: PanelConfig[] = [
     { id: 'query-control', title: 'Query Control', collapsed: false },
-    { id: 'model-picker', title: 'Model Picker', collapsed: false },
+    { id: 'model-picker', title: 'Model Picker (Single)', collapsed: false },
+    { id: 'dual-picker', title: 'Model Picker (Dual Checkbox)', collapsed: true },
+    { id: 'base-dual-picker', title: 'Model Picker (Experimental Parent-Child)', collapsed: true },
     { id: 'vin-browser', title: 'VIN Browser', collapsed: false },
     { id: 'vehicle-results', title: 'Vehicle Results', collapsed: false },
     { id: 'interactive-charts', title: 'Interactive Charts', collapsed: false },
@@ -65,6 +70,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     this.loadPanelOrder();
     this.subscribeToStateFilters();
     this.subscribeToStateBroadcast(); // Broadcast state changes to all popouts
+    this.subscribeToPopoutMessages(); // Handle messages from popout windows
   }
 
   ngOnDestroy(): void {
@@ -118,6 +124,79 @@ export class DiscoverComponent implements OnInit, OnDestroy {
             });
           }
         });
+      });
+  }
+
+  /**
+   * Subscribe to popout messages (Observable Pattern)
+   * BroadcastChannel events push to Subject, handled here in Angular zone
+   */
+  private subscribeToPopoutMessages(): void {
+    this.popoutMessages$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(({ panelId, event }) => {
+        if (event.data.type === 'PANEL_READY') {
+          console.log(`Pop-out panel ${panelId} is ready, sending initial state`);
+
+          // Send current state to pop-out
+          const currentState = this.stateService.getCurrentState();
+          const popoutInfo = this.popoutWindows.get(panelId);
+          if (popoutInfo) {
+            popoutInfo.channel.postMessage({
+              type: 'STATE_UPDATE',
+              state: currentState
+            });
+          }
+        } else if (event.data.type === 'PICKER_SELECTION_CHANGE') {
+          // BasePickerComponent sends this new message type with URL param info
+          console.log('Picker selection change from pop-out:', event.data.payload);
+          // BasePicker sends { configId, urlParam, urlValue }
+          // For manufacturer-model picker: urlParam = 'modelCombos', urlValue = 'Ford:F-150,Chevy:Corvette'
+          if (event.data.payload && event.data.payload.urlParam && event.data.payload.urlValue !== undefined) {
+            const updates: any = {};
+            const urlParam = event.data.payload.urlParam;
+            const urlValue = event.data.payload.urlValue;
+
+            // Parse URL value based on param type
+            // modelCombos needs to be an array of objects {manufacturer, model}
+            if (urlParam === 'modelCombos' && urlValue) {
+              // Parse comma-separated string: 'Ford:F-150,Chevy:Corvette'
+              // Into array of objects: [{manufacturer: 'Ford', model: 'F-150'}, ...]
+              updates[urlParam] = urlValue.split(',').map((combo: string) => {
+                const [manufacturer, model] = combo.split(':');
+                return { manufacturer, model };
+              });
+            } else {
+              updates[urlParam] = urlValue || undefined;
+            }
+
+            this.stateService.updateFilters(updates);
+          }
+        } else if (event.data.type === 'SELECTION_CHANGE') {
+          // Legacy: Handle model selection change from popped-out picker
+          console.log('Selection change from pop-out picker (legacy):', event.data.data);
+          this.stateService.updateFilters({
+            modelCombos: event.data.data.length > 0 ? event.data.data : undefined,
+          });
+        } else if (event.data.type === 'PICKER_CLEAR') {
+          // Handle picker clear from config-driven pickers
+          console.log('Picker clear from pop-out:', event.data.payload);
+          if (event.data.payload && event.data.payload.urlParam) {
+            this.routeState.removeParam(event.data.payload.urlParam);
+          }
+        } else if (event.data.type === 'CLEAR_ALL') {
+          // Legacy: Handle clear all from popped-out picker
+          console.log('Clear all from pop-out picker (legacy)');
+          this.stateService.resetFilters();
+        } else if (event.data.type === 'FILTER_ADD') {
+          // Handle filter add from pop-out
+          console.log('Filter add from pop-out:', event.data.payload);
+          this.onFilterAdd(event.data.payload);
+        } else if (event.data.type === 'FILTER_REMOVE') {
+          // Handle filter remove from pop-out
+          console.log('Filter remove from pop-out:', event.data.payload);
+          this.onFilterRemove(event.data.payload);
+        }
       });
   }
 
@@ -209,19 +288,21 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load panel order from localStorage
+   * Load panel order and collapsed state from localStorage
    */
   private loadPanelOrder(): void {
     try {
       const savedOrder = localStorage.getItem(this.PANEL_ORDER_KEY);
       if (savedOrder) {
-        const panelIds: string[] = JSON.parse(savedOrder);
+        const savedPanels: PanelConfig[] = JSON.parse(savedOrder);
 
-        // Reorder panels based on saved order
+        // Reorder panels based on saved order and restore collapsed state
         const reorderedPanels: PanelConfig[] = [];
-        panelIds.forEach(id => {
-          const panel = this.panels.find(p => p.id === id);
+        savedPanels.forEach(savedPanel => {
+          const panel = this.panels.find(p => p.id === savedPanel.id);
           if (panel) {
+            // Restore collapsed state from saved config
+            panel.collapsed = savedPanel.collapsed;
             reorderedPanels.push(panel);
           }
         });
@@ -234,7 +315,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
         });
 
         this.panels = reorderedPanels;
-        console.log('Panel order loaded from localStorage:', this.panels.map(p => p.id));
+        console.log('Panel order and state loaded from localStorage:', this.panels.map(p => `${p.id}:${p.collapsed ? 'collapsed' : 'expanded'}`));
       }
     } catch (error) {
       console.error('Failed to load panel order:', error);
@@ -242,16 +323,23 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Save panel order to localStorage
+   * Save panel order and collapsed state to localStorage
    */
   private savePanelOrder(): void {
     try {
-      const panelIds = this.panels.map(p => p.id);
-      localStorage.setItem(this.PANEL_ORDER_KEY, JSON.stringify(panelIds));
-      console.log('Panel order saved to localStorage');
+      // Save full panel configs (id, title, collapsed state)
+      localStorage.setItem(this.PANEL_ORDER_KEY, JSON.stringify(this.panels));
+      console.log('Panel order and state saved to localStorage');
     } catch (error) {
       console.error('Failed to save panel order:', error);
     }
+  }
+
+  /**
+   * Handle panel collapsed state change (save to localStorage)
+   */
+  onPanelCollapsedChange(): void {
+    this.savePanelOrder();
   }
 
   /**
@@ -260,7 +348,9 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   resetPanelOrder(): void {
     this.panels = [
       { id: 'query-control', title: 'Query Control', collapsed: false },
-      { id: 'model-picker', title: 'Model Picker', collapsed: false },
+      { id: 'model-picker', title: 'Model Picker (Single)', collapsed: false },
+      { id: 'dual-picker', title: 'Model Picker (Dual Checkbox)', collapsed: true },
+      { id: 'base-dual-picker', title: 'Model Picker (Experimental Parent-Child)', collapsed: true },
       { id: 'vin-browser', title: 'VIN Browser', collapsed: false },
       { id: 'vehicle-results', title: 'Vehicle Results', collapsed: false },
       { id: 'interactive-charts', title: 'Interactive Charts', collapsed: false },
@@ -281,6 +371,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     const panelTypeMap: Record<string, string> = {
       'query-control': 'query-control',
       'model-picker': 'picker',
+      'dual-picker': 'dual-picker',
+      'base-dual-picker': 'base-dual-picker',
       'vin-browser': 'picker',
       'vehicle-results': 'results',
       'interactive-charts': 'plotly-charts',
@@ -325,61 +417,10 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     // Set up BroadcastChannel for communication
     const channel = new BroadcastChannel(`panel-${panelId}`);
 
-    // Listen for messages from pop-out
+    // Listen for messages from pop-out (Observable Pattern)
+    // Push browser API events to RxJS Subject for handling in Angular zone
     channel.onmessage = (event) => {
-      if (event.data.type === 'PANEL_READY') {
-        console.log(`Pop-out panel ${panelId} is ready, sending initial state`);
-
-        // Send current state to pop-out
-        const currentState = this.stateService.getCurrentState();
-        channel.postMessage({
-          type: 'STATE_UPDATE',
-          state: currentState
-        });
-      } else if (event.data.type === 'PICKER_SELECTION_CHANGE') {
-        // BasePickerComponent sends this new message type with URL param info
-        console.log('Picker selection change from pop-out:', event.data.payload);
-        // BasePicker sends { configId, urlParam, urlValue }
-        // For manufacturer-model picker: urlParam = 'modelCombos', urlValue = 'Ford:F-150,Chevy:Corvette'
-        if (event.data.payload && event.data.payload.urlParam && event.data.payload.urlValue !== undefined) {
-          const updates: any = {};
-          const urlParam = event.data.payload.urlParam;
-          const urlValue = event.data.payload.urlValue;
-
-          // Parse URL value based on param type
-          // modelCombos needs to be an array of objects {manufacturer, model}
-          if (urlParam === 'modelCombos' && urlValue) {
-            // Parse comma-separated string: 'Ford:F-150,Chevy:Corvette'
-            // Into array of objects: [{manufacturer: 'Ford', model: 'F-150'}, ...]
-            updates[urlParam] = urlValue.split(',').map((combo: string) => {
-              const [manufacturer, model] = combo.split(':');
-              return { manufacturer, model };
-            });
-          } else {
-            updates[urlParam] = urlValue || undefined;
-          }
-
-          this.stateService.updateFilters(updates);
-        }
-      } else if (event.data.type === 'SELECTION_CHANGE') {
-        // Legacy: Handle model selection change from popped-out picker
-        console.log('Selection change from pop-out picker (legacy):', event.data.data);
-        this.stateService.updateFilters({
-          modelCombos: event.data.data.length > 0 ? event.data.data : undefined,
-        });
-      } else if (event.data.type === 'CLEAR_ALL') {
-        // Handle clear all from popped-out picker
-        console.log('Clear all from pop-out picker');
-        this.stateService.resetFilters();
-      } else if (event.data.type === 'FILTER_ADD') {
-        // Handle filter add from pop-out
-        console.log('Filter add from pop-out:', event.data.payload);
-        this.onFilterAdd(event.data.payload);
-      } else if (event.data.type === 'FILTER_REMOVE') {
-        // Handle filter remove from pop-out
-        console.log('Filter remove from pop-out:', event.data.payload);
-        this.onFilterRemove(event.data.payload);
-      }
+      this.popoutMessages$.next({ panelId, event });
     };
 
     // NOTE: State broadcasting is handled by centralized subscribeToStateBroadcast()

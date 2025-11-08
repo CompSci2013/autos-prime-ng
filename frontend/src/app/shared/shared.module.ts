@@ -22,6 +22,8 @@ import { ColumnManagerComponent } from './components/column-manager/column-manag
 import { PlotlyHistogramComponent } from './components/plotly-histogram/plotly-histogram.component';
 import { StaticParabolaChartComponent } from './components/static-parabola-chart/static-parabola-chart.component';
 import { BasePickerComponent } from './components/base-picker/base-picker.component';
+import { DualCheckboxPickerComponent } from './components/dual-checkbox-picker/dual-checkbox-picker.component';
+import { BaseDualPickerComponent } from './components/base-dual-picker/base-dual-picker.component';
 // New chart components (refactored from plotly-histogram)
 import { BaseChartComponent } from './components/base-chart/base-chart.component';
 import { ManufacturerChartComponent } from './components/manufacturer-chart/manufacturer-chart.component';
@@ -36,6 +38,8 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     PlotlyHistogramComponent,
     StaticParabolaChartComponent,
     BasePickerComponent,
+    DualCheckboxPickerComponent,
+    BaseDualPickerComponent,
     // New chart components
     BaseChartComponent,
     ManufacturerChartComponent,
@@ -70,6 +74,8 @@ import { BodyClassChartComponent } from './components/body-class-chart/body-clas
     PlotlyHistogramComponent,
     StaticParabolaChartComponent,
     BasePickerComponent,
+    DualCheckboxPickerComponent,
+    BaseDualPickerComponent,
     // New chart components
     BaseChartComponent,
     ManufacturerChartComponent,

@@ -65,6 +65,7 @@
             *ngIf="!isPanelPoppedOut(panel.id)"
             [toggleable]="true"
             [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
           >
             <ng-template pTemplate="header">
               <div class="panel-header-content">
@@ -90,12 +91,13 @@
           </p-panel>
         </ng-container>
 
-        <!-- Model Picker Panel -->
+        <!-- Model Picker Panel (Single Checkbox) -->
         <ng-container *ngSwitchCase="'model-picker'">
           <p-panel
             *ngIf="!isPanelPoppedOut(panel.id)"
             [toggleable]="true"
             [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
           >
             <ng-template pTemplate="header">
               <div class="panel-header-content">
@@ -118,12 +120,68 @@
           </p-panel>
         </ng-container>
 
+        <!-- Dual Checkbox Picker Panel (Parent-Child) -->
+        <ng-container *ngSwitchCase="'dual-picker'">
+          <p-panel
+            *ngIf="!isPanelPoppedOut(panel.id)"
+            [toggleable]="true"
+            [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
+          >
+            <ng-template pTemplate="header">
+              <div class="panel-header-content">
+                <span class="panel-header-title">{{ panel.title }}</span>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-window-maximize"
+                  class="p-button-text p-button-sm popout-btn"
+                  (click)="popOutPanel(panel.id)"
+                  pTooltip="Pop out to new window"
+                  tooltipPosition="left"
+                ></button>
+              </div>
+            </ng-template>
+            <app-dual-checkbox-picker [configId]="'manufacturer-model-dual'"></app-dual-checkbox-picker>
+          </p-panel>
+        </ng-container>
+
+        <!-- Base Dual Picker Panel (Experimental Parent-Child with BaseDataTable) -->
+        <ng-container *ngSwitchCase="'base-dual-picker'">
+          <p-panel
+            *ngIf="!isPanelPoppedOut(panel.id)"
+            [toggleable]="true"
+            [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
+          >
+            <ng-template pTemplate="header">
+              <div class="panel-header-content">
+                <span class="panel-header-title">
+                  <i class="pi pi-flask" style="color: #ff9800; margin-right: 8px;"></i>
+                  {{ panel.title }}
+                </span>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-window-maximize"
+                  class="p-button-text p-button-sm popout-btn"
+                  (click)="popOutPanel(panel.id)"
+                  pTooltip="Pop out to new window"
+                  tooltipPosition="left"
+                ></button>
+              </div>
+            </ng-template>
+            <app-base-dual-picker [configId]="'manufacturer-model-base-dual'"></app-base-dual-picker>
+          </p-panel>
+        </ng-container>
+
         <!-- VIN Browser Panel -->
         <ng-container *ngSwitchCase="'vin-browser'">
           <p-panel
             *ngIf="!isPanelPoppedOut(panel.id)"
             [toggleable]="true"
             [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
           >
             <ng-template pTemplate="header">
               <div class="panel-header-content">
@@ -149,6 +207,7 @@
             *ngIf="!isPanelPoppedOut(panel.id)"
             [toggleable]="true"
             [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
           >
             <ng-template pTemplate="header">
               <div class="panel-header-content">
@@ -174,6 +233,7 @@
             *ngIf="!isPanelPoppedOut(panel.id)"
             [toggleable]="true"
             [(collapsed)]="panel.collapsed"
+            (collapsedChange)="onPanelCollapsedChange()"
           >
             <ng-template pTemplate="header">
               <div class="panel-header-content">

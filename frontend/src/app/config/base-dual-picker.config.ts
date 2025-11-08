@@ -1,17 +1,23 @@
 /**
- * Manufacturer-Model Picker Configuration
+ * Base Dual Picker Configuration (EXPERIMENTAL)
  *
- * Features:
- * - Client-side pagination (loads all ~200 combinations at once)
- * - Client-side filtering and sorting
- * - Data caching enabled (rarely changes)
- * - URL param: modelCombos
+ * Demonstrates proper config-driven parent-child picker architecture:
+ * - Uses BaseDataTable (inherits sorting, filtering, column management)
+ * - Parent-child grouping (manufacturer → models)
+ * - Tri-state parent checkbox (unchecked/indeterminate/checked)
+ * - Binary child checkbox (unchecked/checked)
+ * - All BaseDataTable features work (sort, filter, column actions)
+ * - Fully config-driven rendering
+ *
+ * This is the CORRECT implementation pattern - dual-checkbox-picker.component
+ * was the initial prototype that didn't follow config-driven architecture.
  */
 
 import { PickerConfig } from '../shared/models/picker-config.model';
 
 /**
  * Manufacturer-Model Picker Row Interface
+ * (Same structure as dual-checkbox-picker)
  */
 export interface ManufacturerModelPickerRow {
   manufacturer: string;
@@ -20,18 +26,18 @@ export interface ManufacturerModelPickerRow {
   key: string; // "Manufacturer|Model"
 }
 
-export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
+export const BASE_DUAL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
   {
-    id: 'manufacturer-model',
-    displayName: 'Manufacturer & Model Picker',
+    id: 'manufacturer-model-base-dual',
+    displayName: 'Manufacturer & Model Picker (Experimental Parent-Child)',
 
     columns: [
       {
         key: 'manufacturer',
         label: 'Manufacturer',
         width: '50%',
-        sortable: true,
-        filterable: true,
+        sortable: true,  // ✅ Config-driven: BaseDataTable respects this
+        filterable: true, // ✅ Config-driven: BaseDataTable respects this
         filterType: 'text',
         hideable: false,
       },
@@ -39,8 +45,8 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
         key: 'model',
         label: 'Model',
         width: '35%',
-        sortable: false,
-        filterable: false,
+        sortable: true,  // ✅ Config-driven: BaseDataTable respects this
+        filterable: true, // ✅ Config-driven: BaseDataTable respects this
         filterType: 'text',
         hideable: false,
       },
@@ -48,7 +54,7 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
         key: 'count',
         label: 'Count',
         width: '15%',
-        sortable: true,
+        sortable: true,  // ✅ Config-driven: BaseDataTable respects this
         filterable: false,
         hideable: false,
       },
@@ -58,19 +64,18 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
       method: 'getManufacturerModelCombinations',
       paramMapper: () => ({
         page: 1,
-        size: 100, // Load all at once for client-side filtering
+        size: 100, // Load all at once for client-side grouping
       }),
       responseTransformer: (response: any) => {
-        // Transform hierarchical API response to flat rows
         console.log(
-          '[PICKER CONFIG] responseTransformer called with:',
+          '[BASE DUAL PICKER CONFIG] responseTransformer called with:',
           response
         );
 
         // Defensive check
         if (!response || !response.data) {
           console.error(
-            '[PICKER CONFIG] Invalid response structure:',
+            '[BASE DUAL PICKER CONFIG] Invalid response structure:',
             response
           );
           return { results: [], total: 0, page: 1, size: 0, totalPages: 0 };
@@ -108,7 +113,7 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
       keyGenerator: (row) => {
         if (!row || !row.manufacturer || !row.model) {
           console.warn(
-            '[PICKER CONFIG] keyGenerator called with invalid row:',
+            '[BASE DUAL PICKER CONFIG] keyGenerator called with invalid row:',
             row
           );
           return 'invalid-key';
@@ -134,12 +139,11 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
         if (!urlValue) return [];
         return urlValue
           .split(',')
-          .filter((combo) => combo && combo.includes(':')) // Filter out empty/invalid combos
+          .filter((combo) => combo && combo.includes(':'))
           .map((combo) => {
             const [manufacturer, model] = combo.split(':');
-            // Skip if either is missing
             if (!manufacturer || !model) {
-              console.warn('[PICKER CONFIG] Invalid combo in URL:', combo);
+              console.warn('[BASE DUAL PICKER CONFIG] Invalid combo in URL:', combo);
               return null;
             }
             return {
@@ -149,7 +153,7 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
               key: `${manufacturer}|${model}`,
             } as ManufacturerModelPickerRow;
           })
-          .filter((item) => item !== null) as ManufacturerModelPickerRow[]; // Remove nulls
+          .filter((item) => item !== null) as ManufacturerModelPickerRow[];
       },
     },
 

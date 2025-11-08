@@ -115,7 +115,9 @@ export class PanelPopoutComponent implements OnInit, OnDestroy {
   get panelTitle(): string {
     switch (this.panelType) {
       case 'picker':
-        return 'Model Picker';
+        return 'Model Picker (Single)';
+      case 'dual-picker':
+        return 'Model Picker (Dual Checkbox)';
       case 'results':
         return 'Vehicle Results';
       case 'plotly-charts':

@@ -9,12 +9,22 @@
   <div class="popout-content">
     <ng-container [ngSwitch]="panelType">
 
-      <!-- Manufacturer-Model Picker Panel -->
+      <!-- Manufacturer-Model Picker Panel (Single Checkbox) -->
       <div *ngSwitchCase="'picker'" class="panel-wrapper">
         <app-base-picker
           [configId]="'manufacturer-model'"
           [externalFilters]="currentFilters"
         ></app-base-picker>
+      </div>
+
+      <!-- Dual Checkbox Picker Panel (Parent-Child) -->
+      <div *ngSwitchCase="'dual-picker'" class="panel-wrapper">
+        <app-dual-checkbox-picker [configId]="'manufacturer-model-dual'"></app-dual-checkbox-picker>
+      </div>
+
+      <!-- Base Dual Picker Panel (Experimental Parent-Child with BaseDataTable) -->
+      <div *ngSwitchCase="'base-dual-picker'" class="panel-wrapper">
+        <app-base-dual-picker [configId]="'manufacturer-model-base-dual'"></app-base-dual-picker>
       </div>
 
       <!-- Vehicle Results Table Panel -->

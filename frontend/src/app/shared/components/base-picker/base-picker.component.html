@@ -75,6 +75,8 @@
     <p-chip
       *ngFor="let label of selectedItemsDisplay.slice(0, 10)"
       [label]="label"
+      [removable]="true"
+      (onRemove)="onRemoveItem(label)"
       styleClass="selection-chip chip-blue"
     ></p-chip>
     <p-chip *ngIf="selectionCount > 10" [label]="'+' + (selectionCount - 10) + ' more'" styleClass="chip-default"></p-chip>
