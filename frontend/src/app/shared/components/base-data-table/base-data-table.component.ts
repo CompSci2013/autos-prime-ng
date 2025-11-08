@@ -606,33 +606,27 @@ export class BaseDataTableComponent<T> implements OnInit, OnDestroy, OnChanges {
    * Event structure: { first: number, rows: number, page: number, pageCount: number }
    */
   onPrimeNgPageChange(event: any): void {
-    console.log('========================================');
-    console.log('📄 onPrimeNgPageChange: PrimeNG emitted pagination event');
-    console.log('   Event:', event);
-    console.log(`   Current state: page=${this.currentPage}, size=${this.pageSize}, first=${this.first}`);
+    // PrimeNG's onPage event structure: { first: number, rows: number }
+    // Note: No 'page' property - must calculate from first/rows
 
-    const newPage = event.page + 1; // PrimeNG uses 0-indexed pages
+    // Calculate page from first index (PrimeNG uses 0-indexed first)
+    const newPage = Math.floor(event.first / event.rows) + 1;
     const newSize = event.rows;
 
-    console.log(`   User wants: page=${newPage}, size=${newSize}`);
+    console.log(`📄 Pagination event: page ${newPage}, size ${newSize} (first=${event.first})`);
 
     // Validate values
-    if (isNaN(newSize) || isNaN(newPage)) {
-      console.error('❌ Invalid pagination values!', { newSize, newPage });
+    if (isNaN(newSize) || isNaN(newPage) || newSize <= 0 || newPage <= 0) {
+      console.error('❌ Invalid pagination values!', { newSize, newPage, event });
       return;
     }
 
     // Check if page size changed
     if (newSize !== this.pageSize) {
-      console.log(`   → Page size changed: ${this.pageSize} → ${newSize}`);
       this.onPageSizeChange(newSize);
     } else if (newPage !== this.currentPage) {
-      console.log(`   → Page changed: ${this.currentPage} → ${newPage}`);
       this.onPageChange(newPage);
-    } else {
-      console.log('   → No change (page and size are same)');
     }
-    console.log('========================================');
   }
 
   /**
