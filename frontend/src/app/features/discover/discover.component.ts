@@ -314,10 +314,20 @@ export class DiscoverComponent implements OnInit, OnDestroy {
         // BasePickerComponent sends this new message type with URL param info
         console.log('Picker selection change from pop-out:', event.data.payload);
         // BasePicker sends { configId, urlParam, urlValue }
-        // For manufacturer-model picker: urlParam = 'models', urlValue = 'Ford:F-150,Chevy:Corvette'
+        // For manufacturer-model picker: urlParam = 'modelCombos', urlValue = 'Ford:F-150,Chevy:Corvette'
         if (event.data.payload && event.data.payload.urlParam && event.data.payload.urlValue !== undefined) {
           const updates: any = {};
-          updates[event.data.payload.urlParam] = event.data.payload.urlValue || undefined;
+          const urlParam = event.data.payload.urlParam;
+          const urlValue = event.data.payload.urlValue;
+
+          // Parse URL value based on param type
+          // modelCombos needs to be an array, not a comma-separated string
+          if (urlParam === 'modelCombos' && urlValue) {
+            updates[urlParam] = urlValue.split(',');
+          } else {
+            updates[urlParam] = urlValue || undefined;
+          }
+
           this.stateService.updateFilters(updates);
         }
       } else if (event.data.type === 'SELECTION_CHANGE') {
