@@ -64,6 +64,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadPanelOrder();
     this.subscribeToStateFilters();
+    this.subscribeToStateBroadcast(); // Broadcast state changes to all popouts
   }
 
   ngOnDestroy(): void {
@@ -92,6 +93,31 @@ export class DiscoverComponent implements OnInit, OnDestroy {
         this.currentFilters = filters;
         this.updateSelectionCount();
         this.cdr.markForCheck();
+      });
+  }
+
+  /**
+   * Subscribe to FULL state changes and broadcast to ALL popouts
+   * This is the centralized subscription that keeps all popouts in sync
+   */
+  private subscribeToStateBroadcast(): void {
+    this.stateService.state$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((state) => {
+        console.log('[Discover] Broadcasting state to all popouts:', {
+          resultsCount: state.results?.length,
+          filters: state.filters,
+          popoutsCount: this.popoutWindows.size,
+        });
+        // Broadcast to ALL popout windows
+        this.popoutWindows.forEach((popoutInfo) => {
+          if (popoutInfo.window && !popoutInfo.window.closed) {
+            popoutInfo.channel.postMessage({
+              type: 'STATE_UPDATE',
+              state,
+            });
+          }
+        });
       });
   }
 
@@ -356,17 +382,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
       }
     };
 
-    // Subscribe to state changes and broadcast to pop-out
-    this.stateService.state$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(state => {
-        if (popoutWindow && !popoutWindow.closed) {
-          channel.postMessage({
-            type: 'STATE_UPDATE',
-            state: state
-          });
-        }
-      });
+    // NOTE: State broadcasting is handled by centralized subscribeToStateBroadcast()
+    // No per-popout subscription needed here
 
     // Check periodically if pop-out window is closed (MOVE semantics restoration)
     const checkInterval = setInterval(() => {
