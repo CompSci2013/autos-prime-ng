@@ -48,6 +48,7 @@ import { PickerConfigService } from '../../../core/services/picker-config.servic
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { UrlParamService } from '../../../core/services/url-param.service';
 import { RouteStateService } from '../../../core/services/route-state.service';
+import { StateManagementService } from '../../../core/services/state-management.service';
 import { ApiService } from '../../../services/api.service';
 import { SearchFilters } from '../../../models/search-filters.model';
 import { TableStatePersistenceService } from '../../services/table-state-persistence.service';
@@ -131,6 +132,7 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
     private popOutContext: PopOutContextService,
     private urlParamService: UrlParamService,
     private routeState: RouteStateService,
+    private stateService: StateManagementService,
     private tablePersistence: TableStatePersistenceService
   ) {}
 
@@ -186,6 +188,11 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
     // Subscribe to URL state for hydration
     this.subscribeToUrlState();
 
+    // In popout mode, also subscribe to filters$ for state synchronization
+    if (this.popOutContext.isInPopOut()) {
+      this.subscribeToStateFilters();
+    }
+
     console.log(
       `[BasePickerComponent] Initialized (pop-out mode: ${this.popOutContext.isInPopOut()})`
     );
@@ -236,6 +243,43 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
 
       // If data already loaded, hydrate immediately
       if (this.dataLoaded) {
+        this.hydrateSelections();
+        this.cdr.markForCheck();
+      } else {
+        console.log(
+          '[BasePickerComponent] Data not loaded yet, deferring hydration'
+        );
+      }
+    });
+  }
+
+  /**
+   * Subscribe to StateManagementService filters$ for popout mode
+   * In popout mode, the URL doesn't contain query params, so we need to
+   * hydrate from the filters$ observable which is synchronized via BroadcastChannel
+   */
+  private subscribeToStateFilters(): void {
+    const urlParam = this.config.selection.urlParam;
+
+    this.stateService.filters$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((filters) => {
+      console.log('[BasePickerComponent] Filters updated from StateManagementService:', filters);
+
+      // Extract selections from filters object
+      // The urlParam is the key we're looking for (e.g., 'modelCombos')
+      const modelCombos = (filters as any)[urlParam] || filters.modelCombos || [];
+
+      console.log(`[BasePickerComponent] Extracted ${modelCombos.length} selections from filters`);
+
+      // Convert to keys
+      this.pendingHydration = modelCombos.map((sel: any) =>
+        this.config.row.keyGenerator(sel as T)
+      );
+
+      // If data already loaded, hydrate immediately
+      if (this.dataLoaded) {
+        console.log('[BasePickerComponent] Data loaded, hydrating selections now');
         this.hydrateSelections();
         this.cdr.markForCheck();
       } else {
