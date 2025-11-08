@@ -296,7 +296,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     // Set up BroadcastChannel for communication
     const channel = new BroadcastChannel(`panel-${panelId}`);
 
-    // Listen for PANEL_READY message from pop-out
+    // Listen for messages from pop-out
     channel.onmessage = (event) => {
       if (event.data.type === 'PANEL_READY') {
         console.log(`Pop-out panel ${panelId} is ready, sending initial state`);
@@ -307,6 +307,16 @@ export class DiscoverComponent implements OnInit, OnDestroy {
           type: 'STATE_UPDATE',
           state: currentState
         });
+      } else if (event.data.type === 'SELECTION_CHANGE') {
+        // Handle model selection change from popped-out picker
+        console.log('Selection change from pop-out picker:', event.data.data);
+        this.stateService.updateFilters({
+          modelCombos: event.data.data.length > 0 ? event.data.data : undefined,
+        });
+      } else if (event.data.type === 'CLEAR_ALL') {
+        // Handle clear all from popped-out picker
+        console.log('Clear all from pop-out picker');
+        this.stateService.resetFilters();
       } else if (event.data.type === 'FILTER_ADD') {
         // Handle filter add from pop-out
         console.log('Filter add from pop-out:', event.data.payload);
