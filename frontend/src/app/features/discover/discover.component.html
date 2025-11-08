@@ -12,50 +12,103 @@
         <span class="summary-label">Active Filters:</span>
         <span class="summary-count">{{ selectionCount }} model(s) selected</span>
       </div>
+      <button
+        pButton
+        type="button"
+        label="Reset Panel Order"
+        class="p-button-secondary p-button-sm"
+        (click)="resetPanelOrder()"
+        icon="pi pi-refresh"
+      ></button>
       <button pButton type="button" label="Clear All" (click)="onClearAll()"></button>
     </div>
   </div>
 
-  <!-- Query Control Section -->
-  <p-panel header="Query Control" [toggleable]="true">
-    <app-query-control
-      (filterAdd)="onFilterAdd($event)"
-      (filterRemove)="onFilterRemove($event)"
-      (highlightRemove)="onHighlightRemove($event)"
-      (clearHighlights)="onClearHighlights()"
-    >
-    </app-query-control>
-  </p-panel>
+  <!-- Drag/Drop Panels Container -->
+  <div cdkDropList (cdkDropListDropped)="onPanelDrop($event)" class="panels-container">
+    <div *ngFor="let panel of panels" cdkDrag class="panel-wrapper">
+      <!-- Drag Handle (appears on hover) -->
+      <div class="drag-handle" cdkDragHandle>
+        <i class="pi pi-bars"></i>
+        <span class="drag-hint">Drag to reorder</span>
+      </div>
 
-  <!-- Model Picker Section -->
-  <p-panel header="Model Picker" [toggleable]="true" styleClass="mt-3">
-    <!-- NEW: BasePickerComponent (Configuration-Driven) -->
-    <div class="info-banner">
-      <strong>✨ NEW: BasePickerComponent</strong>
-      <span>(Configuration-driven)</span>
+      <!-- Drag Preview (shows while dragging) -->
+      <div *cdkDragPreview class="drag-preview">
+        <div class="drag-preview-header">
+          <i class="pi pi-bars"></i>
+          <span>{{ panel.title }}</span>
+        </div>
+      </div>
+
+      <!-- Placeholder (shows drop location) -->
+      <div *cdkDragPlaceholder class="drag-placeholder">
+        <div class="placeholder-content">Drop here</div>
+      </div>
+
+      <!-- Actual Panel Content -->
+      <div [ngSwitch]="panel.id" class="panel-content">
+        <!-- Query Control Panel -->
+        <p-panel
+          *ngSwitchCase="'query-control'"
+          [header]="panel.title"
+          [toggleable]="true"
+          [(collapsed)]="panel.collapsed"
+        >
+          <app-query-control
+            (filterAdd)="onFilterAdd($event)"
+            (filterRemove)="onFilterRemove($event)"
+            (highlightRemove)="onHighlightRemove($event)"
+            (clearHighlights)="onClearHighlights()"
+          >
+          </app-query-control>
+        </p-panel>
+
+        <!-- Model Picker Panel -->
+        <p-panel
+          *ngSwitchCase="'model-picker'"
+          [header]="panel.title"
+          [toggleable]="true"
+          [(collapsed)]="panel.collapsed"
+        >
+          <!-- NEW: BasePickerComponent (Configuration-Driven) -->
+          <div class="info-banner">
+            <strong>✨ NEW: BasePickerComponent</strong>
+            <span>(Configuration-driven)</span>
+          </div>
+          <app-base-picker
+            [configId]="'manufacturer-model'"
+            [externalFilters]="currentFilters"
+          ></app-base-picker>
+
+          <!-- VIN Browser (Browse ALL VINs) -->
+          <div class="info-banner vin-browser-banner">
+            <strong>🚗 NEW: VIN Browser</strong>
+            <span>(Browse ALL VINs with filtering: Mfr, Model, Year, Body Class, Mileage, Value)</span>
+          </div>
+          <app-base-picker [configId]="'vin-browser'"></app-base-picker>
+        </p-panel>
+
+        <!-- Vehicle Results Panel -->
+        <p-panel
+          *ngSwitchCase="'vehicle-results'"
+          [header]="panel.title"
+          [toggleable]="true"
+          [(collapsed)]="panel.collapsed"
+        >
+          <app-results-table></app-results-table>
+        </p-panel>
+
+        <!-- Interactive Charts Panel -->
+        <p-panel
+          *ngSwitchCase="'interactive-charts'"
+          [header]="panel.title"
+          [toggleable]="true"
+          [(collapsed)]="panel.collapsed"
+        >
+          <app-plotly-histogram></app-plotly-histogram>
+        </p-panel>
+      </div>
     </div>
-    <app-base-picker
-      [configId]="'manufacturer-model'"
-      [externalFilters]="currentFilters"
-    ></app-base-picker>
-
-    <!-- VIN Browser (Browse ALL 1,835 VINs) -->
-    <div class="info-banner vin-browser-banner">
-      <strong>🚗 NEW: VIN Browser</strong>
-      <span>(Browse ALL VINs with filtering: Mfr, Model, Year, Body Class, Mileage, Value)</span>
-    </div>
-    <app-base-picker
-      [configId]="'vin-browser'"
-    ></app-base-picker>
-  </p-panel>
-
-  <!-- Vehicle Results Section -->
-  <p-panel header="Vehicle Results" [toggleable]="true" styleClass="mt-3">
-    <app-results-table></app-results-table>
-  </p-panel>
-
-  <!-- Charts Section -->
-  <p-panel header="Interactive Charts" [toggleable]="true" styleClass="mt-3">
-    <app-plotly-histogram></app-plotly-histogram>
-  </p-panel>
+  </div>
 </div>
