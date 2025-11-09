@@ -126,7 +126,16 @@ export class StateManagementService implements OnDestroy {
     // Always auto-fetch data on initialization (supports filtered and unfiltered)
     // Backend supports empty modelCombos (returns all vehicles)
     console.log('[StateManagement] Auto-fetching data on initialization');
-    this.fetchVehicleData().pipe(take(1)).subscribe();
+    this.fetchVehicleData().pipe(take(1)).subscribe({
+      next: () => console.log('[StateManagement] Initial data loaded successfully'),
+      error: (err) => {
+        console.error('[StateManagement] Failed to load initial data:', err);
+        this.updateState({
+          error: this.formatError(err),
+          loading: false
+        });
+      }
+    });
   }
 
   private watchUrlChanges(): void {
@@ -227,12 +236,24 @@ export class StateManagementService implements OnDestroy {
 
         // Map to HighlightFilters properties
         switch (baseKey) {
-          case 'yearMin':
-            highlights.yearMin = parseInt(params[key], 10);
+          case 'yearMin': {
+            const value = parseInt(params[key], 10);
+            if (!isNaN(value)) {
+              highlights.yearMin = value;
+            } else {
+              console.warn(`[StateManagement] Invalid yearMin value: "${params[key]}"`);
+            }
             break;
-          case 'yearMax':
-            highlights.yearMax = parseInt(params[key], 10);
+          }
+          case 'yearMax': {
+            const value = parseInt(params[key], 10);
+            if (!isNaN(value)) {
+              highlights.yearMax = value;
+            } else {
+              console.warn(`[StateManagement] Invalid yearMax value: "${params[key]}"`);
+            }
             break;
+          }
           case 'manufacturer':
             highlights.manufacturer = params[key];
             break;
@@ -245,12 +266,24 @@ export class StateManagementService implements OnDestroy {
           case 'stateCode':
             highlights.stateCode = params[key];
             break;
-          case 'conditionMin':
-            highlights.conditionMin = parseInt(params[key], 10);
+          case 'conditionMin': {
+            const value = parseInt(params[key], 10);
+            if (!isNaN(value)) {
+              highlights.conditionMin = value;
+            } else {
+              console.warn(`[StateManagement] Invalid conditionMin value: "${params[key]}"`);
+            }
             break;
-          case 'conditionMax':
-            highlights.conditionMax = parseInt(params[key], 10);
+          }
+          case 'conditionMax': {
+            const value = parseInt(params[key], 10);
+            if (!isNaN(value)) {
+              highlights.conditionMax = value;
+            } else {
+              console.warn(`[StateManagement] Invalid conditionMax value: "${params[key]}"`);
+            }
             break;
+          }
         }
       }
     });
@@ -348,7 +381,18 @@ export class StateManagementService implements OnDestroy {
     this.syncStateToUrl();
 
     // Always trigger API search (supports both filtered and unfiltered)
-    this.fetchVehicleData().subscribe();
+    this.fetchVehicleData().subscribe({
+      next: () => console.log('[StateManagement] Page data loaded successfully'),
+      error: (err) => {
+        console.error('[StateManagement] Failed to load page data:', err);
+        // Revert to previous page on error
+        this.updateState({
+          filters: currentFilters,
+          error: this.formatError(err)
+        });
+        this.syncStateToUrl();
+      }
+    });
   }
 
   /**
@@ -367,7 +411,18 @@ export class StateManagementService implements OnDestroy {
     this.syncStateToUrl();
 
     // Always trigger API search (supports both filtered and unfiltered)
-    this.fetchVehicleData().subscribe();
+    this.fetchVehicleData().subscribe({
+      next: () => console.log('[StateManagement] Sorted data loaded successfully'),
+      error: (err) => {
+        console.error('[StateManagement] Failed to load sorted data:', err);
+        // Revert to previous sort on error
+        this.updateState({
+          filters: currentFilters,
+          error: this.formatError(err)
+        });
+        this.syncStateToUrl();
+      }
+    });
   }
 
   /**
@@ -581,6 +636,45 @@ export class StateManagementService implements OnDestroy {
   }
 
   /**
+   * Fetch vehicle instances (VINs) with request coordination
+   * Uses RequestCoordinatorService for deduplication, caching, and retry
+   */
+  fetchVehicleInstances(vehicleId: string, count: number = 8): Observable<any> {
+    const cacheKey = `vehicle-instances:${vehicleId}:${count}`;
+
+    return this.requestCoordinator.execute(
+      cacheKey,
+      () => this.apiService.getVehicleInstances(vehicleId, count),
+      {
+        cacheTime: 300000, // Cache for 5 minutes
+        deduplication: true,
+        retryAttempts: 2,
+        retryDelay: 1000,
+      }
+    );
+  }
+
+  /**
+   * Fetch manufacturer-model combinations with request coordination
+   * Uses RequestCoordinatorService for deduplication, caching, and retry
+   * Used by DualCheckboxPicker and other manufacturer-model pickers
+   */
+  fetchManufacturerModelData(page: number = 1, size: number = 1000): Observable<any> {
+    const cacheKey = `manufacturer-model:${page}:${size}`;
+
+    return this.requestCoordinator.execute(
+      cacheKey,
+      () => this.apiService.getManufacturerModelCombinations(page, size),
+      {
+        cacheTime: 600000, // Cache for 10 minutes (data rarely changes)
+        deduplication: true,
+        retryAttempts: 2,
+        retryDelay: 1000,
+      }
+    );
+  }
+
+  /**
    * Get loading state for vehicle data
    * Returns observable of loading state for the current filters AND highlights
    */
@@ -655,8 +749,9 @@ export class StateManagementService implements OnDestroy {
       h_bodyClass: highlights.bodyClass,
     });
 
-    // Use base64 encoding for URL-safe key
-    return `${prefix}:${btoa(filterString)}`;
+    // Use encodeURIComponent for URL-safe key (supports Unicode)
+    // Previously used btoa() which crashes on Unicode characters (Citroën, etc.)
+    return `${prefix}:${encodeURIComponent(filterString)}`;
   }
 
   /**

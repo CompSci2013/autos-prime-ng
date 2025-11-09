@@ -149,8 +149,18 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
     // Get params from config paramMapper
     const params = this.config.api.paramMapper ? this.config.api.paramMapper({} as any) : {};
 
-    // Call API method dynamically
-    (this.apiService as any)[apiMethod](params.page, params.size).pipe(
+    // Use StateManagementService wrapper for RequestCoordinator benefits
+    // (deduplication, caching, retry logic)
+    let apiCall$;
+    if (apiMethod === 'getManufacturerModelCombinations') {
+      apiCall$ = this.stateService.fetchManufacturerModelData(params.page, params.size);
+    } else {
+      // Fallback for other API methods (should add wrappers for these too)
+      console.warn(`[DualCheckboxPicker] API method '${apiMethod}' not wrapped in RequestCoordinator`);
+      apiCall$ = (this.apiService as any)[apiMethod](params.page, params.size);
+    }
+
+    apiCall$.pipe(
       takeUntil(this.destroy$)
     ).subscribe({
       next: (response: any) => {

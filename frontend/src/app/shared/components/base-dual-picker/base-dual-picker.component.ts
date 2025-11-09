@@ -353,11 +353,37 @@ export class BaseDualPickerComponent implements OnInit, OnDestroy {
    * Remove single item
    */
   onRemoveItem(label: string): void {
-    const [manufacturer, model] = label.split(' - ');
+    const parts = label.split(' - ');
+    if (parts.length !== 2) {
+      console.warn(`[BaseDualPicker] Invalid label format for removal: "${label}"`);
+      return;
+    }
+    const [manufacturer, model] = parts;
+    if (!manufacturer || !model) {
+      console.warn(`[BaseDualPicker] Empty value in label: "${label}"`);
+      return;
+    }
     const key = `${manufacturer}|${model}`;
 
     this.selectedRows.delete(key);
     this.updateSelectionDisplay();
+
+    // Persist the removal to URL (same logic as onApply)
+    const urlValue = this.config.selection.serializer(this.selectedItems);
+
+    if (this.popOutContext.isInPopOut()) {
+      this.popOutContext.sendMessage({
+        type: 'PICKER_SELECTION_CHANGE',
+        payload: {
+          configId: this.config.id,
+          urlParam: this.config.selection.urlParam,
+          urlValue,
+        },
+      });
+    } else {
+      this.urlParamService.updateParam(this.config.selection.urlParam, urlValue);
+    }
+
     this.cdr.markForCheck();
   }
 }

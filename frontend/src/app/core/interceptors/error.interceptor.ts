@@ -39,8 +39,12 @@ export class ErrorInterceptor implements HttpInterceptor {
           error: error.error,
         });
 
-        // Show user-friendly notification (only once, not on retries)
-        this.errorNotification.handleHttpError(error);
+        // Show user-friendly notification only once (not on retries)
+        // Mark error as already shown to prevent duplicate notifications
+        if (!(error as any)._notificationShown) {
+          this.errorNotification.handleHttpError(error);
+          (error as any)._notificationShown = true;
+        }
 
         // Re-throw the error for RequestCoordinator to handle retries
         return throwError(() => error);

@@ -137,11 +137,23 @@ export class RouteStateService {
 
     // Handle manufacturer-model combinations from URL
     if (params['modelCombos']) {
-      const modelsArray = params['modelCombos'].split(',').map((combo: string) => {
-        const [manufacturer, model] = combo.split(':');
-        return { manufacturer, model };
-      });
-      filters.modelCombos = modelsArray;
+      const modelsArray = params['modelCombos']
+        .split(',')
+        .map((combo: string) => {
+          const parts = combo.split(':');
+          if (parts.length !== 2) {
+            console.warn(`[RouteState] Invalid modelCombo format: "${combo}"`);
+            return null;
+          }
+          const [manufacturer, model] = parts;
+          if (!manufacturer?.trim() || !model?.trim()) {
+            console.warn(`[RouteState] Empty value in modelCombo: "${combo}"`);
+            return null;
+          }
+          return { manufacturer: manufacturer.trim(), model: model.trim() };
+        })
+        .filter(Boolean); // Remove nulls
+      filters.modelCombos = modelsArray as any;
     }
 
     // NOTE: Table column filters (manufacturerSearch, modelSearch, etc.) are NOT in URL

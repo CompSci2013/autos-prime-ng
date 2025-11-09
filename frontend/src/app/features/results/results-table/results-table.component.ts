@@ -3,7 +3,6 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { StateManagementService } from '../../../core/services/state-management.service';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
-import { ApiService } from '../../../services/api.service';
 import { VehicleResult, VehicleInstance, SearchFilters } from '../../../models';
 import { TableColumn, TableQueryParams } from '../../../shared/models';
 import { BaseDataTableComponent } from '../../../shared/components/base-data-table/base-data-table.component';
@@ -133,7 +132,6 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
   constructor(
     private stateService: StateManagementService,
     private popOutContext: PopOutContextService,
-    private apiService: ApiService,
     private cdr: ChangeDetectorRef
   ) {
     // Initialize tableQueryParams from current state BEFORE template renders
@@ -340,12 +338,16 @@ export class ResultsTableComponent implements OnInit, OnDestroy {
 
   /**
    * Load VIN instances for expanded row
+   * Uses StateManagementService wrapper for RequestCoordinator benefits:
+   * - Deduplication (expanding same row twice uses cached data)
+   * - Caching (5 minute TTL)
+   * - Retry with exponential backoff
    */
   private loadVehicleInstances(vehicleId: string): void {
     this.loadingInstances.add(vehicleId);
 
-    this.apiService
-      .getVehicleInstances(vehicleId, 8)
+    this.stateService
+      .fetchVehicleInstances(vehicleId, 8)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

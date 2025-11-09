@@ -106,8 +106,9 @@ export class RequestCoordinatorService {
           return timer(delayTime);
         },
       }),
-      // Share for deduplication
-      shareReplay(1),
+      // Share for deduplication with refCount to prevent memory leaks
+      // refCount: true ensures subscription is cleaned up when all subscribers unsubscribe
+      shareReplay({ bufferSize: 1, refCount: true }),
       // Tap to cache successful responses
       tap((response) => {
         if (cacheTime > 0) {
