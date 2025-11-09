@@ -342,17 +342,47 @@ async function getVehicleDetails(options = {}) {
     }
 
     if (highlights.manufacturer) {
+      // Support comma-separated values for multi-select highlighting
+      const manufacturers = highlights.manufacturer.split(',').map(m => m.trim()).filter(m => m);
+      if (manufacturers.length > 0) {
+        highlightFilter.bool.filter.push({
+          terms: { 'manufacturer.keyword': manufacturers }
+        });
+        hasHighlights = true;
+      }
+    }
+
+    if (highlights.modelCombos && highlights.modelCombos.length > 0) {
+      // Model combos: Array of {manufacturer, model} pairs
+      // Create OR query with AND conditions for each pair
+      // Example: (manufacturer=Dodge AND model=Charger) OR (manufacturer=Chevrolet AND model=Camaro)
+      const modelComboQueries = highlights.modelCombos.map(combo => ({
+        bool: {
+          must: [
+            { term: { 'manufacturer.keyword': combo.manufacturer } },
+            { term: { 'model.keyword': combo.model } }
+          ]
+        }
+      }));
+
       highlightFilter.bool.filter.push({
-        term: { 'manufacturer.keyword': highlights.manufacturer }
+        bool: {
+          should: modelComboQueries,
+          minimum_should_match: 1
+        }
       });
       hasHighlights = true;
     }
 
     if (highlights.bodyClass) {
-      highlightFilter.bool.filter.push({
-        term: { 'body_class': highlights.bodyClass }
-      });
-      hasHighlights = true;
+      // Support comma-separated values for multi-select highlighting
+      const bodyClasses = highlights.bodyClass.split(',').map(b => b.trim()).filter(b => b);
+      if (bodyClasses.length > 0) {
+        highlightFilter.bool.filter.push({
+          terms: { 'body_class': bodyClasses }
+        });
+        hasHighlights = true;
+      }
     }
 
     // Build sub-aggregation for highlighted portion

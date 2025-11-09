@@ -1,551 +1,395 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ColumnManagerComponent } from './column-manager.component';
-import { TableColumn } from '../../models/table-column.model';
-import { SimpleChange } from '@angular/core';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 
-describe('ColumnManagerComponent - Column Visibility Management', () => {
+import { ColumnManagerComponent, ColumnItem } from './column-manager.component';
+import { TableColumn } from '../../models/table-column.model';
+
+describe('ColumnManagerComponent', () => {
   let component: ColumnManagerComponent;
   let fixture: ComponentFixture<ColumnManagerComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  const mockColumns: TableColumn[] = [
+    { key: 'id', label: 'ID', sortable: true, filterable: false, visible: true, hideable: false },
+    { key: 'name', label: 'Name', sortable: true, filterable: true, visible: true, hideable: true },
+    { key: 'email', label: 'Email', sortable: false, filterable: false, visible: false, hideable: true },
+    { key: 'count', label: 'Count', sortable: true, filterable: false, visible: true, hideable: true },
+  ];
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       declarations: [ColumnManagerComponent],
       schemas: [NO_ERRORS_SCHEMA],
-    }).compileComponents();
+    });
 
     fixture = TestBed.createComponent(ColumnManagerComponent);
     component = fixture.componentInstance;
   });
 
-  describe('Initialization', () => {
-    it('should create the component', () => {
+  // ========== Component Initialization ==========
+
+  describe('Component Initialization', () => {
+    it('should create', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should initialize with default state', () => {
+    it('should initialize with default values', () => {
       expect(component.visible).toBe(false);
       expect(component.columns).toEqual([]);
-      expect(component.transferData).toEqual([]);
+      expect(component.sourceColumns).toEqual([]);
+      expect(component.targetColumns).toEqual([]);
       expect(component.searchText).toBe('');
     });
 
-    it('should initialize transfer data when columns change', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', sortable: false, filterable: true, hideable: true },
-      ];
+    it('should initialize PickList data with visible and hidden columns', () => {
+      component.columns = [...mockColumns];
 
-      component.columns = columns;
+      component.initializePickListData();
+
+      // Verify target (visible) columns: id, name, count
+      expect(component.targetColumns.length).toBe(3);
+      expect(component.targetColumns.map(c => c.key)).toContain('id');
+      expect(component.targetColumns.map(c => c.key)).toContain('name');
+      expect(component.targetColumns.map(c => c.key)).toContain('count');
+
+      // Verify source (hidden) columns: email
+      expect(component.sourceColumns.length).toBe(1);
+      expect(component.sourceColumns[0].key).toBe('email');
+    });
+
+    it('should mark required columns as disabled', () => {
+      component.columns = [...mockColumns];
+
+      component.initializePickListData();
+
+      const idItem = component.targetColumns.find(c => c.key === 'id');
+      expect(idItem?.disabled).toBe(true); // Not hideable = disabled
+
+      const nameItem = component.targetColumns.find(c => c.key === 'name');
+      expect(nameItem?.disabled).toBe(false); // Hideable = not disabled
+    });
+
+    it('should generate column descriptions based on features', () => {
+      const desc1 = component.getColumnDescription(mockColumns[0]); // ID: sortable, required
+      const desc2 = component.getColumnDescription(mockColumns[1]); // Name: sortable, filterable
+      const desc3 = component.getColumnDescription(mockColumns[2]); // Email: none
+
+      expect(desc1).toContain('Sortable');
+      expect(desc1).toContain('Required');
+      expect(desc2).toContain('Sortable');
+      expect(desc2).toContain('Filterable');
+      expect(desc3).toBe('Standard column');
+    });
+  });
+
+  // ========== ngOnChanges Lifecycle ==========
+
+  describe('ngOnChanges Lifecycle', () => {
+    it('should reinitialize PickList data when columns change', () => {
+      const initSpy = spyOn(component, 'initializePickListData');
+
       component.ngOnChanges({
-        columns: new SimpleChange(null, columns, true),
+        columns: {
+          previousValue: [],
+          currentValue: mockColumns,
+          firstChange: false,
+          isFirstChange: () => false,
+        },
       });
 
-      expect(component.transferData.length).toBe(2);
+      expect(initSpy).toHaveBeenCalled();
+    });
+
+    it('should reinitialize PickList data when visible changes', () => {
+      const initSpy = spyOn(component, 'initializePickListData');
+
+      component.ngOnChanges({
+        visible: {
+          previousValue: false,
+          currentValue: true,
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(initSpy).toHaveBeenCalled();
+    });
+
+    it('should not reinitialize if unrelated properties change', () => {
+      const initSpy = spyOn(component, 'initializePickListData');
+
+      component.ngOnChanges({
+        someOtherProp: {
+          previousValue: 'old',
+          currentValue: 'new',
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(initSpy).not.toHaveBeenCalled();
     });
   });
 
-  describe('Transfer Data Initialization', () => {
-    it('should create transfer items from columns', () => {
-      const columns: TableColumn[] = [
-        { key: 'manufacturer', label: 'Manufacturer', sortable: true, filterable: true, hideable: true },
-        { key: 'model', label: 'Model', sortable: true, filterable: true, hideable: true },
-      ];
+  // ========== Drawer Actions ==========
 
-      component.columns = columns;
-      component.initializeTransferData();
-
-      expect(component.transferData.length).toBe(2);
-      expect(component.transferData[0]['key']).toBe('manufacturer');
-      expect(component.transferData[0]['title']).toBe('Manufacturer');
-    });
-
-    it('should set direction to "right" for visible columns', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      expect(component.transferData[0]['direction']).toBe('right');
-    });
-
-    it('should set direction to "left" for hidden columns', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      expect(component.transferData[0]['direction']).toBe('left');
-    });
-
-    it('should treat undefined visibility as visible', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      // visible: undefined should be treated as visible
-      expect(component.transferData[0]['direction']).toBe('right');
-    });
-
-    it('should disable transfer for non-hideable columns', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Required Column', sortable: true, filterable: false, hideable: false },
-        { key: 'col2', label: 'Optional Column', sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      expect(component.transferData[0]['disabled']).toBe(true);
-      expect(component.transferData[1]['disabled']).toBe(false);
-    });
-  });
-
-  describe('Column Description Generation', () => {
-    it('should describe sortable columns', () => {
-      const column: TableColumn = {
-        key: 'col1',
-        label: 'Column 1',
-        sortable: true,
-        filterable: false,
-        hideable: true,
-      };
-
-      const description = component.getColumnDescription(column);
-      expect(description).toContain('Sortable');
-    });
-
-    it('should describe filterable columns', () => {
-      const column: TableColumn = {
-        key: 'col1',
-        label: 'Column 1',
-        sortable: false,
-        filterable: true,
-        hideable: true,
-      };
-
-      const description = component.getColumnDescription(column);
-      expect(description).toContain('Filterable');
-    });
-
-    it('should describe required columns', () => {
-      const column: TableColumn = {
-        key: 'col1',
-        label: 'Column 1',
-        sortable: false,
-        filterable: false,
-        hideable: false,
-      };
-
-      const description = component.getColumnDescription(column);
-      expect(description).toContain('Required');
-    });
-
-    it('should combine multiple features', () => {
-      const column: TableColumn = {
-        key: 'col1',
-        label: 'Column 1',
-        sortable: true,
-        filterable: true,
-        hideable: false,
-      };
-
-      const description = component.getColumnDescription(column);
-      expect(description).toContain('Sortable');
-      expect(description).toContain('Filterable');
-      expect(description).toContain('Required');
-    });
-
-    it('should return "Standard column" when no features', () => {
-      const column: TableColumn = {
-        key: 'col1',
-        label: 'Column 1',
-        sortable: false,
-        filterable: false,
-        hideable: true,
-      };
-
-      const description = component.getColumnDescription(column);
-      expect(description).toBe('Standard column');
-    });
-  });
-
-  describe('Drawer Visibility', () => {
+  describe('Drawer Actions', () => {
     it('should close drawer and emit visibleChange', () => {
-      spyOn(component.visibleChange, 'emit');
-
       component.visible = true;
+      const emitSpy = spyOn(component.visibleChange, 'emit');
+
       component.onClose();
 
       expect(component.visible).toBe(false);
-      expect(component.visibleChange.emit).toHaveBeenCalledWith(false);
+      expect(emitSpy).toHaveBeenCalledWith(false);
     });
 
-    it('should close drawer on cancel', () => {
-      spyOn(component, 'onClose');
+    it('should call onClose when cancel is clicked', () => {
+      const closeSpy = spyOn(component, 'onClose');
 
       component.onCancel();
 
-      expect(component.onClose).toHaveBeenCalled();
+      expect(closeSpy).toHaveBeenCalled();
     });
 
-    it('should close drawer after applying changes', () => {
-      spyOn(component, 'onClose');
+    it('should update column visibility on apply', () => {
+      component.columns = [...mockColumns];
+      component.initializePickListData();
 
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-      component.initializeTransferData();
+      // Move 'name' from target to source (hide it)
+      const nameItem = component.targetColumns.find(c => c.key === 'name')!;
+      component.targetColumns = component.targetColumns.filter(c => c.key !== 'name');
+      component.sourceColumns.push(nameItem);
 
       component.onApply();
 
-      expect(component.onClose).toHaveBeenCalled();
+      const nameColumn = component.columns.find(c => c.key === 'name');
+      expect(nameColumn?.visible).toBe(false);
+    });
+
+    it('should emit columnsChange on apply', () => {
+      component.columns = [...mockColumns];
+      component.initializePickListData();
+      const emitSpy = spyOn(component.columnsChange, 'emit');
+
+      component.onApply();
+
+      expect(emitSpy).toHaveBeenCalled();
+    });
+
+    it('should close drawer after apply', () => {
+      component.columns = [...mockColumns];
+      component.initializePickListData();
+      const closeSpy = spyOn(component, 'onClose');
+
+      component.onApply();
+
+      expect(closeSpy).toHaveBeenCalled();
+    });
+
+    it('should handle errors during apply gracefully', () => {
+      component.columns = [...mockColumns];
+      spyOn(console, 'error');
+      spyOn(component, 'validateDependencies').and.throwError('Validation error');
+
+      component.onApply();
+
+      expect(console.error).toHaveBeenCalledWith('❌ ERROR in onApply():', jasmine.any(Error));
+    });
+
+    it('should reset all columns to default visibility', () => {
+      component.columns = [...mockColumns];
+      // Modify visibility
+      component.columns[1].visible = false; // Hide 'name'
+      component.columns[2].visible = true; // Show 'email'
+
+      component.onReset();
+
+      // Check reset: hideable columns should have visible=undefined, required columns=true
+      expect(component.columns[0].visible).toBe(true); // id (required)
+      expect(component.columns[1].visible).toBeUndefined(); // name (hideable)
+      expect(component.columns[2].visible).toBeUndefined(); // email (hideable)
+    });
+
+    it('should reinitialize PickList data on reset', () => {
+      component.columns = [...mockColumns];
+      const initSpy = spyOn(component, 'initializePickListData');
+
+      component.onReset();
+
+      expect(initSpy).toHaveBeenCalled();
+    });
+
+    it('should emit columnsChange on reset', () => {
+      component.columns = [...mockColumns];
+      const emitSpy = spyOn(component.columnsChange, 'emit');
+
+      component.onReset();
+
+      expect(emitSpy).toHaveBeenCalled();
     });
   });
 
-  describe('Apply Changes', () => {
-    it('should update column visibility based on transfer direction', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', visible: true, sortable: true, filterable: false, hideable: true },
-      ];
+  // ========== PickList Actions ==========
 
-      component.columns = columns;
-      component.initializeTransferData();
+  describe('PickList Actions', () => {
+    it('should log when columns are moved to target', () => {
+      spyOn(console, 'log');
 
-      // Move col2 to left (hide)
-      component.transferData[1]['direction'] = 'left';
+      component.onMoveToTarget({ items: [{ key: 'email', title: 'Email' }] });
 
-      component.onApply();
-
-      expect(component.columns[0].visible).toBe(true);
-      expect(component.columns[1].visible).toBe(false);
+      expect(console.log).toHaveBeenCalledWith('Move to target (show columns):', jasmine.any(Object));
     });
 
-    it('should emit columnsChange event', () => {
-      spyOn(component.columnsChange, 'emit');
+    it('should log when columns are moved to source', () => {
+      spyOn(console, 'log');
 
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-      component.initializeTransferData();
+      component.onMoveToSource({ items: [{ key: 'name', title: 'Name' }] });
 
-      component.onApply();
-
-      expect(component.columnsChange.emit).toHaveBeenCalled();
-    });
-
-    it('should validate dependencies when applying', () => {
-      spyOn(component, 'validateDependencies');
-
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-      component.initializeTransferData();
-
-      component.onApply();
-
-      expect(component.validateDependencies).toHaveBeenCalled();
-    });
-
-    it('should handle multiple columns changing visibility', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', visible: true, sortable: true, filterable: false, hideable: true },
-        { key: 'col3', label: 'Column 3', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      // Hide col1, show col3
-      component.transferData[0]['direction'] = 'left';
-      component.transferData[2]['direction'] = 'right';
-
-      component.onApply();
-
-      expect(component.columns[0].visible).toBe(false);
-      expect(component.columns[1].visible).toBe(true);
-      expect(component.columns[2].visible).toBe(true);
+      expect(console.log).toHaveBeenCalledWith('Move to source (hide columns):', jasmine.any(Object));
     });
   });
 
-  describe('Reset to Defaults', () => {
-    it('should reset hideable columns to undefined visibility', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: false, sortable: true, filterable: false, hideable: true },
+  // ========== Validation ==========
+
+  describe('Validation - Dependencies', () => {
+    it('should auto-show dependent columns when parent is visible', () => {
+      const columnsWithDeps: TableColumn[] = [
+        { key: 'id', label: 'ID', sortable: true, filterable: false, visible: true, hideable: true },
+        { key: 'expanded', label: 'Expanded View', sortable: false, filterable: false, visible: true, hideable: true, dependencies: ['details'] },
+        { key: 'details', label: 'Details', sortable: false, filterable: false, visible: false, hideable: true },
       ];
 
-      component.columns = columns;
-      component.onReset();
+      component.columns = columnsWithDeps;
+      component.initializePickListData();
 
-      expect(component.columns[0].visible).toBeUndefined();
+      // Apply changes (expanded is visible, details is hidden)
+      component.onApply();
+
+      // Verify 'details' was auto-shown because 'expanded' depends on it
+      const detailsColumn = component.columns.find(c => c.key === 'details');
+      expect(detailsColumn?.visible).toBe(true);
     });
 
-    it('should keep required columns visible', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Required', visible: true, sortable: true, filterable: false, hideable: false },
+    it('should move dependent columns from source to target', () => {
+      const columnsWithDeps: TableColumn[] = [
+        { key: 'parent', label: 'Parent', sortable: true, filterable: false, visible: true, hideable: true, dependencies: ['child'] },
+        { key: 'child', label: 'Child', sortable: false, filterable: false, visible: false, hideable: true },
       ];
 
-      component.columns = columns;
-      component.onReset();
+      component.columns = columnsWithDeps;
+      component.initializePickListData();
 
-      expect(component.columns[0].visible).toBe(true);
-    });
-
-    it('should reinitialize transfer data', () => {
-      spyOn(component, 'initializeTransferData');
-
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.onReset();
-
-      expect(component.initializeTransferData).toHaveBeenCalled();
-    });
-
-    it('should emit columnsChange event', () => {
-      spyOn(component.columnsChange, 'emit');
-
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.onReset();
-
-      expect(component.columnsChange.emit).toHaveBeenCalled();
-    });
-  });
-
-  describe('Dependency Validation', () => {
-    it('should ensure dependent columns are visible', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true, dependencies: ['col2'] },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
+      // Before validation: child is in source
+      expect(component.sourceColumns.find(c => c.key === 'child')).toBeDefined();
+      expect(component.targetColumns.find(c => c.key === 'child')).toBeUndefined();
 
       component.validateDependencies();
 
-      expect(component.columns[1].visible).toBe(true);
-    });
-
-    it('should update transfer data for dependent columns', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true, dependencies: ['col2'] },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      component.validateDependencies();
-
-      const col2Transfer = component.transferData.find((t) => t['key'] === 'col2');
-      expect(col2Transfer?.['direction']).toBe('right');
+      // After validation: child moved to target
+      expect(component.sourceColumns.find(c => c.key === 'child')).toBeUndefined();
+      expect(component.targetColumns.find(c => c.key === 'child')).toBeDefined();
     });
 
     it('should handle multiple dependencies', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true, dependencies: ['col2', 'col3'] },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-        { key: 'col3', label: 'Column 3', visible: false, sortable: true, filterable: false, hideable: true },
+      const columnsWithDeps: TableColumn[] = [
+        { key: 'parent', label: 'Parent', sortable: true, filterable: false, visible: true, hideable: true, dependencies: ['child1', 'child2'] },
+        { key: 'child1', label: 'Child 1', sortable: false, filterable: false, visible: false, hideable: true },
+        { key: 'child2', label: 'Child 2', sortable: false, filterable: false, visible: false, hideable: true },
       ];
 
-      component.columns = columns;
-      component.initializeTransferData();
-
+      component.columns = columnsWithDeps;
+      component.initializePickListData();
       component.validateDependencies();
 
-      expect(component.columns[1].visible).toBe(true);
-      expect(component.columns[2].visible).toBe(true);
+      // Both children should be auto-shown
+      expect(component.columns.find(c => c.key === 'child1')?.visible).toBe(true);
+      expect(component.columns.find(c => c.key === 'child2')?.visible).toBe(true);
     });
 
     it('should not affect columns without dependencies', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
+      component.columns = [...mockColumns]; // No dependencies
+      component.initializePickListData();
 
-      component.columns = columns;
-      component.initializeTransferData();
-
+      const beforeState = component.columns.map(c => ({ key: c.key, visible: c.visible }));
       component.validateDependencies();
+      const afterState = component.columns.map(c => ({ key: c.key, visible: c.visible }));
 
-      expect(component.columns[1].visible).toBe(false);
-    });
-
-    it('should only validate visible columns dependencies', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', visible: false, sortable: true, filterable: false, hideable: true, dependencies: ['col2'] },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      component.validateDependencies();
-
-      // col1 is hidden, so its dependencies should not be enforced
-      expect(component.columns[1].visible).toBe(false);
+      expect(beforeState).toEqual(afterState);
     });
   });
 
-  describe('Helper Methods', () => {
-    it('should count visible columns correctly', () => {
-      component.columns = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-        { key: 'col3', label: 'Column 3', sortable: true, filterable: false, hideable: true }, // undefined = visible
-      ];
+  // ========== Helper Methods ==========
 
-      expect(component.getVisibleCount()).toBe(2);
+  describe('Helper Methods', () => {
+    beforeEach(() => {
+      component.columns = [...mockColumns];
+    });
+
+    it('should count visible columns correctly', () => {
+      expect(component.getVisibleCount()).toBe(3); // id, name, count
     });
 
     it('should count hidden columns correctly', () => {
-      component.columns = [
-        { key: 'col1', label: 'Column 1', visible: true, sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', visible: false, sortable: true, filterable: false, hideable: true },
-        { key: 'col3', label: 'Column 3', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
-
-      expect(component.getHiddenCount()).toBe(2);
+      expect(component.getHiddenCount()).toBe(1); // email
     });
 
     it('should count total columns correctly', () => {
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-        { key: 'col2', label: 'Column 2', sortable: true, filterable: false, hideable: true },
-        { key: 'col3', label: 'Column 3', sortable: true, filterable: false, hideable: true },
-      ];
-
-      expect(component.getTotalCount()).toBe(3);
+      expect(component.getTotalCount()).toBe(4);
     });
 
-    it('should detect if reset is possible when columns modified', () => {
-      component.columns = [
-        { key: 'col1', label: 'Column 1', visible: false, sortable: true, filterable: false, hideable: true },
-      ];
+    it('should return true if columns can be reset', () => {
+      // Modify a hideable column
+      component.columns[1].visible = false;
 
       expect(component.canReset()).toBe(true);
     });
 
-    it('should detect if reset is not needed when columns at default', () => {
-      component.columns = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true }, // visible: undefined = default
-      ];
+    it('should return false if no columns modified from default', () => {
+      // Reset all hideable columns to undefined (default)
+      component.columns.forEach(col => {
+        if (col.hideable) {
+          col.visible = undefined;
+        }
+      });
 
       expect(component.canReset()).toBe(false);
     });
 
-    it('should not allow reset for required columns', () => {
-      component.columns = [
-        { key: 'col1', label: 'Required', visible: true, sortable: true, filterable: false, hideable: false },
-      ];
+    it('should not count required columns in canReset', () => {
+      // Only required column is modified (doesn't count)
+      component.columns.forEach(col => {
+        if (col.hideable) {
+          col.visible = undefined;
+        }
+      });
+      component.columns[0].visible = false; // Modify required column
 
-      expect(component.canReset()).toBe(false);
+      expect(component.canReset()).toBe(false); // Still false because required columns don't count
     });
   });
 
-  describe('Filter Options', () => {
-    it('should filter columns by title case-insensitively', () => {
-      const item: any = { title: 'Manufacturer' };
+  // ========== ColumnItem Interface ==========
 
-      expect(component.filterOption('manu', item)).toBe(true);
-      expect(component.filterOption('MANU', item)).toBe(true);
-      expect(component.filterOption('facturer', item)).toBe(true);
-      expect(component.filterOption('xyz', item)).toBe(false);
+  describe('ColumnItem Interface', () => {
+    it('should create ColumnItem with correct properties', () => {
+      component.columns = [mockColumns[0]];
+
+      component.initializePickListData();
+
+      const item = component.targetColumns[0];
+      expect(item.key).toBe('id');
+      expect(item.title).toBe('ID');
+      expect(item.description).toContain('Sortable');
+      expect(item.disabled).toBe(true); // Not hideable
     });
 
-    it('should handle empty search text', () => {
-      const item: any = { title: 'Column' };
+    it('should set disabled=false for hideable columns', () => {
+      component.columns = [mockColumns[1]]; // name is hideable
 
-      expect(component.filterOption('', item)).toBe(true);
-    });
-  });
+      component.initializePickListData();
 
-  describe('Edge Cases', () => {
-    it('should handle empty column list', () => {
-      component.columns = [];
-      component.initializeTransferData();
-
-      expect(component.transferData).toEqual([]);
-      expect(component.getVisibleCount()).toBe(0);
-      expect(component.getHiddenCount()).toBe(0);
-    });
-
-    it('should handle columns with missing optional properties', () => {
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.columns = columns;
-      component.initializeTransferData();
-
-      expect(component.transferData.length).toBe(1);
-    });
-
-    it('should handle apply with no transfer data', () => {
-      component.columns = [];
-      component.transferData = [];
-
-      expect(() => {
-        component.onApply();
-      }).not.toThrow();
-    });
-
-    it('should handle reset with no columns', () => {
-      component.columns = [];
-
-      expect(() => {
-        component.onReset();
-      }).not.toThrow();
-    });
-  });
-
-  describe('ngOnChanges Lifecycle', () => {
-    it('should reinitialize on columns change', () => {
-      spyOn(component, 'initializeTransferData');
-
-      const columns: TableColumn[] = [
-        { key: 'col1', label: 'Column 1', sortable: true, filterable: false, hideable: true },
-      ];
-
-      component.ngOnChanges({
-        columns: new SimpleChange(null, columns, false),
-      });
-
-      expect(component.initializeTransferData).toHaveBeenCalled();
-    });
-
-    it('should reinitialize on visible change', () => {
-      spyOn(component, 'initializeTransferData');
-
-      component.ngOnChanges({
-        visible: new SimpleChange(false, true, false),
-      });
-
-      expect(component.initializeTransferData).toHaveBeenCalled();
-    });
-
-    it('should not reinitialize on other changes', () => {
-      spyOn(component, 'initializeTransferData');
-
-      component.ngOnChanges({
-        otherProp: new SimpleChange(null, 'value', false),
-      });
-
-      expect(component.initializeTransferData).not.toHaveBeenCalled();
+      const item = component.targetColumns[0];
+      expect(item.disabled).toBe(false);
     });
   });
 });

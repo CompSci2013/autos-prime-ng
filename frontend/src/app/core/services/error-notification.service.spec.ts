@@ -1,28 +1,23 @@
 import { TestBed } from '@angular/core/testing';
-import { NzNotificationService } from 'ng-zorro-antd/notification';
+import { MessageService } from 'primeng/api';
 import { ErrorNotificationService } from './error-notification.service';
 
 describe('ErrorNotificationService', () => {
   let service: ErrorNotificationService;
-  let notificationService: jasmine.SpyObj<NzNotificationService>;
+  let messageService: jasmine.SpyObj<MessageService>;
 
   beforeEach(() => {
-    const notificationSpy = jasmine.createSpyObj('NzNotificationService', [
-      'error',
-      'warning',
-      'info',
-      'success',
-    ]);
+    const messageSpy = jasmine.createSpyObj('MessageService', ['add']);
 
     TestBed.configureTestingModule({
       providers: [
         ErrorNotificationService,
-        { provide: NzNotificationService, useValue: notificationSpy },
+        { provide: MessageService, useValue: messageSpy },
       ],
     });
 
     service = TestBed.inject(ErrorNotificationService);
-    notificationService = TestBed.inject(NzNotificationService) as jasmine.SpyObj<NzNotificationService>;
+    messageService = TestBed.inject(MessageService) as jasmine.SpyObj<MessageService>;
   });
 
   it('should be created', () => {
@@ -31,41 +26,54 @@ describe('ErrorNotificationService', () => {
 
   it('should show error notification', () => {
     service.showError('Test Error', 'Test message');
-    expect(notificationService.error).toHaveBeenCalledWith('Test Error', 'Test message', { nzDuration: 5000 });
+    expect(messageService.add).toHaveBeenCalledWith({
+      severity: 'error',
+      summary: 'Test Error',
+      detail: 'Test message',
+      life: 5000,
+    });
   });
 
   it('should show warning notification', () => {
     service.showWarning('Test Warning', 'Test message');
-    expect(notificationService.warning).toHaveBeenCalledWith('Test Warning', 'Test message', { nzDuration: 4000 });
+    expect(messageService.add).toHaveBeenCalledWith({
+      severity: 'warn',
+      summary: 'Test Warning',
+      detail: 'Test message',
+      life: 4000,
+    });
   });
 
   it('should categorize network error (status 0)', () => {
     const error = { status: 0 };
     service.handleHttpError(error);
-    expect(notificationService.error).toHaveBeenCalledWith(
-      'Network Error',
-      jasmine.any(String),
-      { nzDuration: 6000 }
-    );
+    expect(messageService.add).toHaveBeenCalledWith({
+      severity: 'error',
+      summary: 'Network Error',
+      detail: jasmine.any(String),
+      life: 6000,
+    });
   });
 
   it('should categorize 404 error', () => {
     const error = { status: 404, error: {} };
     service.handleHttpError(error);
-    expect(notificationService.warning).toHaveBeenCalledWith(
-      'Not Found',
-      jasmine.any(String),
-      { nzDuration: 4000 }
-    );
+    expect(messageService.add).toHaveBeenCalledWith({
+      severity: 'warn',
+      summary: 'Not Found',
+      detail: jasmine.any(String),
+      life: 4000,
+    });
   });
 
   it('should categorize 500 error', () => {
     const error = { status: 500 };
     service.handleHttpError(error);
-    expect(notificationService.error).toHaveBeenCalledWith(
-      'Server Error',
-      jasmine.any(String),
-      { nzDuration: 6000 }
-    );
+    expect(messageService.add).toHaveBeenCalledWith({
+      severity: 'error',
+      summary: 'Server Error',
+      detail: jasmine.any(String),
+      life: 6000,
+    });
   });
 });

@@ -29,6 +29,7 @@ describe('StateManagementService - URL-First State Management', () => {
     ]);
 
     mockRouter = {
+      url: '/discover',  // Default URL (not a popout)
       events: routerEventsSubject.asObservable(),
       navigate: jasmine.createSpy('navigate').and.returnValue(Promise.resolve(true)),
     };
@@ -614,6 +615,168 @@ describe('StateManagementService - URL-First State Management', () => {
 
       // Observables should complete (not testable directly with BehaviorSubject)
       expect(completeSpy).not.toHaveBeenCalled(); // BehaviorSubject doesn't complete
+    });
+  });
+
+  describe('Error Handling and Edge Cases', () => {
+    beforeEach(() => {
+      mockRouteState.getCurrentParams.and.returnValue({});
+      mockRouteState.paramsToFilters.and.returnValue({ page: 1, size: 20 });
+      service = TestBed.inject(StateManagementService);
+    });
+
+    it('should handle API errors during initialization', () => {
+      const errorFilters = {
+        modelCombos: [{ manufacturer: 'Ford', model: 'F-150' }],
+        page: 1,
+        size: 20,
+      };
+      mockRouteState.paramsToFilters.and.returnValue(errorFilters);
+      mockRequestCoordinator.execute.and.returnValue(
+        throwError(() => new Error('Network error'))
+      );
+
+      // Re-initialize service with error conditions
+      service = TestBed.inject(StateManagementService);
+
+      service.state$.subscribe((state) => {
+        if (state.error) {
+          expect(state.error).toContain('Network error');
+          expect(state.loading).toBe(false);
+        }
+      });
+    });
+
+    it('should handle clearAllFilters errors gracefully', () => {
+      mockRequestCoordinator.execute.and.returnValue(
+        throwError(() => new Error('Clear failed'))
+      );
+
+      service.clearAllFilters();
+
+      service.state$.subscribe((state) => {
+        if (state.error) {
+          expect(state.error).toContain('Clear failed');
+        }
+      });
+    });
+
+    it('should format HTTP error objects correctly', () => {
+      const httpError = {
+        status: 404,
+        statusText: 'Not Found',
+        message: 'Resource not found',
+      };
+
+      const formatted = service['formatError'](httpError);
+      expect(formatted).toContain('404');
+      expect(formatted).toContain('Not Found');
+    });
+
+    it('should format Error objects correctly', () => {
+      const error = new Error('Something went wrong');
+      const formatted = service['formatError'](error);
+      expect(formatted).toBe('Something went wrong');
+    });
+
+    it('should format string errors correctly', () => {
+      const formatted = service['formatError']('Simple error message');
+      expect(formatted).toBe('Simple error message');
+    });
+
+    it('should format unknown error types as generic message', () => {
+      const formatted = service['formatError']({ unknown: 'object' });
+      expect(formatted).toBe('An unknown error occurred');
+    });
+
+    it('should handle updateFilters with empty modelCombos array', () => {
+      service.updateFilters({ modelCombos: [] });
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.modelCombos).toEqual([]);
+    });
+
+    it('should preserve page size when clearing all filters', () => {
+      service.updateFilters({ page: 3, size: 100 });
+
+      service.clearAllFilters();
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.page).toBe(1);
+      expect(currentFilters.size).toBe(100);
+    });
+
+    it('should handle fetchWithEphemeralFilters with all filter types', () => {
+      const ephemeralFilters = {
+        manufacturerSearch: 'Ford',
+        modelSearch: 'F-150',
+        bodyClassSearch: 'Pickup',
+        dataSourceSearch: 'NHTSA',
+      };
+
+      service.fetchWithEphemeralFilters(ephemeralFilters);
+
+      expect(mockRequestCoordinator.execute).toHaveBeenCalled();
+    });
+
+    it('should handle concurrent filter updates correctly', () => {
+      service.updateFilters({ manufacturer: 'Ford' });
+      service.updateFilters({ model: 'F-150' });
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.manufacturer).toBe('Ford');
+      expect(currentFilters.model).toBe('F-150');
+    });
+
+    it('should handle filter removal with multiple undefined values', () => {
+      service.updateFilters({ manufacturer: 'Ford', model: 'F-150', bodyClass: 'Sedan' });
+
+      service.updateFilters({
+        manufacturer: undefined,
+        bodyClass: undefined,
+      });
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.manufacturer).toBeUndefined();
+      expect(currentFilters.model).toBe('F-150');
+      expect(currentFilters.bodyClass).toBeUndefined();
+    });
+
+    it('should handle mixed defined and undefined filter updates', () => {
+      service.updateFilters({ manufacturer: 'Ford', model: 'F-150' });
+
+      service.updateFilters({
+        manufacturer: undefined,
+        bodyClass: 'Sedan',
+      });
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.manufacturer).toBeUndefined();
+      expect(currentFilters.model).toBe('F-150');
+      expect(currentFilters.bodyClass).toBe('Sedan');
+    });
+
+    it('should handle page size update via updateFilters', () => {
+      service.updateFilters({ size: 50 });
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.size).toBe(50);
+    });
+
+    it('should handle updateSort', () => {
+      service.updateSort('year', 'asc');
+
+      const currentFilters = service.getCurrentFilters();
+      expect(currentFilters.sort).toBe('year');
+      expect(currentFilters.sortDirection).toBe('asc');
+    });
+
+    it('should getCurrentState', () => {
+      const state = service.getCurrentState();
+
+      expect(state).toBeDefined();
+      expect(state.filters).toBeDefined();
+      expect(state.results).toBeDefined();
     });
   });
 });

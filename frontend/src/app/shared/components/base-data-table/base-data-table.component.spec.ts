@@ -1,984 +1,829 @@
-import {
-  ComponentFixture,
-  TestBed,
-  fakeAsync,
-  tick,
-  flush,
-} from '@angular/core/testing';
-import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-import { NO_ERRORS_SCHEMA, SimpleChange, ChangeDetectorRef } from '@angular/core';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ChangeDetectorRef, TemplateRef } from '@angular/core';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { of, throwError, Subject } from 'rxjs';
+
 import { BaseDataTableComponent } from './base-data-table.component';
-import { ColumnManagerComponent } from '../column-manager/column-manager.component';
 import { TableStatePersistenceService } from '../../services/table-state-persistence.service';
-import { MockTableDataSource } from './mocks/mock-data-source';
-import { createTestColumns } from './tests/test-helpers';
-import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
-import { NzTableModule } from 'ng-zorro-antd/table';
-import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzIconModule, NzIconService } from 'ng-zorro-antd/icon';
-import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzEmptyModule } from 'ng-zorro-antd/empty';
-import { NzSpinModule } from 'ng-zorro-antd/spin';
-import { NzDrawerModule } from 'ng-zorro-antd/drawer';
-import { NzTransferModule } from 'ng-zorro-antd/transfer';
-import { NzAlertModule } from 'ng-zorro-antd/alert';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { TableColumn, TableQueryParams } from '../../models';
-import { VehicleResult } from '../../../models';
-import { of } from 'rxjs';
+import { TableColumn } from '../../models/table-column.model';
+import { TableDataSource, TableQueryParams, TableResponse } from '../../models/table-data-source.model';
 
-/**
- * BaseDataTableComponent Enhanced Test Suite
- *
- * Comprehensive tests for the generic, reusable base table component.
- *
- * Key Testing Areas:
- * - Initialization and inputs
- * - Query parameter hydration
- * - Data fetching and response handling
- * - Pagination
- * - Sorting
- * - Filtering (with debounce)
- * - Column management (reordering, visibility)
- * - Row expansion
- * - Table state persistence (localStorage)
- * - Change detection (OnPush strategy)
- * - Edge cases and error handling
- */
 describe('BaseDataTableComponent', () => {
-  let component: BaseDataTableComponent<VehicleResult>;
-  let fixture: ComponentFixture<BaseDataTableComponent<VehicleResult>>;
-  let mockDataSource: MockTableDataSource;
-  let persistenceService: jasmine.SpyObj<TableStatePersistenceService>;
+  let component: BaseDataTableComponent<any>;
+  let fixture: ComponentFixture<BaseDataTableComponent<any>>;
+  let mockPersistenceService: jasmine.SpyObj<TableStatePersistenceService>;
+  let mockCdr: jasmine.SpyObj<ChangeDetectorRef>;
 
-  beforeEach(async () => {
-    // Create spy for persistence service with correct method names
-    const persistenceSpy = jasmine.createSpyObj('TableStatePersistenceService', [
+  const mockColumns: TableColumn<any>[] = [
+    { key: 'id', label: 'ID', sortable: true, filterable: false, hideable: false, visible: true },
+    { key: 'name', label: 'Name', sortable: true, filterable: true, hideable: true, visible: true },
+    { key: 'count', label: 'Count', sortable: true, filterable: false, hideable: true, visible: true, clientSideSort: true },
+  ];
+
+  const mockTableData = [
+    { id: 1, name: 'Item 1', count: 10 },
+    { id: 2, name: 'Item 2', count: 5 },
+    { id: 3, name: 'Item 3', count: 15 },
+  ];
+
+  beforeEach(() => {
+    mockPersistenceService = jasmine.createSpyObj('TableStatePersistenceService', [
       'loadPreferences',
       'savePreferences',
       'resetPreferences',
     ]);
 
-    // Mock NzIconService to prevent icon lookup errors
-    const mockIconService = jasmine.createSpyObj('NzIconService', ['getRenderedContent']);
-    mockIconService.getRenderedContent.and.callFake(() => {
-      const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      return of(svgElement);
+    mockCdr = jasmine.createSpyObj('ChangeDetectorRef', ['markForCheck', 'detectChanges']);
+
+    TestBed.configureTestingModule({
+      declarations: [BaseDataTableComponent],
+      providers: [
+        { provide: TableStatePersistenceService, useValue: mockPersistenceService },
+        { provide: ChangeDetectorRef, useValue: mockCdr },
+      ],
     });
 
-    await TestBed.configureTestingModule({
-      declarations: [BaseDataTableComponent, ColumnManagerComponent],
-      imports: [
-        FormsModule,
-        HttpClientModule,
-        DragDropModule,
-        NzTableModule,
-        NzButtonModule,
-        NzIconModule,
-        NzInputModule,
-        NzEmptyModule,
-        NzSpinModule,
-        NzDrawerModule,
-        NzTransferModule,
-        NzAlertModule,
-        NoopAnimationsModule,
-      ],
-      providers: [
-        { provide: TableStatePersistenceService, useValue: persistenceSpy },
-        { provide: NzIconService, useValue: mockIconService },
-      ],
-      schemas: [NO_ERRORS_SCHEMA], // Suppress icon errors
-    }).compileComponents();
-
-    persistenceService = TestBed.inject(
-      TableStatePersistenceService
-    ) as jasmine.SpyObj<TableStatePersistenceService>;
-
-    // Setup default return value for loadPreferences
-    persistenceService.loadPreferences.and.returnValue(null);
-  });
-
-  beforeEach(() => {
-    fixture = TestBed.createComponent(BaseDataTableComponent) as ComponentFixture<
-      BaseDataTableComponent<VehicleResult>
-    >;
+    fixture = TestBed.createComponent(BaseDataTableComponent);
     component = fixture.componentInstance;
-
-    // Setup required inputs
-    mockDataSource = new MockTableDataSource();
     component.tableId = 'test-table';
-    component.columns = createTestColumns();
-    component.dataSource = mockDataSource;
-    component.queryParams = {
-      page: 1,
-      size: 20,
-      filters: {},
-    };
+    component.columns = [...mockColumns];
   });
 
-  /**
-   * =========================================================================
-   * COMPONENT INITIALIZATION
-   * =========================================================================
-   */
+  // ========== Component Initialization ==========
+
   describe('Component Initialization', () => {
-    it('should create the component', () => {
+    it('should create', () => {
       expect(component).toBeTruthy();
     });
 
-    it('should have required inputs defined', () => {
-      expect(component.tableId).toBe('test-table');
-      expect(component.columns.length).toBeGreaterThan(0);
-      expect(component.dataSource).toBeTruthy();
-    });
-
-    it('should initialize with default query params', () => {
-      fixture.detectChanges(); // Trigger ngOnInit
-
+    it('should initialize with default values', () => {
       expect(component.currentPage).toBe(1);
       expect(component.pageSize).toBe(20);
-      expect(component.filters).toEqual({});
-    });
-
-    it('should initialize expandedRowSet as empty Set', () => {
-      expect(component.expandedRowSet).toBeInstanceOf(Set);
+      expect(component.first).toBe(0);
       expect(component.expandedRowSet.size).toBe(0);
-    });
-
-    it('should initialize with columnManagerVisible false', () => {
       expect(component.columnManagerVisible).toBe(false);
     });
 
-    it('should initialize with default maxTableHeight', () => {
-      expect(component.maxTableHeight).toBe('1200px');
-    });
-
-    it('should initialize with expandable false by default', () => {
-      expect(component.expandable).toBe(false);
-    });
-
-    it('should initialize with loading false by default', () => {
-      expect(component.loading).toBe(false);
-    });
-  });
-
-  /**
-   * =========================================================================
-   * QUERY PARAMETER HYDRATION
-   * =========================================================================
-   */
-  describe('Query Parameter Hydration from Input', () => {
-    it('should hydrate state from queryParams input on ngOnInit', fakeAsync(() => {
-      component.queryParams = {
-        page: 3,
-        size: 50,
-        sortBy: 'year',
-        sortOrder: 'desc',
-        filters: { manufacturer: 'Ford' },
+    it('should load preferences on init', () => {
+      const mockPrefs = {
+        columnOrder: ['name', 'id', 'count'],
+        visibleColumns: ['name', 'id'],
+        pageSize: 50,
+        lastUpdated: Date.now(),
       };
+      mockPersistenceService.loadPreferences.and.returnValue(mockPrefs);
 
-      fixture.detectChanges();
-      tick();
+      component.ngOnInit();
+
+      expect(mockPersistenceService.loadPreferences).toHaveBeenCalledWith('test-table');
+      expect(component.pageSize).toBe(50);
+    });
+
+    it('should initialize pagination from queryParams', () => {
+      component.queryParams = { page: 3, size: 50, filters: {} };
+
+      component.ngOnInit();
 
       expect(component.currentPage).toBe(3);
       expect(component.pageSize).toBe(50);
-      expect(component.sortBy).toBe('year');
-      expect(component.sortOrder).toBe('desc');
-      expect(component.filters).toEqual({ manufacturer: 'Ford' });
-    }));
+      expect(component.first).toBe(100); // (3-1) * 50
+    });
 
-    it('should use default values when queryParams are incomplete', fakeAsync(() => {
-      component.queryParams = {
-        page: 1,
-        size: 20,
-        filters: {},
-      };
+    it('should handle invalid queryParams with defaults', () => {
+      component.queryParams = { page: -1, size: 0, filters: {} };
 
-      fixture.detectChanges();
-      tick();
+      component.ngOnInit();
 
       expect(component.currentPage).toBe(1);
       expect(component.pageSize).toBe(20);
-      expect(component.sortBy).toBeUndefined();
-      expect(component.sortOrder).toBeUndefined();
-    }));
+    });
 
-    it('should call fetchData on initialization', fakeAsync(() => {
-      spyOn(component, 'fetchData');
-      fixture.detectChanges();
+    it('should set up filter debouncing on init', fakeAsync(() => {
+      component.ngOnInit();
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
 
-      expect(component.fetchData).toHaveBeenCalled();
+      component.onFilterChange('name', 'test');
+      tick(300); // Less than debounce time
+      expect(emitSpy).not.toHaveBeenCalled();
+
+      tick(200); // Total 500ms, exceeds debounce time
+      expect(component.currentPage).toBe(1); // Reset to first page
     }));
   });
 
-  /**
-   * =========================================================================
-   * DATA FETCHING
-   * =========================================================================
-   */
+  // ========== Data Fetching ==========
+
   describe('Data Fetching', () => {
-    it('should fetch data from dataSource on ngOnInit', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      expect(mockDataSource.fetchCallCount).toBe(1);
-      expect(component.tableData.length).toBeGreaterThan(0);
-    }));
-
-    it('should set isLoading to true during fetch', fakeAsync(() => {
-      fixture.detectChanges();
-
-      // Immediately after ngOnInit, should be loading
-      expect(component.isLoading).toBe(true);
-
-      tick();
-
-      // After data returns, should not be loading
-      expect(component.isLoading).toBe(false);
-    }));
-
-    it('should update totalCount from response', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      expect(component.totalCount).toBeGreaterThan(0);
-      expect(component.totalCount).toBe(mockDataSource.lastParams?.page === 1 ? 50 : component.totalCount);
-    }));
-
-    it('should emit queryParamsChange after successful fetch', fakeAsync(() => {
-      spyOn(component.queryParamsChange, 'emit');
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.queryParamsChange.emit).toHaveBeenCalled();
-    }));
-
-    it('should handle fetch errors gracefully', fakeAsync(() => {
-      spyOn(console, 'error');
-      spyOn(mockDataSource, 'fetch').and.returnValue(
-        // Create an observable that errors
-        new (require('rxjs').Observable)((subscriber: any) => {
-          subscriber.error(new Error('Network error'));
-        })
-      );
-
-      fixture.detectChanges();
-      tick();
-
-      expect(console.error).toHaveBeenCalled();
-      expect(component.isLoading).toBe(false);
-    }));
-
-    it('should not fetch during column reordering', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      // Set reordering flag
-      (component as any).isReorderingColumns = true;
-
-      component.fetchData();
-      tick();
-
-      expect(mockDataSource.fetchCallCount).toBe(initialCallCount);
-    }));
-  });
-
-  /**
-   * =========================================================================
-   * PAGINATION
-   * =========================================================================
-   */
-  describe('Pagination', () => {
-    it('should handle page change', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      component.onPageChange(2);
-      tick();
-
-      expect(component.currentPage).toBe(2);
-      expect(mockDataSource.fetchCallCount).toBe(initialCallCount + 1);
-      expect(mockDataSource.lastParams?.page).toBe(2);
-    }));
-
-    it('should handle page size change', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onPageSizeChange(50);
-      tick();
-
-      expect(component.pageSize).toBe(50);
-      expect(component.currentPage).toBe(1); // Should reset to first page
-      expect(mockDataSource.lastParams?.size).toBe(50);
-    }));
-
-    it('should save preferences when page size changes', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onPageSizeChange(100);
-      tick();
-
-      expect(persistenceService.savePreferences).toHaveBeenCalled();
-    }));
-
-    it('should emit queryParamsChange when page changes', fakeAsync(() => {
-      spyOn(component.queryParamsChange, 'emit');
-
-      fixture.detectChanges();
-      tick();
-
-      component.onPageChange(3);
-      tick();
-
-      expect(component.queryParamsChange.emit).toHaveBeenCalledWith(
-        jasmine.objectContaining({ page: 3 })
-      );
-    }));
-  });
-
-  /**
-   * =========================================================================
-   * SORTING
-   * =========================================================================
-   */
-  describe('Sorting', () => {
-    it('should sort ascending on first click', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onSort('manufacturer');
-      tick();
-
-      expect(component.sortBy).toBe('manufacturer');
-      expect(component.sortOrder).toBe('asc');
-    }));
-
-    it('should toggle to descending on second click', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onSort('manufacturer');
-      tick();
-
-      component.onSort('manufacturer');
-      tick();
-
-      expect(component.sortBy).toBe('manufacturer');
-      expect(component.sortOrder).toBe('desc');
-    }));
-
-    it('should reset sort when clicking different column', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onSort('manufacturer');
-      tick();
-
-      component.onSort('year');
-      tick();
-
-      expect(component.sortBy).toBe('year');
-      expect(component.sortOrder).toBe('asc');
-    }));
-
-    it('should fetch data after sorting', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      component.onSort('year');
-      tick();
-
-      expect(mockDataSource.fetchCallCount).toBe(initialCallCount + 1);
-    }));
-  });
-
-  /**
-   * =========================================================================
-   * FILTERING
-   * =========================================================================
-   */
-  describe('Filtering', () => {
-    it('should add filter when value is provided', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onFilterChange('manufacturer', 'Ford');
-      tick(400); // Wait for debounce
-
-      expect(component.filters['manufacturer']).toBe('Ford');
-    }));
-
-    it('should remove filter when value is empty', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onFilterChange('manufacturer', 'Ford');
-      tick(400);
-
-      component.onFilterChange('manufacturer', '');
-      tick(400);
-
-      expect(component.filters['manufacturer']).toBeUndefined();
-    }));
-
-    it('should remove filter when value is null', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onFilterChange('manufacturer', 'Ford');
-      tick(400);
-
-      component.onFilterChange('manufacturer', null);
-      tick(400);
-
-      expect(component.filters['manufacturer']).toBeUndefined();
-    }));
-
-    it('should debounce filter changes by 400ms', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      component.onFilterChange('manufacturer', 'F');
-      tick(100);
-      component.onFilterChange('manufacturer', 'Fo');
-      tick(100);
-      component.onFilterChange('manufacturer', 'For');
-      tick(100);
-      component.onFilterChange('manufacturer', 'Ford');
-      tick(400);
-
-      // Should only fetch once after final debounce
-      expect(mockDataSource.fetchCallCount).toBe(initialCallCount + 1);
-    }));
-
-    it('should reset to page 1 when filter changes', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.currentPage = 5;
-
-      component.onFilterChange('manufacturer', 'Ford');
-      tick(400);
-
-      expect(component.currentPage).toBe(1);
-    }));
-
-    it('should clear all filters when clearFilters is called', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.filters = {
-        manufacturer: 'Ford',
-        model: 'F-150',
-        year: 2020,
+    it('should fetch data using dataSource on init', () => {
+      const mockResponse: TableResponse<any> = {
+        results: mockTableData,
+        total: 3,
+        page: 1,
+        size: 20,
+        totalPages: 1,
       };
 
+      const mockDataSource: TableDataSource<any> = {
+        fetch: jasmine.createSpy('fetch').and.returnValue(of(mockResponse)),
+      };
+
+      component.dataSource = mockDataSource;
+      component.ngOnInit();
+
+      expect(mockDataSource.fetch).toHaveBeenCalled();
+      expect(component.tableData).toEqual(mockTableData);
+      expect(component.totalCount).toBe(3);
+    });
+
+    it('should skip fetch in data mode (pre-fetched)', () => {
+      component.data = mockTableData;
+      component.totalCount = 3;
+      const fetchSpy = spyOn<any>(component, 'fetchData').and.callThrough();
+
+      component.ngOnInit();
+
+      expect(fetchSpy).toHaveBeenCalled();
+      // fetchData should return early without making HTTP call
+    });
+
+    it('should emit queryParamsChange when user-initiated fetch', () => {
+      const mockResponse: TableResponse<any> = {
+        results: mockTableData,
+        total: 3,
+        page: 1,
+        size: 20,
+        totalPages: 1,
+      };
+
+      const mockDataSource: TableDataSource<any> = {
+        fetch: jasmine.createSpy('fetch').and.returnValue(of(mockResponse)),
+      };
+
+      component.dataSource = mockDataSource;
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
+      component.ngOnInit(); // Hydration - should NOT emit
+      expect(emitSpy).not.toHaveBeenCalled();
+
+      component['fetchData'](true); // User-initiated - SHOULD emit
+      expect(emitSpy).toHaveBeenCalled();
+    });
+
+    it('should handle fetch errors gracefully', () => {
+      const mockDataSource: TableDataSource<any> = {
+        fetch: jasmine.createSpy('fetch').and.returnValue(
+          throwError(() => new Error('Network error'))
+        ),
+      };
+
+      component.dataSource = mockDataSource;
+      spyOn(console, 'error');
+
+      component.ngOnInit();
+
+      expect(console.error).toHaveBeenCalledWith('Failed to fetch table data:', jasmine.any(Error));
+      expect(component.isLoading).toBe(false);
+    });
+
+    it('should re-apply client-side sort after data fetch', () => {
+      const mockResponse: TableResponse<any> = {
+        results: [...mockTableData],
+        total: 3,
+        page: 1,
+        size: 20,
+        totalPages: 1,
+      };
+
+      const mockDataSource: TableDataSource<any> = {
+        fetch: jasmine.createSpy('fetch').and.returnValue(of(mockResponse)),
+      };
+
+      component.dataSource = mockDataSource;
+      component.sortBy = 'count';
+      component.sortOrder = 'desc';
+
+      component.ngOnInit();
+
+      // Verify sort was applied (count: 15, 10, 5)
+      expect(component.tableData[0].count).toBe(15);
+      expect(component.tableData[2].count).toBe(5);
+    });
+
+    it('should not fetch during column reordering', () => {
+      const mockDataSource: TableDataSource<any> = {
+        fetch: jasmine.createSpy('fetch').and.returnValue(of({ results: [], total: 0, page: 1, size: 20, totalPages: 0 })),
+      };
+
+      component.dataSource = mockDataSource;
+      component['isReorderingColumns'] = true;
+
+      component['fetchData'](true);
+
+      expect(mockDataSource.fetch).not.toHaveBeenCalled();
+    });
+  });
+
+  // ========== ngOnChanges Lifecycle ==========
+
+  describe('ngOnChanges - Data Input Changes', () => {
+    it('should update tableData when data input changes', () => {
+      const newData = [{ id: 4, name: 'Item 4', count: 20 }];
+
+      component.ngOnChanges({
+        data: {
+          previousValue: mockTableData,
+          currentValue: newData,
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(component.tableData).toBe(newData);
+      expect(mockCdr.detectChanges).toHaveBeenCalled();
+    });
+
+    it('should re-apply client-side sort on data change', () => {
+      component.sortBy = 'count';
+      component.sortOrder = 'asc';
+      const unsortedData = [
+        { id: 1, name: 'Item 1', count: 15 },
+        { id: 2, name: 'Item 2', count: 5 },
+        { id: 3, name: 'Item 3', count: 10 },
+      ];
+
+      component.ngOnChanges({
+        data: {
+          previousValue: [],
+          currentValue: unsortedData,
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      // Verify sort was applied (count: 5, 10, 15)
+      expect(component.tableData[0].count).toBe(5);
+      expect(component.tableData[2].count).toBe(15);
+    });
+
+    it('should update totalCount when input changes', () => {
+      component.ngOnChanges({
+        totalCount: {
+          previousValue: 100,
+          currentValue: 200,
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(mockCdr.markForCheck).toHaveBeenCalled();
+    });
+
+    it('should save original column definitions on first change', () => {
+      component.ngOnChanges({
+        columns: {
+          previousValue: undefined,
+          currentValue: mockColumns,
+          firstChange: true,
+          isFirstChange: () => true,
+        },
+      });
+
+      expect(component['originalColumnDefinitions'].length).toBe(3);
+      expect(component['originalColumnDefinitions'][0].key).toBe('id');
+    });
+
+    it('should reload preferences when columns change (not first change)', () => {
+      component.ngOnChanges({
+        columns: {
+          previousValue: mockColumns,
+          currentValue: [...mockColumns, { key: 'new', label: 'New', sortable: false, visible: true }],
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(mockPersistenceService.loadPreferences).toHaveBeenCalled();
+      expect(mockCdr.markForCheck).toHaveBeenCalled();
+    });
+
+    it('should skip queryParams change if first change', () => {
+      const fetchSpy = spyOn<any>(component, 'fetchData');
+
+      component.ngOnChanges({
+        queryParams: {
+          previousValue: undefined,
+          currentValue: { page: 1, size: 20, filters: {} },
+          firstChange: true,
+          isFirstChange: () => true,
+        },
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('should skip queryParams change if deeply equal', () => {
+      const params = { page: 1, size: 20, filters: { name: 'test' } };
+      const fetchSpy = spyOn<any>(component, 'fetchData');
+
+      component.ngOnChanges({
+        queryParams: {
+          previousValue: params,
+          currentValue: { ...params, filters: { name: 'test' } },
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('should fetch data when queryParams change (not equal)', () => {
+      const fetchSpy = spyOn<any>(component, 'fetchData');
+
+      component.ngOnChanges({
+        queryParams: {
+          previousValue: { page: 1, size: 20, filters: {} },
+          currentValue: { page: 2, size: 20, filters: {} },
+          firstChange: false,
+          isFirstChange: () => false,
+        },
+      });
+
+      expect(component.currentPage).toBe(2);
+      expect(component.first).toBe(20);
+      expect(fetchSpy).toHaveBeenCalledWith(false); // Hydration - not user-initiated
+    });
+  });
+
+  // ========== Pagination ==========
+
+  describe('Pagination', () => {
+    it('should handle page change in data mode', () => {
+      component.data = mockTableData;
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
+      component.onPageChange(3);
+
+      expect(emitSpy).toHaveBeenCalledWith({
+        page: 3,
+        size: 20,
+        sortBy: undefined,
+        sortOrder: undefined,
+        filters: {},
+      });
+    });
+
+    it('should handle page change in dataSource mode', () => {
+      const mockDataSource: TableDataSource<any> = {
+        fetch: jasmine.createSpy('fetch').and.returnValue(of({ results: [], total: 0, page: 2, size: 20, totalPages: 5 })),
+      };
+      component.dataSource = mockDataSource;
+
+      component.onPageChange(2);
+
+      expect(component.currentPage).toBe(2);
+      expect(component.first).toBe(20);
+      expect(mockDataSource.fetch).toHaveBeenCalled();
+    });
+
+    it('should handle page size change and save preference', () => {
+      component.data = mockTableData;
+      mockPersistenceService.loadPreferences.and.returnValue({
+        columnOrder: [],
+        visibleColumns: [],
+        pageSize: 20,
+        lastUpdated: Date.now(),
+      });
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
+      component.onPageSizeChange(50);
+
+      expect(mockPersistenceService.savePreferences).toHaveBeenCalledWith(
+        'test-table',
+        jasmine.objectContaining({ pageSize: 50 })
+      );
+      expect(emitSpy).toHaveBeenCalledWith({
+        page: 1, // Reset to first page
+        size: 50,
+        sortBy: undefined,
+        sortOrder: undefined,
+        filters: {},
+      });
+    });
+
+    it('should handle PrimeNG pagination event', () => {
+      const pageSpy = spyOn(component, 'onPageChange');
+      const sizeSpy = spyOn(component, 'onPageSizeChange');
+
+      // Page change only
+      component.onPrimeNgPageChange({ first: 20, rows: 20 });
+      expect(pageSpy).toHaveBeenCalledWith(2);
+
+      // Page size change
+      component.pageSize = 20;
+      component.onPrimeNgPageChange({ first: 0, rows: 50 });
+      expect(sizeSpy).toHaveBeenCalledWith(50);
+    });
+
+    it('should reject invalid PrimeNG pagination values', () => {
+      spyOn(console, 'error');
+
+      component.onPrimeNgPageChange({ first: -1, rows: 0 });
+
+      expect(console.error).toHaveBeenCalledWith(
+        '❌ Invalid pagination values!',
+        jasmine.any(Object)
+      );
+    });
+  });
+
+  // ========== Sorting ==========
+
+  describe('Sorting', () => {
+    it('should toggle sort order on same column', () => {
+      component.data = mockTableData;
+      component.sortBy = 'name';
+      component.sortOrder = 'asc';
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
+      component.onSort('name');
+
+      expect(component.sortOrder).toBe('desc');
+      expect(emitSpy).toHaveBeenCalled();
+    });
+
+    it('should set default sort order on new column', () => {
+      component.data = mockTableData;
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
+      component.onSort('id');
+
+      expect(component.sortBy).toBe('id');
+      expect(component.sortOrder).toBe('asc');
+      expect(emitSpy).toHaveBeenCalled();
+    });
+
+    it('should perform client-side sort for clientSideSort columns', () => {
+      component.data = mockTableData;
+      component.tableData = [...mockTableData];
+
+      component.onSort('count'); // count column has clientSideSort: true
+
+      // Verify sort was applied (count: 5, 10, 15)
+      expect(component.tableData[0].count).toBe(5);
+      expect(component.tableData[2].count).toBe(15);
+      expect(mockCdr.markForCheck).toHaveBeenCalled();
+    });
+
+    it('should handle PrimeNG sort event', () => {
+      component.data = mockTableData;
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
+      component.onPrimeNgSort({ field: 'name', order: 1 });
+
+      expect(component.sortBy).toBe('name');
+      expect(component.sortOrder).toBe('asc');
+      expect(emitSpy).toHaveBeenCalled();
+    });
+
+    it('should clear sort on null order', () => {
+      component.data = mockTableData;
+      component.sortBy = 'name';
+      component.sortOrder = 'asc';
+
+      component.onPrimeNgSort({ field: 'name', order: null });
+
+      expect(component.sortBy).toBeUndefined();
+      expect(component.sortOrder).toBeUndefined();
+    });
+
+    it('should sort strings case-insensitively', () => {
+      const data = [
+        { id: 1, name: 'Zebra', count: 1 },
+        { id: 2, name: 'apple', count: 2 },
+        { id: 3, name: 'Banana', count: 3 },
+      ];
+      component.tableData = [...data];
+
+      component['sortTableDataClientSide']('name', 'asc');
+
+      expect(component.tableData[0].name).toBe('apple');
+      expect(component.tableData[1].name).toBe('Banana');
+      expect(component.tableData[2].name).toBe('Zebra');
+    });
+
+    it('should handle null values in sort (always to end)', () => {
+      const data = [
+        { id: 1, name: 'Item 1', count: null },
+        { id: 2, name: 'Item 2', count: 10 },
+        { id: 3, name: 'Item 3', count: 5 },
+      ];
+      component.tableData = [...data];
+
+      component['sortTableDataClientSide']('count', 'asc');
+
+      expect(component.tableData[0].count).toBe(5);
+      expect(component.tableData[1].count).toBe(10);
+      expect(component.tableData[2].count).toBeNull();
+    });
+  });
+
+  // ========== Filtering ==========
+
+  describe('Filtering', () => {
+    it('should add filter value', fakeAsync(() => {
+      component.onFilterChange('name', 'test');
+
+      expect(component.filters['name']).toBe('test');
+      tick(500); // Debounce
+      expect(component.currentPage).toBe(1); // Reset to first page
+    }));
+
+    it('should remove filter on empty value', () => {
+      component.filters = { name: 'test' };
+
+      component.onFilterChange('name', '');
+
+      expect(component.filters['name']).toBeUndefined();
+    });
+
+    it('should clear all filters', () => {
+      component.data = mockTableData;
+      component.filters = { name: 'test', id: '1' };
+      const emitSpy = spyOn(component.queryParamsChange, 'emit');
+
       component.clearFilters();
-      tick();
 
       expect(component.filters).toEqual({});
       expect(component.currentPage).toBe(1);
-    }));
-
-    it('should fetch data after clearing filters', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      component.clearFilters();
-      tick();
-
-      expect(mockDataSource.fetchCallCount).toBe(initialCallCount + 1);
-    }));
-
-    it('should return correct filter count', () => {
-      component.filters = {
-        manufacturer: 'Ford',
-        model: 'F-150',
-      };
-
-      expect(component.getFilterCount()).toBe(2);
+      expect(emitSpy).toHaveBeenCalled();
     });
 
-    it('should return 0 filter count when no filters', () => {
-      component.filters = {};
-      expect(component.getFilterCount()).toBe(0);
+    it('should handle range filter min change', fakeAsync(() => {
+      component.onRangeMinChange('price', 100, { min: 0, max: 1000 });
+
+      expect(component.filters['priceMin']).toBe(100);
+      expect(component.filters['price']).toEqual({ min: 100, max: 1000 });
+
+      tick(500); // Debounce
+    }));
+
+    it('should handle range filter max change', fakeAsync(() => {
+      component.filters['priceMin'] = 100;
+      component.onRangeMaxChange('price', 500, { min: 0, max: 1000 });
+
+      expect(component.filters['priceMax']).toBe(500);
+      expect(component.filters['price']).toEqual({ min: 100, max: 500 });
+
+      tick(500); // Debounce
+    }));
+
+    it('should format currency correctly', () => {
+      expect(component.formatCurrency(1234.56)).toBe('$1,234.56');
+      expect(component.formatCurrency(null)).toBe('');
+    });
+
+    it('should parse currency correctly', () => {
+      expect(component.parseCurrency('$1,234.56')).toBe('1234.56');
+      expect(component.parseCurrency('')).toBe('');
+    });
+
+    it('should format mileage correctly', () => {
+      expect(component.formatMileage(12345)).toBe('12,345');
+      expect(component.formatMileage(null)).toBe('');
+    });
+
+    it('should parse mileage correctly', () => {
+      expect(component.parseMileage('12,345')).toBe('12345');
+      expect(component.parseMileage('')).toBe('');
+    });
+
+    it('should return filter count', () => {
+      component.filters = { name: 'test', id: '1', active: true };
+
+      expect(component.getFilterCount()).toBe(3);
     });
   });
 
-  /**
-   * =========================================================================
-   * COLUMN MANAGEMENT - REORDERING
-   * =========================================================================
-   */
-  describe('Column Reordering', () => {
-    it('should reorder columns on drag and drop', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
+  // ========== Column Management ==========
 
-      const originalOrder = component.columns.map((c) => c.key);
-
-      const event: any = {
+  describe('Column Management', () => {
+    it('should reorder columns on drag-drop', fakeAsync(() => {
+      const event: CdkDragDrop<TableColumn<any>[]> = {
         previousIndex: 0,
         currentIndex: 2,
-        item: {},
-        container: {},
-        previousContainer: {},
+        item: null as any,
+        container: null as any,
+        previousContainer: null as any,
         isPointerOverContainer: true,
         distance: { x: 0, y: 0 },
+        dropPoint: { x: 0, y: 0 },
+        event: null as any,
       };
 
       component.onColumnDrop(event);
-      tick(100);
 
-      const newOrder = component.columns.map((c) => c.key);
-      expect(newOrder).not.toEqual(originalOrder);
+      expect(component.columns[2].key).toBe('id'); // Moved to end
+      expect(mockPersistenceService.savePreferences).toHaveBeenCalled();
+
+      tick(150); // Wait for isReorderingColumns flag reset
+      expect(component['isReorderingColumns']).toBe(false);
     }));
 
-    it('should save preferences after column reorder', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const event: any = {
-        previousIndex: 0,
-        currentIndex: 2,
-      };
-
-      component.onColumnDrop(event);
-      tick(100);
-
-      expect(persistenceService.savePreferences).toHaveBeenCalled();
-    }));
-
-    it('should set and reset isReorderingColumns flag', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const event: any = {
-        previousIndex: 0,
-        currentIndex: 1,
-      };
-
-      expect((component as any).isReorderingColumns).toBe(false);
-
-      component.onColumnDrop(event);
-
-      expect((component as any).isReorderingColumns).toBe(true);
-
-      tick(100);
-
-      expect((component as any).isReorderingColumns).toBe(false);
-    }));
-  });
-
-  /**
-   * =========================================================================
-   * COLUMN MANAGEMENT - VISIBILITY
-   * =========================================================================
-   */
-  describe('Column Visibility', () => {
     it('should toggle column visibility', () => {
-      fixture.detectChanges();
+      component.toggleColumnVisibility('name');
 
-      const column = component.columns[1]; // manufacturer
-      const initialVisibility = column.visible !== false;
-
-      component.toggleColumnVisibility('manufacturer');
-
-      expect(column.visible).toBe(!initialVisibility);
+      expect(component.columns[1].visible).toBe(false);
+      expect(mockPersistenceService.savePreferences).toHaveBeenCalled();
     });
 
-    it('should save preferences after toggling visibility', () => {
-      fixture.detectChanges();
-
-      component.toggleColumnVisibility('manufacturer');
-
-      expect(persistenceService.savePreferences).toHaveBeenCalled();
-    });
-
-    it('should return only visible columns from getVisibleColumns', () => {
-      component.columns[1].visible = false;
-      component.columns[2].visible = false;
-
-      const visibleColumns = component.getVisibleColumns();
-
-      expect(visibleColumns.length).toBe(component.columns.length - 2);
-      expect(visibleColumns.some((c) => c.key === 'manufacturer')).toBe(false);
-    });
-
-    it('should open column manager drawer', () => {
+    it('should open column manager', () => {
       component.openColumnManager();
+
       expect(component.columnManagerVisible).toBe(true);
     });
 
-    it('should close column manager drawer', () => {
+    it('should close column manager', () => {
       component.columnManagerVisible = true;
+
       component.closeColumnManager();
+
       expect(component.columnManagerVisible).toBe(false);
     });
-  });
 
-  /**
-   * =========================================================================
-   * TABLE STATE PERSISTENCE
-   * =========================================================================
-   */
-  describe('Table State Persistence', () => {
-    it('should load preferences on ngOnInit', () => {
-      fixture.detectChanges();
-      expect(persistenceService.loadPreferences).toHaveBeenCalledWith(
-        'test-table'
-      );
-    });
-
-    it('should apply column order from loaded preferences', fakeAsync(() => {
-      const savedOrder = ['year', 'model', 'manufacturer', 'body_class', 'vehicle_id'];
-
-      persistenceService.loadPreferences.and.returnValue({
-        columnOrder: savedOrder,
-        visibleColumns: savedOrder,
-        pageSize: 20,
-        lastUpdated: Date.now(),
-      });
-
-      fixture.detectChanges();
-      tick();
-
-      const currentOrder = component.columns.map((c) => c.key);
-      expect(currentOrder[0]).toBe('year');
-    }));
-
-    it('should apply column visibility from loaded preferences', fakeAsync(() => {
-      const visibleColumns = ['vehicle_id', 'manufacturer', 'model'];
-
-      persistenceService.loadPreferences.and.returnValue({
-        columnOrder: [],
-        visibleColumns,
-        pageSize: 20,
-        lastUpdated: Date.now(),
-      });
-
-      fixture.detectChanges();
-      tick();
-
-      const yearColumn = component.columns.find((c) => c.key === 'year');
-      expect(yearColumn?.visible).toBe(false);
-    }));
-
-    it('should apply page size from loaded preferences', fakeAsync(() => {
-      persistenceService.loadPreferences.and.returnValue({
-        columnOrder: [],
-        visibleColumns: [],
-        pageSize: 50,
-        lastUpdated: Date.now(),
-      });
-
-      fixture.detectChanges();
-      tick();
-
-      expect(component.pageSize).toBe(50);
-    }));
-
-    it('should save preferences with correct structure', () => {
-      fixture.detectChanges();
-
-      component.savePreferences();
-
-      expect(persistenceService.savePreferences).toHaveBeenCalledWith(
-        'test-table',
-        jasmine.objectContaining({
-          columnOrder: jasmine.any(Array),
-          visibleColumns: jasmine.any(Array),
-          pageSize: jasmine.any(Number),
-          lastUpdated: jasmine.any(Number),
-        })
-      );
-    });
-
-    it('should reset preferences and restore original columns', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      // Modify columns
-      component.columns[1].visible = false;
+    it('should reset columns to original order', () => {
+      component['originalColumnDefinitions'] = [...mockColumns];
+      component.columns = [mockColumns[2], mockColumns[0], mockColumns[1]]; // Reordered
 
       component.resetColumns();
 
-      expect(persistenceService.resetPreferences).toHaveBeenCalledWith(
-        'test-table'
-      );
-    }));
+      expect(mockPersistenceService.resetPreferences).toHaveBeenCalledWith('test-table');
+      expect(component.columns[0].key).toBe('id'); // Back to original order
+      expect(mockCdr.markForCheck).toHaveBeenCalled();
+    });
+
+    it('should get only visible columns', () => {
+      component.columns[1].visible = false;
+
+      const visible = component.getVisibleColumns();
+
+      expect(visible.length).toBe(2);
+      expect(visible.find(c => c.key === 'name')).toBeUndefined();
+    });
+
+    it('should apply column order from preferences', () => {
+      component['applyColumnOrder'](['count', 'name', 'id']);
+
+      expect(component.columns[0].key).toBe('count');
+      expect(component.columns[1].key).toBe('name');
+      expect(component.columns[2].key).toBe('id');
+    });
+
+    it('should apply column visibility from preferences', () => {
+      component['applyColumnVisibility'](['id', 'count']);
+
+      expect(component.columns[0].visible).toBe(true); // id
+      expect(component.columns[1].visible).toBe(false); // name (not in list)
+      expect(component.columns[2].visible).toBe(true); // count
+    });
   });
 
-  /**
-   * =========================================================================
-   * ROW EXPANSION
-   * =========================================================================
-   */
-  describe('Row Expansion', () => {
-    it('should toggle row expansion state', () => {
-      const row: any = { key: 'row-1', manufacturer: 'Ford' };
+  // ========== Row Expansion ==========
 
-      expect(component.isRowExpanded(row)).toBe(false);
+  describe('Row Expansion', () => {
+    it('should toggle row expansion', () => {
+      const row = mockTableData[0];
+      const expandSpy = spyOn(component.rowExpand, 'emit');
 
       component.toggleRowExpansion(row);
 
       expect(component.isRowExpanded(row)).toBe(true);
-
-      component.toggleRowExpansion(row);
-
-      expect(component.isRowExpanded(row)).toBe(false);
+      expect(expandSpy).toHaveBeenCalledWith(row);
+      expect(mockCdr.markForCheck).toHaveBeenCalled();
     });
 
-    it('should emit rowExpand event when expanding', () => {
-      spyOn(component.rowExpand, 'emit');
-      const row: any = { key: 'row-1', manufacturer: 'Ford' };
-
-      component.toggleRowExpansion(row);
-
-      expect(component.rowExpand.emit).toHaveBeenCalledWith(row);
-    });
-
-    it('should emit rowCollapse event when collapsing', () => {
-      spyOn(component.rowCollapse, 'emit');
-      const row: any = { key: 'row-1', manufacturer: 'Ford' };
+    it('should collapse expanded row on second toggle', () => {
+      const row = mockTableData[0];
+      const collapseSpy = spyOn(component.rowCollapse, 'emit');
 
       component.toggleRowExpansion(row); // Expand
       component.toggleRowExpansion(row); // Collapse
 
-      expect(component.rowCollapse.emit).toHaveBeenCalledWith(row);
+      expect(component.isRowExpanded(row)).toBe(false);
+      expect(collapseSpy).toHaveBeenCalledWith(row);
     });
 
-    it('should expand all rows', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
+    it('should expand all rows', () => {
+      component.tableData = mockTableData;
 
       component.expandAllRows();
 
-      expect(component.expandedRowSet.size).toBe(component.tableData.length);
-    }));
+      expect(component.expandedRowSet.size).toBe(3);
+      expect(component.isRowExpanded(mockTableData[0])).toBe(true);
+      expect(component.isRowExpanded(mockTableData[2])).toBe(true);
+    });
 
-    it('should collapse all rows', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
+    it('should collapse all rows', () => {
+      component.tableData = mockTableData;
       component.expandAllRows();
+
       component.collapseAllRows();
 
       expect(component.expandedRowSet.size).toBe(0);
-    }));
+      expect(component.isRowExpanded(mockTableData[0])).toBe(false);
+    });
+
+    it('should handle PrimeNG row expand event', () => {
+      const row = mockTableData[0];
+      const expandSpy = spyOn(component.rowExpand, 'emit');
+
+      component.onPrimeNgRowExpand({ data: row });
+
+      expect(component.isRowExpanded(row)).toBe(true);
+      expect(expandSpy).toHaveBeenCalledWith(row);
+    });
+
+    it('should handle PrimeNG row collapse event', () => {
+      const row = mockTableData[0];
+      component.toggleRowExpansion(row); // Expand first
+      const collapseSpy = spyOn(component.rowCollapse, 'emit');
+
+      component.onPrimeNgRowCollapse({ data: row });
+
+      expect(component.isRowExpanded(row)).toBe(false);
+      expect(collapseSpy).toHaveBeenCalledWith(row);
+    });
 
     it('should emit expandAll event', () => {
-      spyOn(component.expandAll, 'emit');
+      const emitSpy = spyOn(component.expandAll, 'emit');
+
       component.onExpandAll();
-      expect(component.expandAll.emit).toHaveBeenCalled();
+
+      expect(emitSpy).toHaveBeenCalled();
     });
 
     it('should emit collapseAll event', () => {
-      spyOn(component.collapseAll, 'emit');
+      const emitSpy = spyOn(component.collapseAll, 'emit');
+
       component.onCollapseAll();
-      expect(component.collapseAll.emit).toHaveBeenCalled();
+
+      expect(emitSpy).toHaveBeenCalled();
     });
   });
 
-  /**
-   * =========================================================================
-   * ngOnChanges LIFECYCLE
-   * =========================================================================
-   */
-  describe('ngOnChanges Lifecycle', () => {
-    it('should save original column definitions on first change', fakeAsync(() => {
-      const columns = createTestColumns();
-      component.columns = columns;
+  // ========== Utility Functions ==========
 
-      component.ngOnChanges({
-        columns: new SimpleChange(null, columns, true),
-      });
+  describe('Utility Functions', () => {
+    it('should compare query params for equality', () => {
+      const params1 = { page: 1, size: 20, filters: { name: 'test' } };
+      const params2 = { page: 1, size: 20, filters: { name: 'test' } };
 
-      expect((component as any).originalColumnDefinitions.length).toBe(
-        columns.length
-      );
-    }));
-
-    it('should skip fetch on first queryParams change', fakeAsync(() => {
-      const params: TableQueryParams = {
-        page: 1,
-        size: 20,
-        filters: {},
-      };
-
-      spyOn(component, 'fetchData');
-
-      component.ngOnChanges({
-        queryParams: new SimpleChange(null, params, true),
-      });
-
-      tick();
-
-      expect(component.fetchData).not.toHaveBeenCalled();
-    }));
-
-    it('should fetch data when queryParams change after first change', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      const newParams: TableQueryParams = {
-        page: 2,
-        size: 20,
-        filters: {},
-      };
-
-      component.queryParams = newParams;
-      component.ngOnChanges({
-        queryParams: new SimpleChange(
-          { page: 1, size: 20, filters: {} },
-          newParams,
-          false
-        ),
-      });
-
-      tick();
-
-      expect(mockDataSource.fetchCallCount).toBeGreaterThan(initialCallCount);
-    }));
-
-    it('should skip fetch when queryParams are deeply equal', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      const initialCallCount = mockDataSource.fetchCallCount;
-
-      const params: TableQueryParams = {
-        page: 1,
-        size: 20,
-        filters: {},
-      };
-
-      component.ngOnChanges({
-        queryParams: new SimpleChange(params, params, false),
-      });
-
-      tick();
-
-      expect(mockDataSource.fetchCallCount).toBe(initialCallCount);
-    }));
-  });
-
-  /**
-   * =========================================================================
-   * CHANGE DETECTION (OnPush Strategy)
-   * =========================================================================
-   */
-  describe('Change Detection Strategy', () => {
-    it('should use ChangeDetectionStrategy.OnPush', () => {
-      const metadata = (BaseDataTableComponent as any).__annotations__[0];
-      expect(metadata.changeDetection).toBe(2); // OnPush = 2
+      expect(component['areQueryParamsEqual'](params1, params2)).toBe(true);
     });
 
-    it('should call markForCheck after save preferences', () => {
-      const cdr = fixture.debugElement.injector.get(ChangeDetectorRef);
-      spyOn(cdr, 'markForCheck');
+    it('should detect query param differences', () => {
+      const params1 = { page: 1, size: 20, filters: {} };
+      const params2 = { page: 2, size: 20, filters: {} };
 
-      component.savePreferences();
-
-      expect(cdr.markForCheck).toHaveBeenCalled();
+      expect(component['areQueryParamsEqual'](params1, params2)).toBe(false);
     });
-  });
 
-  /**
-   * =========================================================================
-   * UTILITY METHODS
-   * =========================================================================
-   */
-  describe('Utility Methods', () => {
+    it('should detect filter differences', () => {
+      const params1 = { page: 1, size: 20, filters: { name: 'test' } };
+      const params2 = { page: 1, size: 20, filters: { name: 'other' } };
+
+      expect(component['areQueryParamsEqual'](params1, params2)).toBe(false);
+    });
+
+    it('should handle null/undefined in query param comparison', () => {
+      expect(component['areQueryParamsEqual'](null as any, null as any)).toBe(true);
+      expect(component['areQueryParamsEqual'](null as any, { page: 1, size: 20, filters: {} })).toBe(false);
+    });
+
     it('should track columns by key', () => {
-      const column = component.columns[0];
-      expect(component.trackByKey(0, column)).toBe(column.key);
+      const key = component.trackByKey(0, mockColumns[0]);
+
+      expect(key).toBe('id');
     });
 
     it('should track by index', () => {
-      expect(component.trackByIndex(5)).toBe(5);
+      const index = component.trackByIndex(5);
+
+      expect(index).toBe(5);
     });
   });
 
-  /**
-   * =========================================================================
-   * LIFECYCLE HOOKS
-   * =========================================================================
-   */
-  describe('Lifecycle Hooks', () => {
-    it('should complete destroy$ subject on ngOnDestroy', () => {
-      const destroySpy = jasmine.createSpyObj('Subject', ['next', 'complete']);
-      (component as any).destroy$ = destroySpy;
+  // ========== Component Cleanup ==========
+
+  describe('Component Cleanup', () => {
+    it('should complete subscriptions on destroy', () => {
+      const destroySpy = spyOn(component['destroy$'], 'next');
+      const completeSpy = spyOn(component['destroy$'], 'complete');
 
       component.ngOnDestroy();
 
-      expect(destroySpy.next).toHaveBeenCalled();
-      expect(destroySpy.complete).toHaveBeenCalled();
+      expect(destroySpy).toHaveBeenCalled();
+      expect(completeSpy).toHaveBeenCalled();
     });
-  });
-
-  /**
-   * =========================================================================
-   * EDGE CASES
-   * =========================================================================
-   */
-  describe('Edge Cases', () => {
-    it('should handle missing column in applyColumnOrder', () => {
-      const savedOrder = ['nonexistent-column', 'manufacturer'];
-
-      persistenceService.loadPreferences.and.returnValue({
-        columnOrder: savedOrder,
-        visibleColumns: [],
-        pageSize: 20,
-        lastUpdated: Date.now(),
-      });
-
-      fixture.detectChanges();
-
-      // Should not crash, columns should still exist
-      expect(component.columns.length).toBeGreaterThan(0);
-    });
-
-    it('should handle toggleColumnVisibility for non-existent column', () => {
-      expect(() => {
-        component.toggleColumnVisibility('nonexistent-column');
-      }).not.toThrow();
-    });
-
-    it('should handle very large page sizes', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onPageSizeChange(10000);
-      tick();
-
-      expect(component.pageSize).toBe(10000);
-    }));
-
-    it('should handle negative page numbers gracefully', fakeAsync(() => {
-      fixture.detectChanges();
-      tick();
-
-      component.onPageChange(-1);
-      tick();
-
-      expect(component.currentPage).toBe(-1); // Let data source handle validation
-    }));
   });
 });

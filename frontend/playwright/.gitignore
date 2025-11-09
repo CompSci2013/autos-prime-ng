@@ -1,0 +1,17 @@
+# Playwright test artifacts
+# Keep directory structure but ignore generated files
+
+# Screenshots from test runs
+screenshots/*.png
+screenshots/*.jpg
+
+# HTML test reports
+reports/
+
+# Test result artifacts
+test-results/
+
+# Keep directory structure
+!screenshots/.gitkeep
+!reports/.gitkeep
+!test-results/.gitkeep

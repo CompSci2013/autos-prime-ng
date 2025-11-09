@@ -1,6 +1,6 @@
 {
   "name": "autos-backend",
-  "version": "1.6.2",
+  "version": "1.6.4",
   "description": "AUTOS Backend API - Vehicle data service",
   "main": "src/index.js",
   "scripts": {

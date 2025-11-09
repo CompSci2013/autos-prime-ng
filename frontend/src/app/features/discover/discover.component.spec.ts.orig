@@ -156,7 +156,6 @@ describe('DiscoverComponent', () => {
       const filter = {
         type: 'multiselect' as const,
         field: 'bodyClass',
-        fieldLabel: 'Body Class',
         values: ['Sedan', 'SUV'],
       };
 
@@ -171,7 +170,6 @@ describe('DiscoverComponent', () => {
       const filter = {
         type: 'range' as const,
         field: 'year',
-        fieldLabel: 'Year',
         rangeMin: 1960,
         rangeMax: 1980,
       };
@@ -186,9 +184,8 @@ describe('DiscoverComponent', () => {
 
     it('should handle filter add with single value', () => {
       const filter = {
-        type: 'string' as const,
+        type: 'select' as const,
         field: 'dataSource',
-        fieldLabel: 'Data Source',
         value: 'NHTSA',
       };
 
@@ -520,9 +517,8 @@ describe('DiscoverComponent', () => {
 
     it('should handle FILTER_ADD message', () => {
       const filter = {
-        type: 'string' as const,
+        type: 'select' as const,
         field: 'bodyClass',
-        fieldLabel: 'Body Class',
         value: 'Sedan',
       };
 

@@ -85,6 +85,7 @@ async function getVehicleDetailsHandler(req, res, next) {
       h_yearMin = '',
       h_yearMax = '',
       h_manufacturer = '',
+      h_modelCombos = '',
       h_bodyClass = '',
       sortBy = '',
       sortOrder = 'asc',
@@ -170,6 +171,23 @@ async function getVehicleDetailsHandler(req, res, next) {
     if (h_yearMin) highlights.yearMin = parseInt(h_yearMin);
     if (h_yearMax) highlights.yearMax = parseInt(h_yearMax);
     if (h_manufacturer) highlights.manufacturer = h_manufacturer.trim();
+
+    // Parse h_modelCombos (format: "Dodge:Charger,Chevrolet:Camaro")
+    if (h_modelCombos && h_modelCombos.trim() !== '') {
+      highlights.modelCombos = h_modelCombos.split(',').map((combo) => {
+        const [mfr, mdl] = combo.split(':');
+        if (!mfr || !mdl) {
+          throw new Error(
+            `Invalid h_modelCombos format: "${combo}". Expected format: "Manufacturer:Model"`
+          );
+        }
+        return {
+          manufacturer: mfr.trim(),
+          model: mdl.trim(),
+        };
+      });
+    }
+
     if (h_bodyClass) highlights.bodyClass = h_bodyClass.trim();
 
     // Call service to get vehicle details

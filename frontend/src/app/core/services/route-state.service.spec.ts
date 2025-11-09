@@ -398,7 +398,8 @@ describe('RouteStateService - URL-First State Management', () => {
 
       const filters = service.paramsToFilters(params);
 
-      expect(filters).toEqual({});
+      // Even with empty params, pagination defaults are added for consistent cache keys
+      expect(filters).toEqual({ page: 1, size: 20 });
     });
   });
 
