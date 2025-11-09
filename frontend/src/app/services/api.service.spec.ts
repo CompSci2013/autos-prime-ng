@@ -19,190 +19,134 @@ describe('ApiService', () => {
   });
 
   afterEach(() => {
-    httpMock.verify(); // Ensure no outstanding requests
+    httpMock.verify(); // Ensure no outstanding HTTP requests
   });
 
   describe('Service Creation', () => {
     it('should be created', () => {
       expect(service).toBeTruthy();
     });
-
-    it('should use correct API URL from environment', () => {
-      expect((service as any).apiUrl).toBe(environment.apiUrl);
-    });
   });
 
-  describe('getManufacturerModelCombinations', () => {
-    it('should make GET request to correct endpoint', () => {
-      service.getManufacturerModelCombinations().subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush({ data: [] });
-    });
-
-    it('should include default pagination parameters', () => {
-      service.getManufacturerModelCombinations().subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      expect(req.request.params.get('page')).toBe('1');
-      expect(req.request.params.get('size')).toBe('20');
-      req.flush({ data: [] });
-    });
-
-    it('should include custom pagination parameters', () => {
-      service.getManufacturerModelCombinations(3, 50).subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      expect(req.request.params.get('page')).toBe('3');
-      expect(req.request.params.get('size')).toBe('50');
-      req.flush({ data: [] });
-    });
-
-    it('should include search parameter when provided', () => {
-      service.getManufacturerModelCombinations(1, 20, 'ford').subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      expect(req.request.params.get('search')).toBe('ford');
-      req.flush({ data: [] });
-    });
-
-    it('should not include search parameter when empty', () => {
-      service.getManufacturerModelCombinations(1, 20, '').subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      expect(req.request.params.has('search')).toBe(false);
-      req.flush({ data: [] });
-    });
-
-    it('should return manufacturer model data', (done) => {
-      const mockData = {
+  describe('getManufacturerModelCombinations()', () => {
+    it('should fetch manufacturer-model combinations with default parameters', () => {
+      const mockResponse = {
+        data: [{ manufacturer: "Ford", count: 1, models: [{ model: "F-150", count: 1 }] }],
         total: 1,
         page: 1,
         size: 20,
         totalPages: 1,
-        data: [
-          {
-            manufacturer: 'Ford',
-            count: 25000,
-            models: [{ model: 'F-150', count: 25000 }],
-          },
-        ],
       };
 
       service.getManufacturerModelCombinations().subscribe((response) => {
-        expect(response).toEqual(mockData);
-        done();
+        expect(response).toBe(mockResponse);
       });
 
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
+      const req = httpMock.expectOne(
+        `${apiUrl}/manufacturer-model-combinations?page=1&size=20`
       );
-      req.flush(mockData);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    it('should handle HTTP errors', (done) => {
-      service.getManufacturerModelCombinations().subscribe({
-        error: (error) => {
-          expect(error.status).toBe(500);
-          done();
-        },
-      });
+    it('should include search parameter when provided', () => {
+      const mockResponse = { results: [], total: 0 };
 
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
+      service.getManufacturerModelCombinations(1, 20, 'Ford').subscribe();
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/manufacturer-model-combinations?page=1&size=20&search=Ford`
       );
-      req.flush('Server error', { status: 500, statusText: 'Server Error' });
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should use custom baseUrl when provided', () => {
+      const customUrl = 'https://custom-api.com/api';
+      const mockResponse = { results: [], total: 0 };
+
+      service.getManufacturerModelCombinations(1, 20, '', customUrl).subscribe();
+
+      const req = httpMock.expectOne(
+        `${customUrl}/manufacturer-model-combinations?page=1&size=20`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should handle custom page and size', () => {
+      const mockResponse = { results: [], total: 0 };
+
+      service.getManufacturerModelCombinations(3, 50).subscribe();
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/manufacturer-model-combinations?page=3&size=50`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
   });
 
-  describe('getVehicleDetails', () => {
-    it('should make GET request to correct endpoint', () => {
-      service.getVehicleDetails('Ford:F-150').subscribe();
+  describe('getVehicleDetails()', () => {
+    it('should fetch vehicle details with models parameter', () => {
+      const mockResponse = {
+        results: [],
+        total: 0,
+        page: 1,
+        size: 20,
+        totalPages: 0,
+        query: { modelCombos: [] },
+      };
+      const models = 'Ford:F-150,Chevrolet:Corvette';
 
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
+      service.getVehicleDetails(models).subscribe((response) => {
+        expect(response).toBe(mockResponse);
+      });
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/vehicles/details?page=1&size=20&models=${encodeURIComponent(models)}`
+      );
       expect(req.request.method).toBe('GET');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
+      req.flush(mockResponse);
     });
 
-    it('should include required models parameter', () => {
-      service.getVehicleDetails('Ford:F-150,Ford:Mustang').subscribe();
+    it('should omit models parameter when empty string', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
 
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('models')).toBe('Ford:F-150,Ford:Mustang');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
+      service.getVehicleDetails('').subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/vehicles/details?page=1&size=20`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    it('should include default pagination parameters', () => {
-      service.getVehicleDetails('Ford:F-150').subscribe();
+    it('should include all field-specific search filters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+      const filters = {
+        manufacturerSearch: 'Ford',
+        modelSearch: 'F-150',
+        bodyClassSearch: 'Pickup',
+        dataSourceSearch: 'NHTSA',
+      };
 
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('page')).toBe('1');
-      expect(req.request.params.get('size')).toBe('20');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
+      service.getVehicleDetails('Ford:F-150', 1, 20, filters).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return (
+          request.url.includes('/vehicles/details') &&
+          request.params.has('manufacturerSearch') &&
+          request.params.get('manufacturerSearch') === 'Ford' &&
+          request.params.get('modelSearch') === 'F-150' &&
+          request.params.get('bodyClassSearch') === 'Pickup' &&
+          request.params.get('dataSourceSearch') === 'NHTSA'
+        );
+      });
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    it('should include custom pagination parameters', () => {
-      service.getVehicleDetails('Ford:F-150', 3, 50).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('page')).toBe('3');
-      expect(req.request.params.get('size')).toBe('50');
-      req.flush({ results: [], total: 0, page: 3, size: 50, totalPages: 2 });
-    });
-
-    it('should include manufacturer filter when provided', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, { manufacturer: 'Ford' }).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('manufacturer')).toBe('Ford');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should include model filter when provided', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, { model: 'F-150' }).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('model')).toBe('F-150');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should include year range filters when provided', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, { yearMin: 1965, yearMax: 1973 }).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('yearMin')).toBe('1965');
-      expect(req.request.params.get('yearMax')).toBe('1973');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should include bodyClass filter when provided', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, { bodyClass: 'Pickup' }).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('bodyClass')).toBe('Pickup');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should include dataSource filter when provided', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, { dataSource: 'NHTSA' }).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('dataSource')).toBe('NHTSA');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should include all filters when provided', () => {
+    it('should include all Query Control filters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
       const filters = {
         manufacturer: 'Ford',
         model: 'Mustang',
@@ -212,274 +156,436 @@ describe('ApiService', () => {
         dataSource: 'NHTSA',
       };
 
-      service.getVehicleDetails('Ford:Mustang', 1, 20, filters).subscribe();
+      service.getVehicleDetails('', 1, 20, filters).subscribe();
 
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('manufacturer')).toBe('Ford');
-      expect(req.request.params.get('model')).toBe('Mustang');
-      expect(req.request.params.get('yearMin')).toBe('1965');
-      expect(req.request.params.get('yearMax')).toBe('1973');
-      expect(req.request.params.get('bodyClass')).toBe('Coupe');
-      expect(req.request.params.get('dataSource')).toBe('NHTSA');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
+      const req = httpMock.expectOne((request) => {
+        return (
+          request.url.includes('/vehicles/details') &&
+          request.params.get('manufacturer') === 'Ford' &&
+          request.params.get('model') === 'Mustang' &&
+          request.params.get('yearMin') === '1965' &&
+          request.params.get('yearMax') === '1973' &&
+          request.params.get('bodyClass') === 'Coupe' &&
+          request.params.get('dataSource') === 'NHTSA'
+        );
+      });
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    it('should not include undefined filter parameters', () => {
-      const filters = {
+    it('should include highlight parameters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+      const highlights = {
+        yearMin: 1960,
+        yearMax: 1980,
         manufacturer: 'Ford',
-        model: undefined,
+        modelCombos: 'Ford:F-150',
+        bodyClass: 'Pickup',
       };
 
-      service.getVehicleDetails('Ford:F-150', 1, 20, filters).subscribe();
+      service.getVehicleDetails('Ford:F-150', 1, 20, undefined, highlights).subscribe();
 
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.has('manufacturer')).toBe(true);
-      expect(req.request.params.has('model')).toBe(false);
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should include sorting parameters when provided', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, undefined, 'year', 'desc').subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('sortBy')).toBe('year');
-      expect(req.request.params.get('sortOrder')).toBe('desc');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should not include sorting when not provided', () => {
-      service.getVehicleDetails('Ford:F-150').subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.has('sortBy')).toBe(false);
-      expect(req.request.params.has('sortOrder')).toBe(false);
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should return vehicle details data', (done) => {
-      const mockData = {
-        total: 1,
-        page: 1,
-        size: 20,
-        totalPages: 1,
-        query: {
-          modelCombos: [{ manufacturer: 'Ford', model: 'F-150' }],
-        },
-        results: [
-          {
-            vehicle_id: 'v1',
-            manufacturer: 'Ford',
-            model: 'F-150',
-            year: 2020,
-            body_class: 'Pickup',
-            data_source: 'NHTSA',
-            ingested_at: new Date().toISOString(),
-          },
-        ],
-      };
-
-      service.getVehicleDetails('Ford:F-150').subscribe((response) => {
-        expect(response).toEqual(mockData);
-        done();
+      const req = httpMock.expectOne((request) => {
+        return (
+          request.url.includes('/vehicles/details') &&
+          request.params.get('h_yearMin') === '1960' &&
+          request.params.get('h_yearMax') === '1980' &&
+          request.params.get('h_manufacturer') === 'Ford' &&
+          request.params.get('h_modelCombos') === 'Ford:F-150' &&
+          request.params.get('h_bodyClass') === 'Pickup'
+        );
       });
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      req.flush(mockData);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    it('should handle HTTP errors', (done) => {
-      service.getVehicleDetails('Ford:F-150').subscribe({
-        error: (error) => {
-          expect(error.status).toBe(404);
-          done();
-        },
-      });
+    it('should include sort parameters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
 
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      req.flush('Not found', { status: 404, statusText: 'Not Found' });
+      service
+        .getVehicleDetails('Ford:F-150', 1, 20, undefined, undefined, 'year', 'desc')
+        .subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return (
+          request.url.includes('/vehicles/details') &&
+          request.params.get('sortBy') === 'year' &&
+          request.params.get('sortOrder') === 'desc'
+        );
+      });
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should use custom baseUrl when provided', () => {
+      const customUrl = 'https://custom-api.com/api';
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+
+      service
+        .getVehicleDetails(
+          'Ford:F-150',
+          1,
+          20,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          customUrl
+        )
+        .subscribe();
+
+      const req = httpMock.expectOne(
+        `${customUrl}/vehicles/details?page=1&size=20&models=Ford%3AF-150`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should handle yearMin and yearMax as 0', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+      const filters = { yearMin: 0, yearMax: 0 };
+
+      service.getVehicleDetails('', 1, 20, filters).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return (
+          request.url.includes('/vehicles/details') &&
+          request.params.get('yearMin') === '0' &&
+          request.params.get('yearMax') === '0'
+        );
+      });
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
   });
 
-  describe('getVehicleInstances', () => {
-    const vehicleId = 'abc123';
-
-    it('should make GET request to correct endpoint with vehicle ID', () => {
-      service.getVehicleInstances(vehicleId).subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId}/instances`)
-      );
-      expect(req.request.method).toBe('GET');
-      req.flush({ instances: [] });
-    });
-
-    it('should include default count parameter', () => {
-      service.getVehicleInstances(vehicleId).subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId}/instances`)
-      );
-      expect(req.request.params.get('count')).toBe('8');
-      req.flush({ instances: [] });
-    });
-
-    it('should include custom count parameter', () => {
-      service.getVehicleInstances(vehicleId, 20).subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId}/instances`)
-      );
-      expect(req.request.params.get('count')).toBe('20');
-      req.flush({ instances: [] });
-    });
-
-    it('should return vehicle instances data', (done) => {
-      const mockData = {
-        vehicle_id: vehicleId,
+  describe('getVehicleInstances()', () => {
+    it('should fetch vehicle instances with default count', () => {
+      const mockResponse = {
+        vehicle_id: 'abc123',
         manufacturer: 'Ford',
         model: 'F-150',
         year: 2020,
         body_class: 'Pickup',
-        instance_count: 1,
-        instances: [
-          {
-            vin: 'ABC123DEF456GHI78',
-            condition_rating: 9,
-            condition_description: 'Excellent',
-            mileage: 45000,
-            mileage_verified: true,
-            registered_state: 'CA',
-            registration_status: 'Current',
-            title_status: 'Clean',
-            exterior_color: 'Blue',
-            factory_options: ['Premium Package'],
-            estimated_value: 28500,
-            matching_numbers: true,
-            last_service_date: '2020-06-15',
-          },
-        ],
+        instance_count: 5000,
+        instances: []
       };
+      const vehicleId = 'abc123';
 
       service.getVehicleInstances(vehicleId).subscribe((response) => {
-        expect(response).toEqual(mockData);
-        done();
+        expect(response).toBe(mockResponse);
       });
 
-      const req = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId}/instances`)
+      const req = httpMock.expectOne(
+        `${apiUrl}/vehicles/${vehicleId}/instances?count=8`
       );
-      req.flush(mockData);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
     });
 
-    it('should handle HTTP errors', (done) => {
-      service.getVehicleInstances(vehicleId).subscribe({
+    it('should use custom count when provided', () => {
+      const mockResponse = { vehicle_id: 'abc123', instances: [] };
+      const vehicleId = 'abc123';
+
+      service.getVehicleInstances(vehicleId, 25).subscribe();
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/vehicles/${vehicleId}/instances?count=25`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should use custom baseUrl when provided', () => {
+      const customUrl = 'https://custom-api.com/api';
+      const mockResponse = { vehicle_id: 'abc123', instances: [] };
+      const vehicleId = 'abc123';
+
+      service.getVehicleInstances(vehicleId, 8, customUrl).subscribe();
+
+      const req = httpMock.expectOne(
+        `${customUrl}/vehicles/${vehicleId}/instances?count=8`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('getAllVins()', () => {
+    it('should fetch all VINs with default parameters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+
+      service.getAllVins().subscribe((response) => {
+        expect(response).toBe(mockResponse);
+      });
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/vins?page=1&size=20&sortBy=vin&sortOrder=asc`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should include all filter parameters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+      const filters = {
+        manufacturer: 'Ford',
+        model: 'F-150',
+        yearMin: 2010,
+        yearMax: 2020,
+        bodyClass: 'Pickup',
+        mileageMin: 10000,
+        mileageMax: 50000,
+        valueMin: 20000,
+        valueMax: 40000,
+        vin: '1FTFW1E',
+        conditionDescription: 'Excellent',
+        registeredState: 'CA',
+        exteriorColor: 'Red',
+      };
+
+      service.getAllVins(1, 20, filters).subscribe();
+
+      const req = httpMock.expectOne((request) => {
+        return (
+          request.url.includes('/vins') &&
+          request.params.get('manufacturer') === 'Ford' &&
+          request.params.get('model') === 'F-150' &&
+          request.params.get('yearMin') === '2010' &&
+          request.params.get('yearMax') === '2020' &&
+          request.params.get('bodyClass') === 'Pickup' &&
+          request.params.get('mileageMin') === '10000' &&
+          request.params.get('mileageMax') === '50000' &&
+          request.params.get('valueMin') === '20000' &&
+          request.params.get('valueMax') === '40000' &&
+          request.params.get('vin') === '1FTFW1E' &&
+          request.params.get('conditionDescription') === 'Excellent' &&
+          request.params.get('registeredState') === 'CA' &&
+          request.params.get('exteriorColor') === 'Red'
+        );
+      });
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should use custom sort parameters', () => {
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+
+      service.getAllVins(1, 20, undefined, 'year', 'desc').subscribe();
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/vins?page=1&size=20&sortBy=year&sortOrder=desc`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should use custom baseUrl when provided', () => {
+      const customUrl = 'https://custom-api.com/api';
+      const mockResponse = { results: [], total: 0, page: 1, size: 20 };
+
+      service.getAllVins(1, 20, undefined, 'vin', 'asc', customUrl).subscribe();
+
+      const req = httpMock.expectOne(
+        `${customUrl}/vins?page=1&size=20&sortBy=vin&sortOrder=asc`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('getFilterOptions()', () => {
+    it('should fetch filter options without parameters', () => {
+      const mockResponse = { data: [] };
+      const fieldName = 'manufacturers';
+
+      service.getFilterOptions(fieldName).subscribe((response) => {
+        expect(response).toBe(mockResponse);
+      });
+
+      const req = httpMock.expectOne(`${apiUrl}/filters/${fieldName}`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should include search parameter when provided', () => {
+      const mockResponse = { data: [] };
+
+      service.getFilterOptions('manufacturers', 'Ford').subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/filters/manufacturers?search=Ford`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should include limit parameter when provided', () => {
+      const mockResponse = { data: [] };
+
+      service.getFilterOptions('manufacturers', undefined, 500).subscribe();
+
+      const req = httpMock.expectOne(`${apiUrl}/filters/manufacturers?limit=500`);
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+
+    it('should include both search and limit parameters', () => {
+      const mockResponse = { data: [] };
+
+      service.getFilterOptions('models', 'Mustang', 100).subscribe();
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/filters/models?search=Mustang&limit=100`
+      );
+      expect(req.request.method).toBe('GET');
+      req.flush(mockResponse);
+    });
+  });
+
+  describe('Convenience Methods', () => {
+    describe('getDistinctManufacturers()', () => {
+      it('should fetch distinct manufacturers', () => {
+        const mockResponse = { manufacturers: ['Ford', 'Chevrolet'] };
+
+        service.getDistinctManufacturers().subscribe((response) => {
+          expect(response).toBe(mockResponse);
+        });
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/manufacturers`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+
+      it('should pass search parameter to getFilterOptions', () => {
+        const mockResponse = { manufacturers: ['Ford'] };
+
+        service.getDistinctManufacturers('Ford').subscribe();
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/manufacturers?search=Ford`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+
+      it('should pass limit parameter to getFilterOptions', () => {
+        const mockResponse = { manufacturers: [] };
+
+        service.getDistinctManufacturers(undefined, 50).subscribe();
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/manufacturers?limit=50`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+    });
+
+    describe('getDistinctModels()', () => {
+      it('should fetch distinct models', () => {
+        const mockResponse = { models: ['F-150', 'Mustang'] };
+
+        service.getDistinctModels().subscribe((response) => {
+          expect(response).toBe(mockResponse);
+        });
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/models`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+
+      it('should pass search parameter to getFilterOptions', () => {
+        const mockResponse = { models: ['Mustang'] };
+
+        service.getDistinctModels('Mustang').subscribe();
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/models?search=Mustang`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+    });
+
+    describe('getDistinctBodyClasses()', () => {
+      it('should fetch distinct body classes', () => {
+        const mockResponse = { body_classes: ['Pickup', 'Sedan', 'SUV'] };
+
+        service.getDistinctBodyClasses().subscribe((response) => {
+          expect(response).toBe(mockResponse);
+        });
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/body-classes`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+    });
+
+    describe('getDistinctDataSources()', () => {
+      it('should fetch distinct data sources', () => {
+        const mockResponse = { data_sources: ['NHTSA', 'EPA'] };
+
+        service.getDistinctDataSources().subscribe((response) => {
+          expect(response).toBe(mockResponse);
+        });
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/data-sources`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+    });
+
+    describe('getYearRange()', () => {
+      it('should fetch year range', () => {
+        const mockResponse = { min: 1920, max: 2024 };
+
+        service.getYearRange().subscribe((response) => {
+          expect(response).toBe(mockResponse);
+        });
+
+        const req = httpMock.expectOne(`${apiUrl}/filters/year-range`);
+        expect(req.request.method).toBe('GET');
+        req.flush(mockResponse);
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should propagate HTTP errors from getManufacturerModelCombinations', () => {
+      const errorMessage = 'Server error';
+
+      service.getManufacturerModelCombinations().subscribe({
+        next: () => fail('should have failed with 500 error'),
         error: (error) => {
           expect(error.status).toBe(500);
-          done();
+        },
+      });
+
+      const req = httpMock.expectOne(
+        `${apiUrl}/manufacturer-model-combinations?page=1&size=20`
+      );
+      req.flush(errorMessage, { status: 500, statusText: 'Server Error' });
+    });
+
+    it('should propagate HTTP errors from getVehicleDetails', () => {
+      service.getVehicleDetails('Ford:F-150').subscribe({
+        next: () => fail('should have failed with 404 error'),
+        error: (error) => {
+          expect(error.status).toBe(404);
         },
       });
 
       const req = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId}/instances`)
+        request.url.includes('/vehicles/details')
       );
-      req.flush('Server error', { status: 500, statusText: 'Server Error' });
+      req.flush('Not found', { status: 404, statusText: 'Not Found' });
     });
 
-    it('should handle different vehicle IDs', () => {
-      const vehicleId1 = 'abc123';
-      const vehicleId2 = 'xyz789';
-
-      service.getVehicleInstances(vehicleId1).subscribe();
-      service.getVehicleInstances(vehicleId2).subscribe();
-
-      const req1 = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId1}/instances`)
-      );
-      const req2 = httpMock.expectOne((request) =>
-        request.url.includes(`/vehicles/${vehicleId2}/instances`)
-      );
-
-      expect(req1.request.url).toContain(vehicleId1);
-      expect(req2.request.url).toContain(vehicleId2);
-
-      req1.flush({ instances: [] });
-      req2.flush({ instances: [] });
-    });
-  });
-
-  describe('Edge Cases', () => {
-    it('should handle empty models parameter', () => {
-      service.getVehicleDetails('').subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('models')).toBe('');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-
-    it('should handle zero page and size', () => {
-      service.getManufacturerModelCombinations(0, 0).subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      expect(req.request.params.get('page')).toBe('0');
-      expect(req.request.params.get('size')).toBe('0');
-      req.flush({ data: [] });
-    });
-
-    it('should handle very large page numbers', () => {
-      service.getVehicleDetails('Ford:F-150', 99999, 100).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('page')).toBe('99999');
-      expect(req.request.params.get('size')).toBe('100');
-      req.flush({ results: [], total: 0, page: 99999, size: 100, totalPages: 0 });
-    });
-
-    it('should handle special characters in search', () => {
-      service.getManufacturerModelCombinations(1, 20, 'Ford & Chevy').subscribe();
-
-      const req = httpMock.expectOne((request) =>
-        request.url.includes('/manufacturer-model-combinations')
-      );
-      // URL encoding handled by HttpParams
-      expect(req.request.params.get('search')).toBe('Ford & Chevy');
-      req.flush({ data: [] });
-    });
-
-    it('should handle yearMin of 0', () => {
-      service.getVehicleDetails('Ford:F-150', 1, 20, { yearMin: 0 }).subscribe();
-
-      const req = httpMock.expectOne((request) => request.url.includes('/vehicles/details'));
-      expect(req.request.params.get('yearMin')).toBe('0');
-      req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-    });
-  });
-
-  describe('Concurrent Requests', () => {
-    it('should handle multiple concurrent requests', () => {
-      service.getManufacturerModelCombinations().subscribe();
-      service.getVehicleDetails('Ford:F-150').subscribe();
-      service.getVehicleInstances('abc123').subscribe();
-
-      const requests = httpMock.match(() => true);
-      expect(requests.length).toBe(3);
-
-      requests[0].flush({ data: [] });
-      requests[1].flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
-      requests[2].flush({ instances: [] });
-    });
-
-    it('should handle same request multiple times', () => {
-      service.getVehicleDetails('Ford:F-150').subscribe();
-      service.getVehicleDetails('Ford:F-150').subscribe();
-
-      const requests = httpMock.match((request) => request.url.includes('/vehicles/details'));
-      expect(requests.length).toBe(2); // Should make 2 separate requests
-
-      requests.forEach((req) => {
-        req.flush({ results: [], total: 0, page: 1, size: 20, totalPages: 0 });
+    it('should propagate HTTP errors from getVehicleInstances', () => {
+      service.getVehicleInstances('invalid-id').subscribe({
+        next: () => fail('should have failed with 404 error'),
+        error: (error) => {
+          expect(error.status).toBe(404);
+        },
       });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/vehicles/invalid-id/instances')
+      );
+      req.flush('Not found', { status: 404, statusText: 'Not Found' });
     });
   });
 });
