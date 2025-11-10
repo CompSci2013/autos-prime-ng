@@ -203,7 +203,20 @@ export class StateManagementService implements OnDestroy {
   private syncStateToUrl(): void {
     const state = this.stateSubject.value;
     const params = this.routeState.filtersToParams(state.filters);
-    this.routeState.setParams(params, false);
+
+    // IMPORTANT: Preserve existing highlight parameters (h_* prefix)
+    // Highlights are UI-only overlays and should not be removed when filters change
+    const currentParams = this.routeState.getCurrentParams();
+    const highlightParams: Record<string, string> = {};
+    Object.keys(currentParams).forEach(key => {
+      if (key.startsWith('h_')) {
+        highlightParams[key] = currentParams[key];
+      }
+    });
+
+    // Merge filter params + preserved highlight params
+    const mergedParams = { ...params, ...highlightParams };
+    this.routeState.setParams(mergedParams, false);
   }
 
   /**
@@ -259,6 +272,9 @@ export class StateManagementService implements OnDestroy {
             break;
           case 'model':
             highlights.model = params[key];
+            break;
+          case 'modelCombos':
+            highlights.modelCombos = params[key];
             break;
           case 'bodyClass':
             highlights.bodyClass = params[key];
@@ -339,17 +355,13 @@ export class StateManagementService implements OnDestroy {
     this.updateState({ filters: newFilters });
     this.syncStateToUrl();
 
-    // Always trigger API search (supports both filtered and unfiltered queries)
-    // Backend supports empty modelCombos (returns all vehicles)
-    console.log('🔵 Triggering fetchVehicleData()');
-    this.fetchVehicleData().subscribe({
-      next: () => console.log('🟢 Data fetched successfully'),
-      error: (err) => console.error('🔴 Fetch failed:', err),
-    });
+    // Note: URL watcher will automatically trigger fetchVehicleData()
+    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
   }
 
   /**
    * Clear all filters and reset to default state
+   * URL watcher will automatically trigger data fetch
    */
   clearAllFilters(): void {
     const currentFilters = this.stateSubject.value.filters;
@@ -363,15 +375,13 @@ export class StateManagementService implements OnDestroy {
     this.updateState({ filters: newFilters });
     this.syncStateToUrl();
 
-    // Trigger API search with empty filters (returns all vehicles)
-    this.fetchVehicleData().subscribe({
-      next: () => console.log('🟢 Data fetched successfully (all filters cleared)'),
-      error: (err) => console.error('🔴 Fetch failed:', err),
-    });
+    // Note: URL watcher will automatically trigger fetchVehicleData()
+    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
   }
 
   /**
    * Update pagination and sync to URL
+   * URL watcher will automatically trigger data fetch
    */
   updatePage(page: number): void {
     const currentFilters = this.stateSubject.value.filters;
@@ -380,23 +390,13 @@ export class StateManagementService implements OnDestroy {
     this.updateState({ filters: newFilters });
     this.syncStateToUrl();
 
-    // Always trigger API search (supports both filtered and unfiltered)
-    this.fetchVehicleData().subscribe({
-      next: () => console.log('[StateManagement] Page data loaded successfully'),
-      error: (err) => {
-        console.error('[StateManagement] Failed to load page data:', err);
-        // Revert to previous page on error
-        this.updateState({
-          filters: currentFilters,
-          error: this.formatError(err)
-        });
-        this.syncStateToUrl();
-      }
-    });
+    // Note: URL watcher will automatically trigger fetchVehicleData()
+    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
   }
 
   /**
    * Update sorting and sync to URL
+   * URL watcher will automatically trigger data fetch
    */
   updateSort(sort: string, sortDirection: 'asc' | 'desc'): void {
     const currentFilters = this.stateSubject.value.filters;
@@ -410,19 +410,8 @@ export class StateManagementService implements OnDestroy {
     this.updateState({ filters: newFilters });
     this.syncStateToUrl();
 
-    // Always trigger API search (supports both filtered and unfiltered)
-    this.fetchVehicleData().subscribe({
-      next: () => console.log('[StateManagement] Sorted data loaded successfully'),
-      error: (err) => {
-        console.error('[StateManagement] Failed to load sorted data:', err);
-        // Revert to previous sort on error
-        this.updateState({
-          filters: currentFilters,
-          error: this.formatError(err)
-        });
-        this.syncStateToUrl();
-      }
-    });
+    // Note: URL watcher will automatically trigger fetchVehicleData()
+    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
   }
 
   /**
@@ -746,6 +735,7 @@ export class StateManagementService implements OnDestroy {
       h_yearMin: highlights.yearMin,
       h_yearMax: highlights.yearMax,
       h_manufacturer: highlights.manufacturer,
+      h_modelCombos: highlights.modelCombos,
       h_bodyClass: highlights.bodyClass,
     });
 

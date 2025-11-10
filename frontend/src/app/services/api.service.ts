@@ -56,6 +56,7 @@ export class ApiService {
       yearMin?: number;
       yearMax?: number;
       manufacturer?: string;
+      modelCombos?: string;
       bodyClass?: string;
     },
     sortBy?: string,
@@ -118,6 +119,9 @@ export class ApiService {
       }
       if (highlights.manufacturer) {
         params = params.set('h_manufacturer', highlights.manufacturer);
+      }
+      if (highlights.modelCombos) {
+        params = params.set('h_modelCombos', highlights.modelCombos);
       }
       if (highlights.bodyClass) {
         params = params.set('h_bodyClass', highlights.bodyClass);

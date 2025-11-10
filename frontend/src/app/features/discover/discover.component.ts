@@ -308,10 +308,20 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Clear all filters
+   * Clear all filters and highlights
+   * URL-first approach: Update URL, let watcher handle state + data fetch
    */
   onClearAll(): void {
-    this.stateService.clearAllFilters();
+    // Directly set URL to only page and size (removes ALL filters and highlights)
+    // This is the cleanest URL-first approach - just update URL and let
+    // watchUrlChanges() handle state updates and data fetching
+    this.routeState.setParams({ page: 1, size: 20 });
+
+    // Note: URL change will trigger watchUrlChanges() which will:
+    // 1. Extract filters from URL: {page: 1, size: 20}
+    // 2. Extract highlights from URL: {}
+    // 3. Update internal state
+    // 4. Fetch data
   }
 
   // ========== DRAG/DROP PANEL REORDERING ==========

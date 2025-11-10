@@ -327,6 +327,14 @@ export class PlotlyHistogramComponent implements OnInit, AfterViewInit, OnDestro
       const label = data.points[0].x;
       this.onManufacturerClick(label);
     });
+
+    // Add selection handler for box/lasso select
+    el.on('plotly_selected', (data: any) => {
+      if (data && data.points && data.points.length > 0) {
+        const selectedManufacturers: string[] = [...new Set<string>(data.points.map((point: any) => point.x as string))];
+        this.onManufacturerSelect(selectedManufacturers);
+      }
+    });
   }
 
   private renderModelsChart(): void {
@@ -454,6 +462,20 @@ export class PlotlyHistogramComponent implements OnInit, AfterViewInit, OnDestro
       }
     }).catch(err => {
       console.error('[PlotlyHistogram] Error rendering models chart:', err);
+    });
+
+    // Add click handler - context-aware
+    el.on('plotly_click', (data: any) => {
+      const label = data.points[0].x; // "Manufacturer Model"
+      this.onModelClick(label);
+    });
+
+    // Add selection handler for box/lasso select
+    el.on('plotly_selected', (data: any) => {
+      if (data && data.points && data.points.length > 0) {
+        const selectedModels: string[] = [...new Set<string>(data.points.map((point: any) => point.x as string))];
+        this.onModelSelect(selectedModels);
+      }
     });
   }
 
@@ -708,6 +730,14 @@ export class PlotlyHistogramComponent implements OnInit, AfterViewInit, OnDestro
       const label = data.points[0].x;
       this.onBodyClassClick(label);
     });
+
+    // Add selection handler for box/lasso select
+    el.on('plotly_selected', (data: any) => {
+      if (data && data.points && data.points.length > 0) {
+        const selectedBodyClasses: string[] = [...new Set<string>(data.points.map((point: any) => point.x as string))];
+        this.onBodyClassSelect(selectedBodyClasses);
+      }
+    });
   }
 
   // Context-aware event handlers
@@ -809,6 +839,126 @@ export class PlotlyHistogramComponent implements OnInit, AfterViewInit, OnDestro
     } else {
       // Normal mode: charts are informational only (no action)
       console.log('[PlotlyHistogram] Chart click in normal mode (no action)');
+    }
+  }
+
+  private onManufacturerSelect(manufacturers: string[]): void {
+    // Check if highlight mode is active
+    if (this.isHighlightModeActive) {
+      console.log(`[PlotlyHistogram] 🟦 Manufacturers HIGHLIGHTED:`, manufacturers);
+      // For multiple manufacturers, use comma-separated string
+      this.urlParamService.setHighlightParam('manufacturer', manufacturers.join(','));
+      return;
+    }
+
+    console.log(`[PlotlyHistogram] Manufacturers SELECTED:`, manufacturers);
+
+    if (this.popOutContext.isInPopOut()) {
+      // Pop-out mode: send message to main window
+      this.popOutContext.sendMessage({
+        type: 'MANUFACTURER_SELECT',
+        payload: manufacturers
+      });
+    } else {
+      // Normal mode: update filters directly via StateManagementService
+      // For now, only support single manufacturer selection
+      if (manufacturers.length === 1) {
+        this.stateService.updateFilters({
+          manufacturer: manufacturers[0]
+        });
+      }
+    }
+  }
+
+  private onModelClick(modelLabel: string): void {
+    // Check if highlight mode is active
+    if (this.isHighlightModeActive) {
+      console.log(`[PlotlyHistogram] 🟦 Model HIGHLIGHTED: ${modelLabel}`);
+      // Parse "Manufacturer Model" format
+      const parts = modelLabel.split(' ');
+      const manufacturer = parts[0];
+      const model = parts.slice(1).join(' ');
+      this.urlParamService.setHighlightParam('modelCombos', `${manufacturer}:${model}`);
+      return;
+    }
+
+    console.log(`[PlotlyHistogram] Model clicked: ${modelLabel}`);
+
+    if (this.popOutContext.isInPopOut()) {
+      // Pop-out mode: send message to main window
+      this.popOutContext.sendMessage({
+        type: 'MODEL_CLICK',
+        payload: modelLabel
+      });
+    } else {
+      // Normal mode: charts are informational only (no action)
+      console.log('[PlotlyHistogram] Chart click in normal mode (no action)');
+    }
+  }
+
+  private onModelSelect(modelLabels: string[]): void {
+    // Check if highlight mode is active
+    if (this.isHighlightModeActive) {
+      console.log(`[PlotlyHistogram] 🟦 Models HIGHLIGHTED:`, modelLabels);
+      // Parse "Manufacturer Model" format and convert to modelCombos format
+      const modelCombos = modelLabels.map(label => {
+        const parts = label.split(' ');
+        const manufacturer = parts[0];
+        const model = parts.slice(1).join(' ');
+        return `${manufacturer}:${model}`;
+      });
+      this.urlParamService.setHighlightParam('modelCombos', modelCombos.join(','));
+      return;
+    }
+
+    console.log(`[PlotlyHistogram] Models SELECTED:`, modelLabels);
+
+    if (this.popOutContext.isInPopOut()) {
+      // Pop-out mode: send message to main window
+      this.popOutContext.sendMessage({
+        type: 'MODEL_SELECT',
+        payload: modelLabels
+      });
+    } else {
+      // Normal mode: update filters directly via StateManagementService
+      // Parse "Manufacturer Model" format and convert to modelCombos
+      const modelCombos = modelLabels.map(label => {
+        const parts = label.split(' ');
+        const manufacturer = parts[0];
+        const model = parts.slice(1).join(' ');
+        return { manufacturer, model };
+      });
+      this.stateService.updateFilters({
+        modelCombos
+      });
+    }
+  }
+
+  private onBodyClassSelect(bodyClasses: string[]): void {
+    // Check if highlight mode is active
+    if (this.isHighlightModeActive) {
+      console.log(`[PlotlyHistogram] 🟦 Body classes HIGHLIGHTED:`, bodyClasses);
+      // For multiple body classes, use comma-separated string
+      this.urlParamService.setHighlightParam('bodyClass', bodyClasses.join(','));
+      return;
+    }
+
+    console.log(`[PlotlyHistogram] Body classes SELECTED:`, bodyClasses);
+
+    if (this.popOutContext.isInPopOut()) {
+      // Pop-out mode: send message to main window
+      this.popOutContext.sendMessage({
+        type: 'BODY_CLASS_SELECT',
+        payload: bodyClasses
+      });
+    } else {
+      // Normal mode: update filters directly via StateManagementService
+      // For now, only support single body class selection
+      if (bodyClasses.length === 1) {
+        this.stateService.updateFilters({
+          bodyClass: bodyClasses[0]
+        });
+      }
     }
   }
 }

@@ -969,6 +969,16 @@ export class QueryControlComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Model combos highlight
+    if (highlights.modelCombos) {
+      chips.push({
+        field: 'h_modelCombos',
+        label: 'Highlight Models',
+        displayValue: highlights.modelCombos,
+        color: 'magenta',
+      });
+    }
+
     return chips;
   }
 

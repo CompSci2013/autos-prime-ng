@@ -52,6 +52,7 @@ export interface HighlightFilters {
 
   // Model highlighting (comma-separated list)
   model?: string;         // h_model
+  modelCombos?: string;   // h_modelCombos (Manufacturer:Model format, comma-separated)
 
   // Body class highlighting (comma-separated list)
   bodyClass?: string;     // h_bodyClass
