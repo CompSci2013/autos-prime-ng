@@ -348,7 +348,11 @@ export class PlotlyHistogramComponent implements OnInit, AfterViewInit, OnDestro
 
     Object.entries(this.statistics.modelsByManufacturer).forEach(
       ([manufacturer, models]) => {
-        if (selectedMfr && manufacturer !== selectedMfr) return;
+        // Handle comma-separated manufacturers from Query Control
+        if (selectedMfr) {
+          const selectedManufacturers = selectedMfr.split(',').map(m => m.trim());
+          if (!selectedManufacturers.includes(manufacturer)) return;
+        }
 
         Object.entries(models).forEach(([model, count]) => {
           if (typeof count === 'object' && 'total' in count) {
