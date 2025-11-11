@@ -352,11 +352,23 @@ export class StateManagementService implements OnDestroy {
     console.log('🔵 Filters to set:', filtersToSet);
     console.log('🔵 Result filters:', newFilters);
 
-    this.updateState({ filters: newFilters });
-    this.syncStateToUrl();
+    // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
+    const params = this.routeState.filtersToParams(newFilters);
 
-    // Note: URL watcher will automatically trigger fetchVehicleData()
-    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
+    // Preserve existing highlight parameters
+    const currentParams = this.routeState.getCurrentParams();
+    const highlightParams: Record<string, string> = {};
+    Object.keys(currentParams).forEach(key => {
+      if (key.startsWith('h_')) {
+        highlightParams[key] = currentParams[key];
+      }
+    });
+
+    const mergedParams = { ...params, ...highlightParams };
+    this.routeState.setParams(mergedParams, false);
+
+    // Note: URL change → NavigationEnd → watchUrlChanges() → updateState() + fetchVehicleData()
+    console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
 
   /**
@@ -372,11 +384,22 @@ export class StateManagementService implements OnDestroy {
 
     console.log('🔵 StateManagement.clearAllFilters() - resetting all filters');
 
-    this.updateState({ filters: newFilters });
-    this.syncStateToUrl();
+    // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
+    const params = this.routeState.filtersToParams(newFilters);
 
-    // Note: URL watcher will automatically trigger fetchVehicleData()
-    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
+    // Preserve existing highlight parameters
+    const currentParams = this.routeState.getCurrentParams();
+    const highlightParams: Record<string, string> = {};
+    Object.keys(currentParams).forEach(key => {
+      if (key.startsWith('h_')) {
+        highlightParams[key] = currentParams[key];
+      }
+    });
+
+    const mergedParams = { ...params, ...highlightParams };
+    this.routeState.setParams(mergedParams, false);
+
+    console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
 
   /**
@@ -387,11 +410,22 @@ export class StateManagementService implements OnDestroy {
     const currentFilters = this.stateSubject.value.filters;
     const newFilters = { ...currentFilters, page };
 
-    this.updateState({ filters: newFilters });
-    this.syncStateToUrl();
+    // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
+    const params = this.routeState.filtersToParams(newFilters);
 
-    // Note: URL watcher will automatically trigger fetchVehicleData()
-    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
+    // Preserve existing highlight parameters
+    const currentParams = this.routeState.getCurrentParams();
+    const highlightParams: Record<string, string> = {};
+    Object.keys(currentParams).forEach(key => {
+      if (key.startsWith('h_')) {
+        highlightParams[key] = currentParams[key];
+      }
+    });
+
+    const mergedParams = { ...params, ...highlightParams };
+    this.routeState.setParams(mergedParams, false);
+
+    console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
 
   /**
@@ -407,11 +441,22 @@ export class StateManagementService implements OnDestroy {
       page: 1, // Reset to page 1 when sort changes
     };
 
-    this.updateState({ filters: newFilters });
-    this.syncStateToUrl();
+    // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
+    const params = this.routeState.filtersToParams(newFilters);
 
-    // Note: URL watcher will automatically trigger fetchVehicleData()
-    console.log('🟡 URL updated - watchUrlChanges() will handle data fetch');
+    // Preserve existing highlight parameters
+    const currentParams = this.routeState.getCurrentParams();
+    const highlightParams: Record<string, string> = {};
+    Object.keys(currentParams).forEach(key => {
+      if (key.startsWith('h_')) {
+        highlightParams[key] = currentParams[key];
+      }
+    });
+
+    const mergedParams = { ...params, ...highlightParams };
+    this.routeState.setParams(mergedParams, false);
+
+    console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
 
   /**
