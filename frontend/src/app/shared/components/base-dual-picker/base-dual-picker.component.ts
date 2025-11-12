@@ -28,7 +28,7 @@ import { Subject, Observable } from 'rxjs';
 import { takeUntil, map } from 'rxjs/operators';
 import { PickerConfig } from '../../models/picker-config.model';
 import { PickerConfigService } from '../../../core/services/picker-config.service';
-import { UrlParamService } from '../../../core/services/url-param.service';
+import { UrlStateService } from '../../../core/services/url-state.service';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { ApiService } from '../../../services/api.service';
 import { TableColumn } from '../../models/table-column.model';
@@ -77,7 +77,7 @@ export class BaseDualPickerComponent implements OnInit, OnDestroy {
     private pickerConfigService: PickerConfigService,
     private apiService: ApiService,
     private http: HttpClient,
-    private urlParamService: UrlParamService,
+    private urlState: UrlStateService,
     private popOutContext: PopOutContextService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -179,8 +179,8 @@ export class BaseDualPickerComponent implements OnInit, OnDestroy {
    * Subscribe to URL state for selection hydration
    */
   private subscribeToUrlState(): void {
-    this.urlParamService
-      .watchParam(this.config.selection.urlParam)
+    this.urlState
+      .getQueryParam(this.config.selection.urlParam)
       .pipe(takeUntil(this.destroy$))
       .subscribe((urlValue: string | null) => {
         console.log('[BaseDualPicker] URL param changed:', urlValue);
@@ -321,7 +321,9 @@ export class BaseDualPickerComponent implements OnInit, OnDestroy {
         },
       });
     } else {
-      this.urlParamService.updateParam(this.config.selection.urlParam, urlValue);
+      this.urlState.setQueryParams({
+        [this.config.selection.urlParam]: urlValue,
+      });
     }
   }
 
@@ -343,7 +345,7 @@ export class BaseDualPickerComponent implements OnInit, OnDestroy {
         },
       });
     } else {
-      this.urlParamService.removeParam(this.config.selection.urlParam);
+      this.urlState.clearQueryParam(this.config.selection.urlParam);
     }
 
     this.cdr.markForCheck();
@@ -381,7 +383,9 @@ export class BaseDualPickerComponent implements OnInit, OnDestroy {
         },
       });
     } else {
-      this.urlParamService.updateParam(this.config.selection.urlParam, urlValue);
+      this.urlState.setQueryParams({
+        [this.config.selection.urlParam]: urlValue,
+      });
     }
 
     this.cdr.markForCheck();

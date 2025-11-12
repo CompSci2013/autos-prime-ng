@@ -141,6 +141,23 @@ export interface PickerRowConfig<T = any> {
 /**
  * Selection state configuration
  * Controls how selections are persisted to URL and hydrated
+ *
+ * Architecture:
+ * - keyGenerator/keyParser: Lightweight key format for selection tracking
+ * - serializer/deserializer: Full object format for complex selections
+ * - urlParam: URL parameter name
+ *
+ * Example with manufacturer-model:
+ *   keyGenerator: (item) => `${item.manufacturer}|${item.model}`
+ *   keyParser: (key) => {
+ *     const [m, mo] = key.split('|');
+ *     return { manufacturer: m, model: mo };
+ *   }
+ *   serializer: (items) => items.map(i => `${i.manufacturer}:${i.model}`).join(',')
+ *   deserializer: (url) => url.split(',').map(p => {
+ *     const [m, mo] = p.split(':');
+ *     return { manufacturer: m, model: mo };
+ *   })
  */
 export interface PickerSelectionConfig<T = any> {
   /**
@@ -161,6 +178,28 @@ export interface PickerSelectionConfig<T = any> {
    * Example: (urlValue) => urlValue.split(',').map(vin => ({ vin }))
    */
   deserializer: (urlValue: string) => T[];
+
+  /**
+   * OPTIONAL: Generate unique key for a selection (for internal tracking)
+   * Used by selection helpers for efficient Set<string> based tracking
+   * If not provided, serializer output is used as key
+   *
+   * Example: (item) => `${item.manufacturer}|${item.model}`
+   * Example: (item) => item.vin
+   */
+  keyGenerator?: (item: T) => string;
+
+  /**
+   * OPTIONAL: Parse key back to partial row data (for hydration)
+   * Inverse of keyGenerator - reconstructs item from key
+   * Required if keyGenerator is provided
+   *
+   * Example: (key) => {
+   *   const [manufacturer, model] = key.split('|');
+   *   return { manufacturer, model };
+   * }
+   */
+  keyParser?: (key: string) => Partial<T>;
 }
 
 /**
