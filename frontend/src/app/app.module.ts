@@ -26,7 +26,7 @@ import { ALL_PICKER_CONFIGS } from './config/picker-configs';
 
 // Feature components
 import { DiscoverComponent } from './features/discover/discover.component';
-import { DynamicComponent } from './features/dynamic/dynamic.component';
+import { DemoComponent } from './features/demo/demo.component';
 import { ResultsTableComponent } from './features/results/results-table/results-table.component';
 import { HomeComponent } from './features/home/home.component';
 import { NavigationComponent } from './core/navigation/navigation.component';
@@ -52,7 +52,7 @@ export function initializePickerConfigs(pickerConfigService: PickerConfigService
   declarations: [
     AppComponent,
     DiscoverComponent,
-    DynamicComponent,
+    DemoComponent,
     ResultsTableComponent,
     HomeComponent,
     NavigationComponent,
