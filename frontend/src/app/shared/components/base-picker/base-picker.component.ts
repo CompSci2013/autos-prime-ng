@@ -47,7 +47,7 @@ import { BasePickerDataSource } from '../../services/base-picker-data-source';
 import { PickerConfigService } from '../../../core/services/picker-config.service';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { UrlParamService } from '../../../core/services/url-param.service';
-import { RouteStateService } from '../../../core/services/route-state.service';
+import { UrlStateService } from '../../../core/services/url-state.service';
 import { StateManagementService } from '../../../core/services/state-management.service';
 import { ApiService } from '../../../services/api.service';
 import { SearchFilters } from '../../../models/search-filters.model';
@@ -131,7 +131,7 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
     private cdr: ChangeDetectorRef,
     private popOutContext: PopOutContextService,
     private urlParamService: UrlParamService,
-    private routeState: RouteStateService,
+    private urlState: UrlStateService,
     private stateService: StateManagementService,
     private tablePersistence: TableStatePersistenceService
   ) {}
@@ -232,9 +232,9 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
   private subscribeToUrlState(): void {
     const urlParam = this.config.selection.urlParam;
 
-    this.routeState.watchParam(urlParam).pipe(
+    this.urlState.getQueryParam(urlParam).pipe(
       takeUntil(this.destroy$)
-    ).subscribe((urlValue) => {
+    ).subscribe((urlValue: string | null) => {
       console.log(`[BasePickerComponent] URL param '${urlParam}' changed:`, urlValue);
 
       // Deserialize selections from URL
@@ -343,7 +343,7 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
 
     // Check if URL has selections - if so, URL takes precedence (don't apply external filters)
     const urlParam = this.config.selection.urlParam;
-    const urlValue = this.routeState.getParam(urlParam);
+    const urlValue = this.urlState.getQueryParamSnapshot(urlParam);
     if (urlValue) {
       console.log('[BasePickerComponent] URL has selections, skipping external filters (URL takes precedence)');
       return;

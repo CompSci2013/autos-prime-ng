@@ -1,85 +1,21 @@
 import { Injectable } from '@angular/core';
-import { Router, ActivatedRoute, Params } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map, distinctUntilChanged } from 'rxjs/operators';
+import { Params } from '@angular/router';
 import { SearchFilters } from '../../models/search-filters.model';
 
 /**
- * RouteStateService - AUTOS Version
+ * FilterUrlMapperService
  *
- * Handles URL query parameter synchronization
- * Adapted from Transportation Portal for Manufacturer+Model combinations
+ * Domain-specific utility for converting between SearchFilters and URL parameters.
+ * Extracted from RouteStateService to separate concerns:
+ * - UrlStateService: Generic URL parameter management
+ * - FilterUrlMapperService: Domain-specific filter ↔ URL conversions
+ *
+ * This service is stateless and can be used across the application.
  */
 @Injectable({
   providedIn: 'root',
 })
-export class RouteStateService {
-  private queryParamsSubject = new BehaviorSubject<Params>({});
-  public queryParams$ = this.queryParamsSubject.asObservable();
-
-  constructor(private router: Router, private route: ActivatedRoute) {
-    this.initQueryParamsListener();
-  }
-
-  // ========== INITIALIZATION ==========
-
-  private initQueryParamsListener(): void {
-    // Subscribe to route query params changes
-    this.route.queryParams.subscribe((params) => {
-      this.queryParamsSubject.next(params);
-    });
-  }
-
-  // ========== READ URL PARAMS ==========
-
-  getCurrentParams(): Params {
-    return this.route.snapshot.queryParams;
-  }
-
-  getParam(key: string): string | null {
-    return this.route.snapshot.queryParams[key] || null;
-  }
-
-  watchParam(key: string): Observable<string | null> {
-    return this.queryParams$.pipe(
-      map((params) => params[key] || null),
-      distinctUntilChanged()
-    );
-  }
-
-  // ========== WRITE URL PARAMS ==========
-
-  updateParams(params: Params, replaceUrl = false): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: params,
-      queryParamsHandling: 'merge',
-      replaceUrl: replaceUrl,
-    });
-  }
-
-  setParams(params: Params, replaceUrl = false): void {
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: params,
-      queryParamsHandling: '',
-      replaceUrl: replaceUrl,
-    });
-  }
-
-  removeParam(key: string): void {
-    const current = this.getCurrentParams();
-    // Create new object without the key (params object is read-only)
-    const { [key]: removed, ...remaining } = current;
-    this.setParams(remaining);
-  }
-
-  clearAllParams(): void {
-    this.setParams({}, true);
-  }
-
-  // ========== CONVERSIONS ==========
-
+export class FilterUrlMapperService {
   /**
    * Convert SearchFilters to URL params
    * Format: ?modelCombos=Ford:F-150,Ford:Mustang,Chevrolet:Corvette
@@ -142,12 +78,12 @@ export class RouteStateService {
         .map((combo: string) => {
           const parts = combo.split(':');
           if (parts.length !== 2) {
-            console.warn(`[RouteState] Invalid modelCombo format: "${combo}"`);
+            console.warn(`[FilterUrlMapper] Invalid modelCombo format: "${combo}"`);
             return null;
           }
           const [manufacturer, model] = parts;
           if (!manufacturer?.trim() || !model?.trim()) {
-            console.warn(`[RouteState] Empty value in modelCombo: "${combo}"`);
+            console.warn(`[FilterUrlMapper] Empty value in modelCombo: "${combo}"`);
             return null;
           }
           return { manufacturer: manufacturer.trim(), model: model.trim() };

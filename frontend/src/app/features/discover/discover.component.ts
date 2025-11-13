@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { StateManagementService } from '../../core/services/state-management.service';
-import { RouteStateService } from '../../core/services/route-state.service';
+import { UrlStateService } from '../../core/services/url-state.service';
 import { SearchFilters } from '../../models/search-filters.model';
 import { QueryFilter } from '../filters/query-control/query-control.component';
 
@@ -76,7 +77,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
 
   constructor(
     private stateService: StateManagementService,
-    private routeState: RouteStateService,
+    private urlState: UrlStateService,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -228,7 +230,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
           // Handle picker clear from config-driven pickers
           console.log('Picker clear from pop-out:', event.data.payload);
           if (event.data.payload && event.data.payload.urlParam) {
-            this.routeState.removeParam(event.data.payload.urlParam);
+            this.urlState.clearQueryParam(event.data.payload.urlParam).subscribe();
           }
         } else if (event.data.type === 'CLEAR_ALL') {
           // Legacy: Handle clear all from popped-out picker
@@ -297,7 +299,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   onHighlightRemove(field: string): void {
     console.log('Discover: Highlight removed:', field);
     // Highlights use h_* prefix in URL, so remove that parameter
-    this.routeState.removeParam(field);
+    this.urlState.clearQueryParam(field).subscribe();
   }
 
   /**
@@ -306,7 +308,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   onClearHighlights(): void {
     console.log('Discover: Clear highlights');
     // Remove all h_* parameters from URL
-    const params = this.routeState.getCurrentParams();
+    const params = this.route.snapshot.queryParams;
     const highlightKeys = Object.keys(params).filter((key) =>
       key.startsWith('h_')
     );
@@ -315,7 +317,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     const newParams = { ...params };
     highlightKeys.forEach((key) => delete newParams[key]);
 
-    this.routeState.setParams(newParams);
+    this.urlState.replaceQueryParams(newParams).subscribe();
   }
 
   /**
@@ -326,7 +328,7 @@ export class DiscoverComponent implements OnInit, OnDestroy {
     // Directly set URL to only page and size (removes ALL filters and highlights)
     // This is the cleanest URL-first approach - just update URL and let
     // watchUrlChanges() handle state updates and data fetching
-    this.routeState.setParams({ page: 1, size: 20 });
+    this.urlState.replaceQueryParams({ page: '1', size: '20' }).subscribe();
 
     // Note: URL change will trigger watchUrlChanges() which will:
     // 1. Extract filters from URL: {page: 1, size: 20}

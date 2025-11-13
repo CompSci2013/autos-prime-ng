@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { BehaviorSubject, Subject, Observable, throwError } from 'rxjs';
 import {
   map,
@@ -11,7 +11,8 @@ import {
   catchError,
 } from 'rxjs/operators';
 import { AppState, SearchFilters, HighlightFilters } from '../../models/search-filters.model';
-import { RouteStateService } from './route-state.service';
+import { UrlStateService } from './url-state.service';
+import { FilterUrlMapperService } from './filter-url-mapper.service';
 import {
   RequestCoordinatorService,
   RequestState,
@@ -76,8 +77,10 @@ export class StateManagementService implements OnDestroy {
   );
 
   constructor(
-    private routeState: RouteStateService,
+    private urlState: UrlStateService,
+    private filterMapper: FilterUrlMapperService,
     private router: Router,
+    private route: ActivatedRoute,
     private apiService: ApiService,
     private requestCoordinator: RequestCoordinatorService
   ) {
@@ -112,8 +115,8 @@ export class StateManagementService implements OnDestroy {
   }
 
   private initializeFromUrl(): void {
-    const params = this.routeState.getCurrentParams();
-    const filters = this.routeState.paramsToFilters(params);
+    const params = this.route.snapshot.queryParams;
+    const filters = this.filterMapper.paramsToFilters(params);
 
     console.log('[StateManagement] Initializing from URL:', filters);
 
@@ -145,7 +148,7 @@ export class StateManagementService implements OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        const params = this.routeState.getCurrentParams();
+        const params = this.route.snapshot.queryParams;
         const currentState = this.stateSubject.value;
 
         // Separate base filters from highlights
@@ -202,11 +205,11 @@ export class StateManagementService implements OnDestroy {
 
   private syncStateToUrl(): void {
     const state = this.stateSubject.value;
-    const params = this.routeState.filtersToParams(state.filters);
+    const params = this.filterMapper.filtersToParams(state.filters);
 
     // IMPORTANT: Preserve existing highlight parameters (h_* prefix)
     // Highlights are UI-only overlays and should not be removed when filters change
-    const currentParams = this.routeState.getCurrentParams();
+    const currentParams = this.route.snapshot.queryParams;
     const highlightParams: Record<string, string> = {};
     Object.keys(currentParams).forEach(key => {
       if (key.startsWith('h_')) {
@@ -216,7 +219,7 @@ export class StateManagementService implements OnDestroy {
 
     // Merge filter params + preserved highlight params
     const mergedParams = { ...params, ...highlightParams };
-    this.routeState.setParams(mergedParams, false);
+    this.urlState.replaceQueryParams(mergedParams).subscribe();
   }
 
   /**
@@ -233,7 +236,7 @@ export class StateManagementService implements OnDestroy {
       }
     });
 
-    return this.routeState.paramsToFilters(baseParams);
+    return this.filterMapper.paramsToFilters(baseParams);
   }
 
   /**
@@ -353,10 +356,10 @@ export class StateManagementService implements OnDestroy {
     console.log('🔵 Result filters:', newFilters);
 
     // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
-    const params = this.routeState.filtersToParams(newFilters);
+    const params = this.filterMapper.filtersToParams(newFilters);
 
     // Preserve existing highlight parameters
-    const currentParams = this.routeState.getCurrentParams();
+    const currentParams = this.route.snapshot.queryParams;
     const highlightParams: Record<string, string> = {};
     Object.keys(currentParams).forEach(key => {
       if (key.startsWith('h_')) {
@@ -365,7 +368,7 @@ export class StateManagementService implements OnDestroy {
     });
 
     const mergedParams = { ...params, ...highlightParams };
-    this.routeState.setParams(mergedParams, false);
+    this.urlState.replaceQueryParams(mergedParams).subscribe();
 
     // Note: URL change → NavigationEnd → watchUrlChanges() → updateState() + fetchVehicleData()
     console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
@@ -385,10 +388,10 @@ export class StateManagementService implements OnDestroy {
     console.log('🔵 StateManagement.clearAllFilters() - resetting all filters');
 
     // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
-    const params = this.routeState.filtersToParams(newFilters);
+    const params = this.filterMapper.filtersToParams(newFilters);
 
     // Preserve existing highlight parameters
-    const currentParams = this.routeState.getCurrentParams();
+    const currentParams = this.route.snapshot.queryParams;
     const highlightParams: Record<string, string> = {};
     Object.keys(currentParams).forEach(key => {
       if (key.startsWith('h_')) {
@@ -397,7 +400,7 @@ export class StateManagementService implements OnDestroy {
     });
 
     const mergedParams = { ...params, ...highlightParams };
-    this.routeState.setParams(mergedParams, false);
+    this.urlState.replaceQueryParams(mergedParams).subscribe();
 
     console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
@@ -411,10 +414,10 @@ export class StateManagementService implements OnDestroy {
     const newFilters = { ...currentFilters, page };
 
     // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
-    const params = this.routeState.filtersToParams(newFilters);
+    const params = this.filterMapper.filtersToParams(newFilters);
 
     // Preserve existing highlight parameters
-    const currentParams = this.routeState.getCurrentParams();
+    const currentParams = this.route.snapshot.queryParams;
     const highlightParams: Record<string, string> = {};
     Object.keys(currentParams).forEach(key => {
       if (key.startsWith('h_')) {
@@ -423,7 +426,7 @@ export class StateManagementService implements OnDestroy {
     });
 
     const mergedParams = { ...params, ...highlightParams };
-    this.routeState.setParams(mergedParams, false);
+    this.urlState.replaceQueryParams(mergedParams).subscribe();
 
     console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
@@ -442,10 +445,10 @@ export class StateManagementService implements OnDestroy {
     };
 
     // TRUE URL-FIRST: Only update URL, let watcher update state + fetch data
-    const params = this.routeState.filtersToParams(newFilters);
+    const params = this.filterMapper.filtersToParams(newFilters);
 
     // Preserve existing highlight parameters
-    const currentParams = this.routeState.getCurrentParams();
+    const currentParams = this.route.snapshot.queryParams;
     const highlightParams: Record<string, string> = {};
     Object.keys(currentParams).forEach(key => {
       if (key.startsWith('h_')) {
@@ -454,7 +457,7 @@ export class StateManagementService implements OnDestroy {
     });
 
     const mergedParams = { ...params, ...highlightParams };
-    this.routeState.setParams(mergedParams, false);
+    this.urlState.replaceQueryParams(mergedParams).subscribe();
 
     console.log('🟡 URL updated - watchUrlChanges() will handle state update + data fetch');
   }
@@ -534,7 +537,7 @@ export class StateManagementService implements OnDestroy {
     console.log('🔵 Combined filters:', combinedFilters);
 
     // Extract highlights from URL (not from state, which may not be updated yet)
-    const params = this.routeState.getCurrentParams();
+    const params = this.route.snapshot.queryParams;
     const currentHighlights = this.extractHighlights(params);
     console.log('🔵 Extracted highlights for API call:', currentHighlights);
 
@@ -611,7 +614,7 @@ export class StateManagementService implements OnDestroy {
       : '';
 
     // Extract highlights from URL (not from state, which may not be updated yet)
-    const params = this.routeState.getCurrentParams();
+    const params = this.route.snapshot.queryParams;
     const currentHighlights = this.extractHighlights(params);
     console.log('🔵 Extracted highlights for API call:', currentHighlights);
 
