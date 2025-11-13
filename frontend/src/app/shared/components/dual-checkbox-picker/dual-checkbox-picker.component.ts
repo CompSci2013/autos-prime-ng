@@ -261,21 +261,14 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
 
   /**
    * Get manufacturer checkbox state (binary pattern - no tri-state)
-   * Returns checked boolean only
+   * Returns checked boolean for THIS SPECIFIC ROW
    *
    * NOTE: Parent checkbox always matches child checkbox state within the same row
    * (no intermediate/tri-state state for flat table pattern)
    */
-  getManufacturerCheckboxState(manufacturer: string): boolean {
-    const manufacturerRows = this.getAllRowsForManufacturer(manufacturer);
-    if (manufacturerRows.length === 0) {
-      return false;
-    }
-
-    // For binary pattern: ALL rows of a manufacturer must be checked for parent to be checked
-    return manufacturerRows.every((row: ManufacturerModelRow) =>
-      this.selectedRows.has(row.key)
-    );
+  getManufacturerCheckboxState(row: ManufacturerModelRow): boolean {
+    // In flat table: parent checkbox matches this row's selection state
+    return this.isRowSelected(row);
   }
 
   /**
@@ -310,7 +303,7 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
     });
 
     this.updateSelectedItemsDisplay();
-    this.persistSelectionToUrl();
+    // NOTE: Do NOT persist to URL here - user must click Apply button
     this.cdr.markForCheck();
   }
 
@@ -333,7 +326,7 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
     }
 
     this.updateSelectedItemsDisplay();
-    this.persistSelectionToUrl();
+    // NOTE: Do NOT persist to URL here - user must click Apply button
     this.cdr.markForCheck();
   }
 
@@ -351,44 +344,13 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Persist current selection to URL
-   * Helper method called after any selection change
-   * Uses UrlStateService for reactive URL state management
-   */
-  private persistSelectionToUrl(): void {
-    // Serialize selections to URL format using config
-    const urlValue = this.config.selection.serializer(this.selectedItems);
-
-    if (this.popOutContext.isInPopOut()) {
-      // Pop-out mode: Send PICKER_SELECTION_CHANGE message to main window
-      this.popOutContext.sendMessage({
-        type: 'PICKER_SELECTION_CHANGE',
-        payload: {
-          configId: this.config.id,
-          urlParam: this.config.selection.urlParam,
-          urlValue: urlValue
-        }
-      });
-    } else {
-      // Normal mode: Update URL directly (URL-driven state management)
-      this.urlState.setQueryParams({
-        [this.config.selection.urlParam]: urlValue
-      }).subscribe(success => {
-        if (!success) {
-          console.error(`[DualCheckboxPicker] Failed to persist selection to URL param: ${this.config.selection.urlParam}`);
-        }
-      });
-    }
-  }
-
-  /**
    * Remove a specific model from selection (from chip close button)
    */
   onRemoveModel(item: SelectedItem): void {
     console.log('[DualCheckboxPicker] Removing model:', item.key);
     this.selectedRows.delete(item.key);
     this.updateSelectedItemsDisplay();
-    this.persistSelectionToUrl();
+    // NOTE: Do NOT persist to URL here - user must click Apply button
     this.cdr.markForCheck();
   }
 
@@ -423,11 +385,42 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
 
   /**
    * Apply selections (update URL and state)
-   * Note: With real-time updates, this is mostly for explicit apply button if needed
+   * This is the primary way users commit their selection changes to the URL state
    */
   onApply(): void {
     console.log('[DualCheckboxPicker] Applying selections:', this.selectedItems);
-    this.persistSelectionToUrl();
+
+    // Serialize selections to URL format using config
+    const urlValue = this.config.selection.serializer(this.selectedItems);
+
+    if (this.popOutContext.isInPopOut()) {
+      // Pop-out mode: Send PICKER_SELECTION_CHANGE message to main window
+      this.popOutContext.sendMessage({
+        type: 'PICKER_SELECTION_CHANGE',
+        payload: {
+          configId: this.config.id,
+          urlParam: this.config.selection.urlParam,
+          urlValue: urlValue
+        }
+      });
+    } else {
+      // Normal mode: Update URL directly (URL-driven state management)
+      this.urlState.setQueryParams({
+        [this.config.selection.urlParam]: urlValue
+      }).subscribe({
+        next: (success) => {
+          if (success) {
+            console.log(`[DualCheckboxPicker] Successfully applied ${this.selectedItems.length} selections`);
+          } else {
+            console.log(`[DualCheckboxPicker] URL already up-to-date (no changes needed)`);
+          }
+        },
+        error: (err) => {
+          console.error(`[DualCheckboxPicker] Failed to apply selections:`, err);
+        }
+      });
+    }
+
     this.cdr.markForCheck();
   }
 

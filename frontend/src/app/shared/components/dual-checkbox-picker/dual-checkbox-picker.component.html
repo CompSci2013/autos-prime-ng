@@ -29,7 +29,7 @@
             <div class="manufacturer-checkbox-wrapper">
               <p-checkbox
                 [binary]="true"
-                [ngModel]="getManufacturerCheckboxState(row.manufacturer)"
+                [ngModel]="getManufacturerCheckboxState(row)"
                 (onChange)="onManufacturerCheckboxChange(row.manufacturer, $event)"
                 [label]="row.manufacturer">
               </p-checkbox>
