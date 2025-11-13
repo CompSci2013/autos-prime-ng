@@ -28,7 +28,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '../../../services/api.service';
 import { StateManagementService } from '../../../core/services/state-management.service';
-import { RouteStateService } from '../../../core/services/route-state.service';
+import { UrlStateService } from '../../../core/services/url-state.service';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { PickerConfigService } from '../../../core/services/picker-config.service';
 import { PickerConfig } from '../../models/picker-config.model';
@@ -91,7 +91,7 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
   constructor(
     private apiService: ApiService,
     private stateService: StateManagementService,
-    private routeState: RouteStateService,
+    private urlState: UrlStateService,
     private popOutContext: PopOutContextService,
     private pickerConfigService: PickerConfigService,
     private cdr: ChangeDetectorRef
@@ -192,7 +192,7 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
    * Subscribe to URL state changes for selection hydration
    */
   private subscribeToUrlState(): void {
-    this.routeState.watchParam(this.config.selection.urlParam).pipe(
+    this.urlState.getQueryParam(this.config.selection.urlParam).pipe(
       takeUntil(this.destroy$)
     ).subscribe((urlValue: string | null) => {
       console.log(`[DualCheckboxPicker] URL param ${this.config.selection.urlParam} changed:`, urlValue);
@@ -353,6 +353,7 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
   /**
    * Persist current selection to URL
    * Helper method called after any selection change
+   * Uses UrlStateService for reactive URL state management
    */
   private persistSelectionToUrl(): void {
     // Serialize selections to URL format using config
@@ -370,8 +371,12 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
       });
     } else {
       // Normal mode: Update URL directly (URL-driven state management)
-      this.routeState.updateParams({
+      this.urlState.setQueryParams({
         [this.config.selection.urlParam]: urlValue
+      }).subscribe(success => {
+        if (!success) {
+          console.error(`[DualCheckboxPicker] Failed to persist selection to URL param: ${this.config.selection.urlParam}`);
+        }
       });
     }
   }
@@ -394,7 +399,25 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
     console.log('[DualCheckboxPicker] Clearing all selections');
     this.selectedRows.clear();
     this.updateSelectedItemsDisplay();
-    this.persistSelectionToUrl();
+
+    if (this.popOutContext.isInPopOut()) {
+      // Pop-out mode: Send clear message to main window
+      this.popOutContext.sendMessage({
+        type: 'PICKER_CLEAR',
+        payload: {
+          configId: this.config.id,
+          urlParam: this.config.selection.urlParam
+        }
+      });
+    } else {
+      // Normal mode: Clear the URL parameter
+      this.urlState.clearQueryParam(this.config.selection.urlParam).subscribe(success => {
+        if (!success) {
+          console.error(`[DualCheckboxPicker] Failed to clear URL param: ${this.config.selection.urlParam}`);
+        }
+      });
+    }
+
     this.cdr.markForCheck();
   }
 
