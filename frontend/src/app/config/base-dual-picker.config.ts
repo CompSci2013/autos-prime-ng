@@ -36,8 +36,8 @@ export const BASE_DUAL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
         key: 'manufacturer',
         label: 'Manufacturer',
         width: '50%',
-        sortable: true,  // ✅ Config-driven: BaseDataTable respects this
-        filterable: true, // ✅ Config-driven: BaseDataTable respects this
+        sortable: false, // ✅ Config-driven: BaseDataTable respects this
+        filterable: false, // ✅ Config-driven: BaseDataTable respects this
         filterType: 'text',
         hideable: false,
       },
@@ -45,7 +45,7 @@ export const BASE_DUAL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
         key: 'model',
         label: 'Model',
         width: '35%',
-        sortable: true,  // ✅ Config-driven: BaseDataTable respects this
+        sortable: true, // ✅ Config-driven: BaseDataTable respects this
         filterable: true, // ✅ Config-driven: BaseDataTable respects this
         filterType: 'text',
         hideable: false,
@@ -54,7 +54,7 @@ export const BASE_DUAL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
         key: 'count',
         label: 'Count',
         width: '15%',
-        sortable: true,  // ✅ Config-driven: BaseDataTable respects this
+        sortable: true, // ✅ Config-driven: BaseDataTable respects this
         filterable: false,
         hideable: false,
       },
@@ -143,7 +143,10 @@ export const BASE_DUAL_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRow> =
           .map((combo) => {
             const [manufacturer, model] = combo.split(':');
             if (!manufacturer || !model) {
-              console.warn('[BASE DUAL PICKER CONFIG] Invalid combo in URL:', combo);
+              console.warn(
+                '[BASE DUAL PICKER CONFIG] Invalid combo in URL:',
+                combo
+              );
               return null;
             }
             return {

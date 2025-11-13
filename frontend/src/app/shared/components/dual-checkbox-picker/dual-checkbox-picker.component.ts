@@ -31,7 +31,6 @@ import { StateManagementService } from '../../../core/services/state-management.
 import { RouteStateService } from '../../../core/services/route-state.service';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { PickerConfigService } from '../../../core/services/picker-config.service';
-import { ManufacturerModelResponse } from '../../../models';
 import { PickerConfig } from '../../models/picker-config.model';
 
 /**
@@ -261,29 +260,22 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get manufacturer checkbox state (tri-state logic)
-   * Returns object with checked and indeterminate flags
+   * Get manufacturer checkbox state (binary pattern - no tri-state)
+   * Returns checked boolean only
    *
-   * NOTE: PrimeNG p-checkbox doesn't support [indeterminate] input directly.
-   * We need to use CSS classes for visual indeterminate state.
+   * NOTE: Parent checkbox always matches child checkbox state within the same row
+   * (no intermediate/tri-state state for flat table pattern)
    */
-  getManufacturerCheckboxState(manufacturer: string): {
-    checked: boolean;
-    indeterminate: boolean;
-  } {
+  getManufacturerCheckboxState(manufacturer: string): boolean {
     const manufacturerRows = this.getAllRowsForManufacturer(manufacturer);
     if (manufacturerRows.length === 0) {
-      return { checked: false, indeterminate: false };
+      return false;
     }
 
-    const checkedCount = manufacturerRows.filter((row: ManufacturerModelRow) =>
+    // For binary pattern: ALL rows of a manufacturer must be checked for parent to be checked
+    return manufacturerRows.every((row: ManufacturerModelRow) =>
       this.selectedRows.has(row.key)
-    ).length;
-
-    return {
-      checked: checkedCount === manufacturerRows.length,
-      indeterminate: checkedCount > 0 && checkedCount < manufacturerRows.length
-    };
+    );
   }
 
   /**
@@ -295,7 +287,12 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
 
   /**
    * Handle manufacturer checkbox change (parent checkbox)
-   * Toggles ALL models for that manufacturer
+   * Binary pattern: When ANY row of a manufacturer is clicked, toggle ALL rows of that manufacturer
+   *
+   * Example with 3 Ford rows:
+   * - All unchecked, click parent on row 1 → ALL 3 rows check
+   * - All checked, click parent on row 3 → ALL 3 rows uncheck
+   * - Row 1 checked, row 2 unchecked, row 3 unchecked, click parent on row 2 → ALL 3 rows toggle to checked
    */
   onManufacturerCheckboxChange(manufacturer: string, event: any): void {
     const checked = event.checked;
@@ -303,21 +300,26 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
 
     const manufacturerRows = this.getAllRowsForManufacturer(manufacturer);
 
+    // Binary pattern: Toggle ALL rows of this manufacturer
     manufacturerRows.forEach((row: ManufacturerModelRow) => {
       if (checked) {
-        this.selectedRows.add(row.key);  // Add ALL models
+        this.selectedRows.add(row.key);  // Add ALL models of this manufacturer
       } else {
-        this.selectedRows.delete(row.key);  // Remove ALL models
+        this.selectedRows.delete(row.key);  // Remove ALL models of this manufacturer
       }
     });
 
     this.updateSelectedItemsDisplay();
+    this.persistSelectionToUrl();
     this.cdr.markForCheck();
   }
 
   /**
    * Handle model checkbox change (child checkbox)
-   * Toggles ONLY that specific model
+   * Binary pattern: Toggles ONLY that specific model (and its parent checkbox)
+   *
+   * Example: If row 2 of Ford is unchecked and we click its child checkbox,
+   * only row 2's parent and child toggle. Other Ford rows unchanged.
    */
   onModelCheckboxChange(manufacturer: string, model: string, event: any): void {
     const checked = event.checked;
@@ -331,6 +333,7 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
     }
 
     this.updateSelectedItemsDisplay();
+    this.persistSelectionToUrl();
     this.cdr.markForCheck();
   }
 
@@ -348,47 +351,10 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Remove a specific model from selection (from chip close button)
+   * Persist current selection to URL
+   * Helper method called after any selection change
    */
-  onRemoveModel(item: SelectedItem): void {
-    console.log('[DualCheckboxPicker] Removing model:', item.key);
-    this.selectedRows.delete(item.key);
-    this.updateSelectedItemsDisplay();
-    this.cdr.markForCheck();
-  }
-
-  /**
-   * Clear all selections
-   */
-  onClear(): void {
-    console.log('[DualCheckboxPicker] Clearing all selections');
-    this.selectedRows.clear();
-    this.updateSelectedItemsDisplay();
-
-    // Update state
-    if (this.popOutContext.isInPopOut()) {
-      // Send PICKER_CLEAR message to main window
-      this.popOutContext.sendMessage({
-        type: 'PICKER_CLEAR',
-        payload: {
-          configId: this.config.id,
-          urlParam: this.config.selection.urlParam
-        }
-      });
-    } else {
-      // Remove URL parameter directly (URL-driven state management)
-      this.routeState.removeParam(this.config.selection.urlParam);
-    }
-
-    this.cdr.markForCheck();
-  }
-
-  /**
-   * Apply selections (update URL and state)
-   */
-  onApply(): void {
-    console.log('[DualCheckboxPicker] Applying selections:', this.selectedItems);
-
+  private persistSelectionToUrl(): void {
     // Serialize selections to URL format using config
     const urlValue = this.config.selection.serializer(this.selectedItems);
 
@@ -404,12 +370,41 @@ export class DualCheckboxPickerComponent implements OnInit, OnDestroy {
       });
     } else {
       // Normal mode: Update URL directly (URL-driven state management)
-      // URL change → RouteStateService emits → StateManagementService updates → Components re-hydrate
       this.routeState.updateParams({
         [this.config.selection.urlParam]: urlValue
       });
     }
+  }
 
+  /**
+   * Remove a specific model from selection (from chip close button)
+   */
+  onRemoveModel(item: SelectedItem): void {
+    console.log('[DualCheckboxPicker] Removing model:', item.key);
+    this.selectedRows.delete(item.key);
+    this.updateSelectedItemsDisplay();
+    this.persistSelectionToUrl();
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Clear all selections
+   */
+  onClear(): void {
+    console.log('[DualCheckboxPicker] Clearing all selections');
+    this.selectedRows.clear();
+    this.updateSelectedItemsDisplay();
+    this.persistSelectionToUrl();
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Apply selections (update URL and state)
+   * Note: With real-time updates, this is mostly for explicit apply button if needed
+   */
+  onApply(): void {
+    console.log('[DualCheckboxPicker] Applying selections:', this.selectedItems);
+    this.persistSelectionToUrl();
     this.cdr.markForCheck();
   }
 

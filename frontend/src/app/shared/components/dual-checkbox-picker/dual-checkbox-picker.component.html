@@ -24,13 +24,12 @@
 
       <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
         <tr>
-          <!-- Manufacturer column with tri-state checkbox -->
+          <!-- Manufacturer column with binary checkbox -->
           <td>
-            <div class="manufacturer-checkbox-wrapper"
-                 [class.indeterminate]="getManufacturerCheckboxState(row.manufacturer).indeterminate">
+            <div class="manufacturer-checkbox-wrapper">
               <p-checkbox
                 [binary]="true"
-                [ngModel]="getManufacturerCheckboxState(row.manufacturer).checked"
+                [ngModel]="getManufacturerCheckboxState(row.manufacturer)"
                 (onChange)="onManufacturerCheckboxChange(row.manufacturer, $event)"
                 [label]="row.manufacturer">
               </p-checkbox>

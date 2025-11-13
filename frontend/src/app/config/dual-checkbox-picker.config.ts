@@ -40,7 +40,7 @@ export const DUAL_CHECKBOX_PICKER_CONFIG: PickerConfig<ManufacturerModelPickerRo
       {
         key: 'manufacturer',
         label: 'Manufacturer',
-        width: '50%',
+        width: '10%',
         sortable: false, // Parent-child checkbox UX doesn't support sorting
         filterable: false, // Parent-child checkbox UX doesn't support filtering
         filterType: 'text',

@@ -51,14 +51,18 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   // Panel order configuration
   panels: PanelConfig[] = [
     { id: 'query-control', title: 'Query Control', collapsed: false },
-    // { id: 'model-picker', title: 'Model Picker (Single)', collapsed: false },
-    // { id: 'dual-picker', title: 'Model Picker (Dual Checkbox)', collapsed: true },
+    { id: 'model-picker', title: 'Model Picker (Single)', collapsed: false },
+    {
+      id: 'dual-picker',
+      title: 'Model Picker (Dual Checkbox)',
+      collapsed: true,
+    },
     {
       id: 'base-dual-picker',
       title: 'Make/Model Picker',
       collapsed: true,
     },
-    // { id: 'vin-browser', title: 'VIN Browser', collapsed: false },
+    { id: 'vin-browser', title: 'VIN Browser', collapsed: false },
     { id: 'vehicle-results', title: 'Vehicle Results', collapsed: false },
     { id: 'interactive-charts', title: 'Interactive Charts', collapsed: false },
   ];
@@ -186,15 +190,22 @@ export class DiscoverComponent implements OnInit, OnDestroy {
                 .map((combo: string) => {
                   const parts = combo.split(':');
                   if (parts.length !== 2) {
-                    console.warn(`[Discover] Invalid modelCombo format: "${combo}"`);
+                    console.warn(
+                      `[Discover] Invalid modelCombo format: "${combo}"`
+                    );
                     return null;
                   }
                   const [manufacturer, model] = parts;
                   if (!manufacturer?.trim() || !model?.trim()) {
-                    console.warn(`[Discover] Empty value in modelCombo: "${combo}"`);
+                    console.warn(
+                      `[Discover] Empty value in modelCombo: "${combo}"`
+                    );
                     return null;
                   }
-                  return { manufacturer: manufacturer.trim(), model: model.trim() };
+                  return {
+                    manufacturer: manufacturer.trim(),
+                    model: model.trim(),
+                  };
                 })
                 .filter(Boolean); // Remove nulls
             } else {

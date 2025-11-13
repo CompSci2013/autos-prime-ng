@@ -2,10 +2,26 @@
  * Manufacturer-Model Picker Configuration
  *
  * Features:
+ * - Binary checkboxes (checked/unchecked only, no tri-state)
+ * - Flat table with hierarchical selection behavior
+ * - Linked manufacturer behavior: Click parent checkbox on ANY row of a manufacturer
+ *   to toggle ALL rows of that manufacturer
+ * - Row-level linking: Parent checkbox (manufacturer) always matches child checkbox (model)
  * - Client-side pagination (loads all ~200 combinations at once)
  * - Client-side filtering and sorting
  * - Data caching enabled (rarely changes)
  * - URL param: modelCombos
+ *
+ * CHECKBOX BEHAVIOR (Binary Pattern):
+ * - Parent checkbox (manufacturer column) is ALWAYS the same as child checkbox (model column)
+ *   within the same row (no tri-state/intermediate state)
+ * - When parent checkbox clicked on ANY row of a manufacturer, ALL parent and child
+ *   checkboxes for that manufacturer toggle together
+ * - When child (model) checkbox clicked, only that row's parent and child toggle
+ * - Example with 3 Ford rows (all initially unchecked):
+ *   Step 1: Click parent checkbox on row 1 → ALL 3 Ford rows toggle to checked
+ *   Step 2: Click child checkbox on row 2 → Just row 2 toggles to unchecked
+ *   Step 3: Click parent checkbox on row 3 → ALL 3 Ford rows toggle to checked
  */
 
 import { PickerConfig } from '../shared/models/picker-config.model';
@@ -29,9 +45,9 @@ export const MANUFACTURER_MODEL_PICKER_CONFIG: PickerConfig<ManufacturerModelPic
       {
         key: 'manufacturer',
         label: 'Manufacturer',
-        width: '50%',
-        sortable: true,
-        filterable: true,
+        width: '25%',
+        sortable: false,
+        filterable: false,
         filterType: 'text',
         hideable: false,
       },

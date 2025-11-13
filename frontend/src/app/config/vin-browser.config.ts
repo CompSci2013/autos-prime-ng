@@ -31,7 +31,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'model',
       label: 'Model',
-      width: '12%',
       sortable: true,
       filterable: true,
       filterType: 'text',
@@ -41,17 +40,15 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'year',
       label: 'Year',
-      width: '8%',
       sortable: true,
       filterable: true,
       filterType: 'number',
-      hideable: false,
+      hideable: true,
       valuePath: 'year',
     },
     {
       key: 'body_class',
       label: 'Body Class',
-      width: '10%',
       sortable: true,
       filterable: true,
       filterType: 'text',
@@ -61,7 +58,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'vin',
       label: 'VIN',
-      width: '14%',
       sortable: true,
       filterable: true,
       filterType: 'text',
@@ -71,7 +67,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'mileage',
       label: 'Mileage',
-      width: '8%',
       sortable: true,
       filterable: true,
       filterType: 'number-range',
@@ -94,7 +89,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'estimated_value',
       label: 'Est. Value',
-      width: '10%',
       sortable: true,
       filterable: true,
       filterType: 'number-range',
@@ -117,7 +111,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'condition_description',
       label: 'Condition',
-      width: '10%',
       sortable: true,
       filterable: true,
       filterType: 'text',
@@ -127,7 +120,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'registered_state',
       label: 'State',
-      width: '6%',
       sortable: true,
       filterable: true,
       filterType: 'text',
@@ -137,7 +129,6 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
     {
       key: 'exterior_color',
       label: 'Color',
-      width: '10%',
       sortable: true,
       filterable: true,
       filterType: 'text',
@@ -191,7 +182,7 @@ export const VIN_BROWSER_CONFIG: PickerConfig<VinPickerRow> = {
       return {
         page: params.page || 1,
         size: params.size || 20,
-        ...mappedFilters,  // Spread filters to top level (backend expects flat structure)
+        ...mappedFilters, // Spread filters to top level (backend expects flat structure)
         sortBy: params.sortBy || 'vin',
         sortOrder: params.sortOrder || 'asc',
       };
