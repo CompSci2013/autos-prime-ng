@@ -149,16 +149,11 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
       distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b))
     );
 
-    // Detect if we're in a pop-out window
-    const isPopout = this.router.url.startsWith('/panel/');
-
-    if (isPopout) {
-      console.log('[ResourceManagement] Pop-out window detected - URL watching DISABLED');
-    } else {
-      console.log('[ResourceManagement] Main window detected - URL watching ENABLED');
-      this.initializeFromUrl();
-      this.watchUrlChanges();
-    }
+    // URL-FIRST: Both main window and pop-outs MUST watch their own URL
+    // Pop-outs derive their state from their own URL parameters (including highlights)
+    console.log('[ResourceManagement] Initializing URL watching for:', this.router.url);
+    this.initializeFromUrl();
+    this.watchUrlChanges();
   }
 
   // ========== INITIALIZATION ==========
