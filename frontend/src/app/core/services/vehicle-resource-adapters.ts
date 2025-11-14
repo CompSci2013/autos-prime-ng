@@ -12,9 +12,8 @@ import { ApiService } from '../../services/api.service';
 import {
   SearchFilters,
   HighlightFilters,
-  ManufacturerModelSelection,
 } from '../../models/search-filters.model';
-import { VehicleDetailsResponse } from '../../models';
+import { ManufacturerModelSelection, VehicleDetailsResponse } from '../../models';
 import {
   ApiAdapter,
   ApiResponse,

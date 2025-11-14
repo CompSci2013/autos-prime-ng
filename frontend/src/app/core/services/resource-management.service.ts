@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, Inject, Optional } from '@angular/core';
 import { Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { BehaviorSubject, Subject, Observable, throwError } from 'rxjs';
 import {
@@ -69,6 +69,9 @@ import {
  *   }
  * );
  * ```
+ *
+ * NOTE: This is a base class NOT meant to be injected directly.
+ * Use domain-specific subclasses (e.g., VehicleResourceManagementService) instead.
  */
 @Injectable()
 export class ResourceManagementService<TFilters, TData> implements OnDestroy {
@@ -88,13 +91,17 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
   public statistics$: Observable<any>;
   public highlights$: Observable<any>;
 
+  // Config is not injected, passed manually by subclasses
+  protected config: ResourceManagementConfig<TFilters, TData>;
+
   constructor(
     private urlState: UrlStateService,
     private router: Router,
     private route: ActivatedRoute,
     private requestCoordinator: RequestCoordinatorService,
-    private config: ResourceManagementConfig<TFilters, TData>
+    @Optional() @Inject('RESOURCE_CONFIG') config: ResourceManagementConfig<TFilters, TData>
   ) {
+    this.config = config!;
     // Initialize state with default filters
     this.stateSubject = new BehaviorSubject<ResourceState<TFilters, TData>>({
       filters: config.defaultFilters,

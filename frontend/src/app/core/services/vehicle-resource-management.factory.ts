@@ -7,6 +7,7 @@
 
 import { Injectable, Provider } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Observable } from 'rxjs';
 import { ResourceManagementService } from './resource-management.service';
 import { UrlStateService } from './url-state.service';
 import { FilterUrlMapperService } from './filter-url-mapper.service';
@@ -55,6 +56,8 @@ export function createVehicleResourceManagementService(
 /**
  * Injectable wrapper for the factory
  * This allows DI to work properly
+ *
+ * Provides backward compatibility with StateManagementService API
  */
 @Injectable({
   providedIn: 'root',
@@ -69,7 +72,7 @@ export class VehicleResourceManagementService extends ResourceManagementService<
     route: ActivatedRoute,
     requestCoordinator: RequestCoordinatorService,
     filterMapper: FilterUrlMapperService,
-    apiAdapter: VehicleApiAdapter,
+    private apiAdapter: VehicleApiAdapter,
     cacheKeyBuilder: VehicleCacheKeyBuilder
   ) {
     super(urlState, router, route, requestCoordinator, {
@@ -87,6 +90,62 @@ export class VehicleResourceManagementService extends ResourceManagementService<
       supportsHighlights: true,
       highlightPrefix: 'h_',
     });
+  }
+
+  // ====================================================================
+  // Backward Compatibility Methods (StateManagementService API)
+  // ====================================================================
+
+  /**
+   * Reset all filters (alias for clearAllFilters)
+   */
+  resetFilters(): void {
+    this.clearAllFilters();
+  }
+
+  /**
+   * Fetch vehicle data (alias for fetchData)
+   */
+  fetchVehicleData() {
+    return this.fetchData();
+  }
+
+  /**
+   * Fetch with ephemeral filters (table search filters not in URL)
+   */
+  fetchWithEphemeralFilters(ephemeralFilters: {
+    manufacturerSearch?: string;
+    modelSearch?: string;
+    bodyClassSearch?: string;
+    dataSourceSearch?: string;
+    yearMin?: number;
+    yearMax?: number;
+  }) {
+    // Get current URL-based filters
+    const urlFilters = this.getCurrentFilters();
+
+    // Combine URL filters with ephemeral filters
+    const combinedFilters: any = {
+      ...urlFilters,
+      ...ephemeralFilters
+    };
+
+    // Use apiAdapter directly to fetch with combined filters
+    return this.apiAdapter.fetchData(combinedFilters);
+  }
+
+  /**
+   * Fetch manufacturer-model data (alias for fetchRelatedData)
+   */
+  fetchManufacturerModelData(page: number = 1, size: number = 1000) {
+    return this.fetchRelatedData(page, size);
+  }
+
+  /**
+   * Fetch vehicle instances (alias for fetchInstances)
+   */
+  fetchVehicleInstances(vehicleId: string, count: number = 8) {
+    return this.fetchInstances(vehicleId, count);
   }
 }
 

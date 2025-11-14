@@ -3,7 +3,9 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { StateManagementService } from '../../core/services/state-management.service';
+// EXPERIMENT: Swap StateManagementService with VehicleResourceManagementService
+// import { StateManagementService } from '../../core/services/state-management.service';
+import { VehicleResourceManagementService } from '../../core/services/vehicle-resource-management.factory';
 import { UrlStateService } from '../../core/services/url-state.service';
 import { SearchFilters } from '../../models/search-filters.model';
 import { QueryFilter } from '../filters/query-control/query-control.component';
@@ -76,7 +78,8 @@ export class DiscoverComponent implements OnInit, OnDestroy {
   > = new Map();
 
   constructor(
-    private stateService: StateManagementService,
+    // EXPERIMENT: Using VehicleResourceManagementService instead of StateManagementService
+    private stateService: VehicleResourceManagementService,
     private urlState: UrlStateService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef

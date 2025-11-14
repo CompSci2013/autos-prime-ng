@@ -14,7 +14,9 @@ import * as Plotly from 'plotly.js-dist-min';
 import { VehicleStatistics } from '../../../models/vehicle-statistics.model';
 import { HighlightFilters } from '../../../models/search-filters.model';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
-import { StateManagementService } from '../../../core/services/state-management.service';
+// EXPERIMENT: Swap StateManagementService with VehicleResourceManagementService
+// import { StateManagementService } from '../../../core/services/state-management.service';
+import { VehicleResourceManagementService } from '../../../core/services/vehicle-resource-management.factory';
 import { UrlParamService } from '../../../core/services/url-param.service';
 
 /**
@@ -62,7 +64,8 @@ export class PlotlyHistogramComponent implements OnInit, AfterViewInit, OnDestro
 
   constructor(
     private popOutContext: PopOutContextService,
-    private stateService: StateManagementService,
+    // EXPERIMENT: Using VehicleResourceManagementService instead of StateManagementService
+    private stateService: VehicleResourceManagementService,
     private urlParamService: UrlParamService,
     private cdr: ChangeDetectorRef
   ) {}

@@ -13,7 +13,9 @@ import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ApiService } from '../../../services/api.service';
 import { RequestCoordinatorService } from '../../../core/services/request-coordinator.service';
-import { StateManagementService } from '../../../core/services/state-management.service';
+// EXPERIMENT: Swap StateManagementService with VehicleResourceManagementService
+// import { StateManagementService } from '../../../core/services/state-management.service';
+import { VehicleResourceManagementService } from '../../../core/services/vehicle-resource-management.factory';
 import { SearchFilters } from '../../../models/search-filters.model';
 
 /**
@@ -188,7 +190,8 @@ export class QueryControlComponent implements OnInit, OnDestroy {
   constructor(
     private apiService: ApiService,
     private requestCoordinator: RequestCoordinatorService,
-    private stateService: StateManagementService,
+    // EXPERIMENT: Using VehicleResourceManagementService instead of StateManagementService
+    private stateService: VehicleResourceManagementService,
     private cdr: ChangeDetectorRef
   ) {}
 

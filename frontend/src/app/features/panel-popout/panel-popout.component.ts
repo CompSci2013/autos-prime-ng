@@ -3,7 +3,9 @@ import { ActivatedRoute } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PopOutContextService } from '../../core/services/popout-context.service';
-import { StateManagementService } from '../../core/services/state-management.service';
+// EXPERIMENT: Swap StateManagementService with VehicleResourceManagementService
+// import { StateManagementService } from '../../core/services/state-management.service';
+import { VehicleResourceManagementService } from '../../core/services/vehicle-resource-management.factory';
 import { SearchFilters } from '../../models/search-filters.model';
 
 /**
@@ -37,7 +39,8 @@ export class PanelPopoutComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private popOutContext: PopOutContextService,
-    private stateService: StateManagementService
+    // EXPERIMENT: Using VehicleResourceManagementService instead of StateManagementService
+    private stateService: VehicleResourceManagementService
   ) {}
 
   ngOnInit(): void {

@@ -3,7 +3,9 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { VehicleStatistics } from '../../../models/vehicle-statistics.model';
 import { HighlightFilters } from '../../../models/search-filters.model';
-import { StateManagementService } from '../../../core/services/state-management.service';
+// EXPERIMENT: Swap StateManagementService with VehicleResourceManagementService
+// import { StateManagementService } from '../../../core/services/state-management.service';
+import { VehicleResourceManagementService } from '../../../core/services/vehicle-resource-management.factory';
 import { UrlParamService } from '../../../core/services/url-param.service';
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { BodyClassChartDataSource } from '../../data-sources/body-class-chart.data-source';
@@ -42,7 +44,8 @@ export class BodyClassChartComponent implements OnInit, OnDestroy {
   selectedBodyClass: string | null = null;
 
   constructor(
-    private stateService: StateManagementService,
+    // EXPERIMENT: Using VehicleResourceManagementService instead of StateManagementService
+    private stateService: VehicleResourceManagementService,
     private urlParamService: UrlParamService,
     private popOutContext: PopOutContextService
   ) {}

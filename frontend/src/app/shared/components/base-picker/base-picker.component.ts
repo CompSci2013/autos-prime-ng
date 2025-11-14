@@ -48,7 +48,9 @@ import { PickerConfigService } from '../../../core/services/picker-config.servic
 import { PopOutContextService } from '../../../core/services/popout-context.service';
 import { UrlParamService } from '../../../core/services/url-param.service';
 import { UrlStateService } from '../../../core/services/url-state.service';
-import { StateManagementService } from '../../../core/services/state-management.service';
+// EXPERIMENT: Swap StateManagementService with VehicleResourceManagementService
+// import { StateManagementService } from '../../../core/services/state-management.service';
+import { VehicleResourceManagementService } from '../../../core/services/vehicle-resource-management.factory';
 import { ApiService } from '../../../services/api.service';
 import { SearchFilters } from '../../../models/search-filters.model';
 import { TableStatePersistenceService } from '../../services/table-state-persistence.service';
@@ -132,7 +134,8 @@ export class BasePickerComponent<T = any> implements OnInit, OnDestroy, OnChange
     private popOutContext: PopOutContextService,
     private urlParamService: UrlParamService,
     private urlState: UrlStateService,
-    private stateService: StateManagementService,
+    // EXPERIMENT: Using VehicleResourceManagementService instead of StateManagementService
+    private stateService: VehicleResourceManagementService,
     private tablePersistence: TableStatePersistenceService
   ) {}
 
