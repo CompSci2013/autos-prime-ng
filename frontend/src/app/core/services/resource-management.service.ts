@@ -468,13 +468,14 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
       )
       .pipe(
         tap((response) => {
-          // Update state on success
+          // Update state on success (preserve highlights!)
           this.updateState({
             results: response.results,
             totalResults: response.total,
             loading: false,
             error: null,
             statistics: response.statistics,
+            highlights: currentHighlights,
           });
         }),
         catchError((error) => {
