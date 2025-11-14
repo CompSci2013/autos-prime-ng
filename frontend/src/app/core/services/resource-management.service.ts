@@ -166,13 +166,17 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
   private initializeFromUrl(): void {
     const params = this.route.snapshot.queryParams;
     const filters = this.config.filterMapper.paramsToFilters(params);
+    const highlights = this.config.supportsHighlights
+      ? this.extractHighlights(params)
+      : undefined;
 
-    console.log('[ResourceManagement] Initializing from URL:', filters);
+    console.log('[ResourceManagement] Initializing from URL:', { filters, highlights });
 
     const currentState = this.stateSubject.value;
     this.stateSubject.next({
       ...currentState,
       filters,
+      highlights,
     });
 
     // Auto-fetch data on initialization
@@ -469,6 +473,15 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
       .pipe(
         tap((response) => {
           // Update state on success (preserve highlights!)
+          console.log('🟢 [ResourceManagement] fetchData response:', {
+            resultsCount: response.results?.length,
+            total: response.total,
+            hasStatistics: !!response.statistics,
+            highlights: currentHighlights,
+            statisticsSample: response.statistics?.byYearRange ?
+              Object.entries(response.statistics.byYearRange).slice(0, 3) : null
+          });
+
           this.updateState({
             results: response.results,
             totalResults: response.total,
@@ -617,9 +630,15 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
       ...currentState,
       ...state,
     };
-    console.log('[ResourceManagement] syncStateFromExternal:', {
+    console.log('🔄 [ResourceManagement] syncStateFromExternal:', {
       currentResults: currentState.results?.length,
       newResults: newState.results?.length,
+      currentHighlights: currentState.highlights,
+      incomingHighlights: state.highlights,
+      finalHighlights: newState.highlights,
+      hasStatistics: !!newState.statistics,
+      statisticsSample: newState.statistics?.byYearRange ?
+        Object.entries(newState.statistics.byYearRange).slice(0, 3) : null
     });
     this.stateSubject.next(newState);
   }
