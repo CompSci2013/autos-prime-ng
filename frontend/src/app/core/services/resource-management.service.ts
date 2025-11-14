@@ -626,15 +626,26 @@ export class ResourceManagementService<TFilters, TData> implements OnDestroy {
     state: Partial<ResourceState<TFilters, TData>>
   ): void {
     const currentState = this.stateSubject.value;
+
+    // URL-FIRST PROTECTION: If incoming state doesn't explicitly include highlights,
+    // preserve the current highlights that were derived from URL parameters.
+    // This prevents external state sync from overwriting URL-derived highlights.
+    const preservedHighlights = state.highlights !== undefined
+      ? state.highlights
+      : currentState.highlights;
+
     const newState = {
       ...currentState,
       ...state,
+      highlights: preservedHighlights,  // Always preserve URL-derived highlights
     };
+
     console.log('🔄 [ResourceManagement] syncStateFromExternal:', {
       currentResults: currentState.results?.length,
       newResults: newState.results?.length,
       currentHighlights: currentState.highlights,
       incomingHighlights: state.highlights,
+      preservedHighlights: preservedHighlights,
       finalHighlights: newState.highlights,
       hasStatistics: !!newState.statistics,
       statisticsSample: newState.statistics?.byYearRange ?
