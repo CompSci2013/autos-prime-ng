@@ -7,14 +7,13 @@
 
 import { Injectable, Provider } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Observable } from 'rxjs';
 import { ResourceManagementService } from './resource-management.service';
 import { UrlStateService } from './url-state.service';
-import { FilterUrlMapperService } from './filter-url-mapper.service';
 import { RequestCoordinatorService } from './request-coordinator.service';
 import {
   VehicleApiAdapter,
   VehicleCacheKeyBuilder,
+  VehicleFilterMapper,
 } from './vehicle-resource-adapters';
 import { SearchFilters } from '../../models/search-filters.model';
 
@@ -26,7 +25,7 @@ export function createVehicleResourceManagementService(
   router: Router,
   route: ActivatedRoute,
   requestCoordinator: RequestCoordinatorService,
-  filterMapper: FilterUrlMapperService,
+  filterMapper: VehicleFilterMapper,
   apiAdapter: VehicleApiAdapter,
   cacheKeyBuilder: VehicleCacheKeyBuilder
 ): ResourceManagementService<SearchFilters, any> {
@@ -36,10 +35,7 @@ export function createVehicleResourceManagementService(
     route,
     requestCoordinator,
     {
-      filterMapper: {
-        filtersToParams: (filters) => filterMapper.filtersToParams(filters),
-        paramsToFilters: (params) => filterMapper.paramsToFilters(params),
-      },
+      filterMapper: filterMapper,
       apiAdapter: apiAdapter,
       cacheKeyBuilder: cacheKeyBuilder,
       defaultFilters: {
@@ -71,15 +67,12 @@ export class VehicleResourceManagementService extends ResourceManagementService<
     router: Router,
     route: ActivatedRoute,
     requestCoordinator: RequestCoordinatorService,
-    filterMapper: FilterUrlMapperService,
+    filterMapper: VehicleFilterMapper,
     private apiAdapter: VehicleApiAdapter,
     cacheKeyBuilder: VehicleCacheKeyBuilder
   ) {
     super(urlState, router, route, requestCoordinator, {
-      filterMapper: {
-        filtersToParams: (filters) => filterMapper.filtersToParams(filters),
-        paramsToFilters: (params) => filterMapper.paramsToFilters(params),
-      },
+      filterMapper: filterMapper,
       apiAdapter: apiAdapter,
       cacheKeyBuilder: cacheKeyBuilder,
       defaultFilters: {
@@ -161,7 +154,7 @@ export const VEHICLE_RESOURCE_MANAGEMENT_PROVIDER: Provider = {
     Router,
     ActivatedRoute,
     RequestCoordinatorService,
-    FilterUrlMapperService,
+    VehicleFilterMapper,
     VehicleApiAdapter,
     VehicleCacheKeyBuilder,
   ],

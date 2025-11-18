@@ -5,12 +5,23 @@ import { SearchFilters } from '../../models/search-filters.model';
 /**
  * FilterUrlMapperService
  *
- * Domain-specific utility for converting between SearchFilters and URL parameters.
- * Extracted from RouteStateService to separate concerns:
- * - UrlStateService: Generic URL parameter management
- * - FilterUrlMapperService: Domain-specific filter ↔ URL conversions
+ * @deprecated Use VehicleFilterMapper from './vehicle-resource-adapters' instead.
+ * This service violates the generic architecture principle by being tightly coupled
+ * to the vehicle domain. The new VehicleFilterMapper implements the generic
+ * FilterUrlMapper<TFilters> interface and follows the adapter pattern.
  *
- * This service is stateless and can be used across the application.
+ * Migration guide:
+ * ```typescript
+ * // Old (deprecated):
+ * import { FilterUrlMapperService } from '@app/core/services';
+ * constructor(private filterMapper: FilterUrlMapperService) {}
+ *
+ * // New (recommended):
+ * import { VehicleFilterMapper } from '@app/core/services';
+ * constructor(private filterMapper: VehicleFilterMapper) {}
+ * ```
+ *
+ * This service will be removed in a future version.
  */
 @Injectable({
   providedIn: 'root',
